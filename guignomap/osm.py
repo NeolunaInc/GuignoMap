@@ -13,26 +13,13 @@ import overpy
 CACHE_FILE = Path(__file__).parent / "osm_cache.json"
 ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
-# Toutes les voies "routières" nommées de Mascouche (hors autoroutes & trunk)
+# Toutes les routes nommées "classiques" (SANS autoroutes)
 QUERY_STREETS_ALL = """
-[out:json][timeout:180];
+[out:json][timeout:120];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
   way["highway"~"^(primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
   way["highway"~"^(primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
-);
-out body;
->;                       /* récupère les nœuds des ways */
-out skel qt;             /* nœuds = lat/lon disponibles */
-"""
-
-# Requête améliorée pour le cache géométrique (avec coordonnées directes)
-QUERY_STREETS_FILTERED = """
-[out:json][timeout:120];
-area["name"="Mascouche"]["boundary"="administrative"]->.a;
-(
-  way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
-  way["highway"~"^(trunk_link|primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
 );
 out tags geom;
 """
@@ -102,48 +89,35 @@ def generate_streets_csv(city="Mascouche"):
 def build_geometry_cache():
     """
     Construit le cache des géométries pour affichage sur la carte
-    Utilise la nouvelle requête avec "out tags geom" pour plus de fiabilité
+    Utilise la requête optimisée avec "out tags geom"
     """
     try:
         api = overpy.Overpass()
-        result = api.query(QUERY_STREETS_FILTERED)
+        result = api.query(QUERY_STREETS_ALL)
         
         geo = {}
         skip_keywords = ["privé", "private", "allée", "impasse", "accès", "service"]
         
         for way in result.ways:
             name = way.tags.get("name")
-            
-            # Appliquer le même filtre que pour le CSV
             if not name or any(skip in name.lower() for skip in skip_keywords):
                 continue
-            
-            # Récupérer les coordonnées
+
             coords = []
-            # 1) priorité à 'geometry' (présent grâce à "out tags geom")
+            # 1) Priorité à la géométrie renvoyée par Overpass
             if hasattr(way, "geometry") and way.geometry:
-                coords = [
-                    [float(p["lat"]), float(p["lon"])]
-                    for p in way.geometry
-                    if isinstance(p, dict) and "lat" in p and "lon" in p
-                ]
-            # 2) repli sur 'nodes'
+                coords = [[float(p["lat"]), float(p["lon"])] for p in way.geometry if "lat" in p and "lon" in p]
+            # 2) Fallback si on a les nodes
             elif hasattr(way, "nodes") and way.nodes:
                 for node in way.nodes:
                     try:
                         coords.append([float(node.lat), float(node.lon)])
                     except Exception:
-                        continue
+                        pass
 
-            # Si pas assez de coordonnées, on ignore ce tronçon
-            if len(coords) < 2:
-                continue
-            
-            # Ajouter les coordonnées au cache
-            if name not in geo:
-                geo[name] = []
-            geo[name].append(coords)
-        
+            if len(coords) >= 2:
+                geo.setdefault(name, []).append(coords)
+
         # Sauvegarder le cache
         CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
         print(f"✅ Cache créé avec {len(geo)} rues géolocalisées")
