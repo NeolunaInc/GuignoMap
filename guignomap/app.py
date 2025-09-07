@@ -110,39 +110,53 @@ def create_map(df, geo):
         st.warning("Aucune donnée géométrique disponible")
         return m
     
-    # ⬇️ CHANGEMENT 1 : Construction robuste du lookup avec valeurs par défaut normalisées
+    # Construction robuste du lookup avec gestion correcte des colonnes
     street_info = {}
-    for _, row in df.iterrows():
-        name = str(row.get('name'))
+    for idx, row in df.iterrows():
+        name = str(row['name']) if 'name' in df.columns else str(row.get('name', ''))
+        
+        # Gestion sûre des colonnes qui peuvent ne pas exister
+        status = 'a_faire'
+        if 'status' in df.columns:
+            status = row['status'] if pd.notna(row['status']) else 'a_faire'
+        
+        team = ''
+        if 'team' in df.columns:
+            team = row['team'] if pd.notna(row['team']) else ''
+        
+        notes = ''
+        if 'notes' in df.columns:
+            notes = str(row['notes']) if pd.notna(row['notes']) else ''
+        
         street_info[name] = {
-            'status': (row.get('status') if pd.notna(row.get('status')) else 'a_faire'),
-            'team': (row.get('team') if pd.notna(row.get('team')) else ''),
-            'notes': (row.get('notes') if 'notes' in row and pd.notna(row.get('notes')) else '')
+            'status': status,
+            'team': team,
+            'notes': notes
         }
     
     # Couleurs par statut
     status_colors = {
         'terminee': '#22c55e',
-        'en_cours': '#f59e0b',
+        'en_cours': '#f59e0b', 
         'a_faire': '#ef4444'
     }
     
     # Ajouter les rues
     for name, paths in geo.items():
         # Cherche l'info DB; si absente → défaut "a_faire" sans équipe
-        info = street_info.get(name)
-        if info is None:
-            info = {'status': 'a_faire', 'team': '', 'notes': ''}
+        info = street_info.get(name, {'status': 'a_faire', 'team': '', 'notes': ''})
         
         status = info.get('status', 'a_faire')
         team = info.get('team', '')
+        
+        # Nettoyer team (gérer NaN, None, etc.)
         if team is None or (isinstance(team, float) and pd.isna(team)):
             team = ''
+        team = str(team).strip() if team else ''
         
         notes = info.get('notes', '')
         
         # Déterminer la couleur et style
-        # nouveau : couleur = statut; si non assignée → pointillés + légère transparence
         color = status_colors.get(status, '#ef4444')
         opacity = 0.8 if team else 0.6
         dash = None if team else '5,7'
@@ -482,13 +496,31 @@ def main():
     conn = db.get_conn(DB_PATH)
     db.init_db(conn)
     
-    # Cache géométrique
+    # Cache géométrique avec gestion d'erreur améliorée
     @st.cache_data(ttl=None)
     def get_geo(_sig):
-        return load_geometry_cache()
+        try:
+            geo_data = load_geometry_cache()
+            if not geo_data:
+                st.warning("⚠️ Cache géométrique vide. Utilisez l'onglet Tech pour reconstruire.")
+                return {}
+            return geo_data
+        except Exception as e:
+            st.error(f"Erreur chargement cache: {e}")
+            return {}
 
     sig = int(CACHE_FILE.stat().st_mtime_ns) if CACHE_FILE.exists() else 0
     geo = get_geo(sig)
+    
+    # Vérifier l'intégrité des données au démarrage
+    if not geo:
+        st.warning("""
+        ⚠️ **Aucune donnée géométrique disponible**
+        
+        Pour initialiser l'application :
+        1. Allez dans **Superviseur** → **Onglet Tech**
+        2. Lancez **Reconstruire cache OSM**
+        """)
     
     # Sidebar
     with st.sidebar:
