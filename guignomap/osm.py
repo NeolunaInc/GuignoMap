@@ -13,15 +13,17 @@ import overpy
 CACHE_FILE = Path(__file__).parent / "osm_cache.json"
 ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
-# Requête OSM étendue - récupère TOUTES les rues nommées
+# Toutes les voies "routières" nommées de Mascouche (hors autoroutes & trunk)
 QUERY_STREETS_ALL = """
-[out:json][timeout:120];
+[out:json][timeout:180];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
-  way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
-  way["highway"~"^(motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
+  way["highway"~"^(primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
+  way["highway"~"^(primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
 );
-out tags geom;
+out body;
+>;                       /* récupère les nœuds des ways */
+out skel qt;             /* nœuds = lat/lon disponibles */
 """
 
 # Requête pour les adresses
@@ -105,29 +107,36 @@ def build_geometry_cache():
             if not name or any(skip in name.lower() for skip in skip_keywords):
                 continue
             
-            # Récupérer les coordonnées - geometry d'abord, puis fallback nodes
+            # Récupérer les coordonnées du way, en privilégiant les nœuds (plus fiable ici)
             coords = []
-            try:
-                # Méthode 1 : via way.geometry (liste de dicts {"lat", "lon"})
-                if hasattr(way, 'geometry') and way.geometry:
-                    coords = [[float(point['lat']), float(point['lon'])] for point in way.geometry]
-                else:
-                    # Fallback : via way.nodes
-                    if hasattr(way, 'nodes'):
-                        for node in way.nodes:
-                            try:
-                                coords.append([float(node.lat), float(node.lon)])
-                            except:
-                                continue
-            except Exception as e:
-                print(f"⚠️ Erreur coords pour {name}: {e}")
+
+            # 1) Nœuds (après "out body; >; out skel qt" ce sont des Node avec lat/lon)
+            for node in (getattr(way, "nodes", None) or []):
+                try:
+                    coords.append([float(node.lat), float(node.lon)])
+                except Exception:
+                    continue
+
+            # 2) Fallback éventuel sur 'geometry' (si présent)
+            if not coords:
+                geom = getattr(way, "geometry", None)
+                if geom:
+                    for p in geom or []:
+                        try:
+                            coords.append([float(p.get("lat")), float(p.get("lon"))])
+                        except Exception:
+                            continue
+
+            # 3) Si toujours rien, on ignore proprement ce tronçon
+            if len(coords) < 2:
+                # log facultatif
+                # print(f"⚠️ Pas de coords exploitables pour {name}")
                 continue
             
-            # Ajouter seulement si on a au moins 2 points
-            if len(coords) >= 2:
-                if name not in geo:
-                    geo[name] = []
-                geo[name].append(coords)
+            # Ajouter les coordonnées au cache
+            if name not in geo:
+                geo[name] = []
+            geo[name].append(coords)
         
         # Sauvegarder le cache
         CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")

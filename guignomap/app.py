@@ -148,13 +148,11 @@ def create_map(df, geo):
         if notes is None or (isinstance(notes, float) and pd.isna(notes)):
             notes = 0
         
-        # Déterminer la couleur
-        if no_team:
-            color = '#9ca3af'  # Gris pour non assignée
-            opacity = 0.5
-        else:
-            color = status_colors.get(status, '#ef4444')
-            opacity = 0.8
+        # Déterminer la couleur et style
+        # nouveau : couleur = statut; si non assignée → pointillés + légère transparence
+        color = status_colors.get(status, '#ef4444')
+        opacity = 0.8 if not no_team else 0.6
+        dash = None if not no_team else '5,7'
         
         # Tooltip
         tooltip_html = f"""
@@ -172,8 +170,16 @@ def create_map(df, geo):
                     color=color,
                     weight=5,
                     opacity=opacity,
+                    dash_array=dash,
                     tooltip=folium.Tooltip(tooltip_html, sticky=True)
                 ).add_to(m)
+    
+    # Cadrer la carte sur toutes les lignes ajoutées
+    all_pts = [pt for paths in geo.values() for path in paths for pt in (path or [])]
+    if all_pts:
+        lats = [p[0] for p in all_pts]
+        lons = [p[1] for p in all_pts]
+        m.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
     
     # Légende
     legend_html = '''
@@ -184,7 +190,7 @@ def create_map(df, geo):
         <span style="background:#22c55e; width:20px; height:10px; display:inline-block;"></span> Terminée<br>
         <span style="background:#f59e0b; width:20px; height:10px; display:inline-block;"></span> En cours<br>
         <span style="background:#ef4444; width:20px; height:10px; display:inline-block;"></span> À faire<br>
-        <span style="background:#9ca3af; width:20px; height:10px; display:inline-block;"></span> Non assignée
+        <em>Les rues non assignées apparaissent en pointillés</em>
     </div>
     '''
     m.get_root().html.add_child(folium.Element(legend_html))
