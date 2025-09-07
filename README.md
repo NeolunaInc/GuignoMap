@@ -5,6 +5,9 @@ Système de gestion de la collecte de denrées pour **Le Relais de Mascouche**.
 ## 🌟 Fonctionnalités
 
 - 🗺️ **Cartes interactives** avec géolocalisation des rues
+  - Centrage automatique sur Mascouche
+  - Couleurs par statut (rouge/jaune/vert)
+  - Rues non assignées en pointillés
 - 👥 **Gestion d'équipes** avec authentification
 - 📍 **Suivi par adresse** avec notes détaillées
 - 📊 **Tableaux de bord** en temps réel
@@ -85,12 +88,14 @@ GuignoMap/
 - Assignation des rues
 - Export des rapports
 - Mise à jour des données OSM
+- Visualisation claire des statuts avec légende interactive
 
 ### Pour les Bénévoles
 - Tournée assignée
 - Ajout de notes par adresse
 - Mise à jour du statut des rues
 - Suivi en temps réel
+- Carte centrée automatiquement sur la zone de travail
 
 ## 🎨 Thème visuel
 
@@ -99,6 +104,12 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - Or (#FFD700)
 - Design responsive
 - Animations fluides
+
+### Légende de la carte
+- 🟢 **Vert** : Rues terminées
+- 🟡 **Jaune** : Rues en cours
+- 🔴 **Rouge** : Rues à faire
+- **Pointillés** : Rues non assignées à une équipe
 
 ## 🚧 Développement
 
@@ -117,4 +128,4 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 Développé pour **Le Relais de Mascouche** - Collecte de denrées 2025
 
 ---
-*Version 2.1 - Interface moderne avec suivi par adresse*
+*Version 2.2 - Interface améliorée avec centrage automatique et légende interactive*
