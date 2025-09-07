@@ -316,7 +316,8 @@ def page_superviseur(conn, geo):
         "📊 Vue d'ensemble",
         "👥 Équipes",
         "🗺️ Assignation",
-        "📥 Export"
+        "📥 Export",
+        "🛠 Tech"
     ])
     
     with tabs[0]:
@@ -404,23 +405,65 @@ def page_superviseur(conn, geo):
                 "text/csv",
                 use_container_width=True
             )
-        
-        # Rafraîchir le cache géométries
-        if st.button("🔄 Rafraîchir cache OSM", use_container_width=True):
-            with st.spinner("Construction du cache…"):
-                build_geometry_cache()   # reconstruit le fichier osm_cache.json
-                st.cache_data.clear()    # purge le cache Streamlit
-            st.success("Cache mis à jour !")
-            st.rerun()
-        
-        # Rafraîchir le cache adresses
-        if st.button("📍 Rafraîchir adresses (OSM)", use_container_width=True):
-            with st.spinner("Construction du cache adresses..."):
-                build_addresses_cache()
-                addr_cache = load_addresses_cache()
-                count = db.import_addresses_from_cache(conn, addr_cache)
-                st.success(f"✅ {count} adresses importées depuis OSM!")
-                st.rerun()
+
+    with tabs[4]:
+        st.markdown("### 🛠 Opérations techniques (protégées)")
+
+        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
+        TECH_PIN = st.secrets.get("TECH_PIN", "")
+
+        if "tech_ok" not in st.session_state:
+            st.session_state.tech_ok = False
+
+        if not st.session_state.tech_ok:
+            pin = st.text_input("Entrer le PIN technique", type="password")
+            if st.button("Déverrouiller"):
+                if TECH_PIN and pin == TECH_PIN:
+                    st.session_state.tech_ok = True
+                    st.success("Accès technique déverrouillé.")
+                    st.rerun()
+                else:
+                    st.error("PIN invalide.")
+            st.stop()
+
+        st.info("⚠️ Ces actions sont lourdes et n'affectent pas les statuts/notes. Elles régénèrent les caches OSM.")
+
+        # --- Reconstruire le cache géométrique (lourd)
+        with st.expander("🔄 Reconstruire cache OSM (géométries)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirm = st.checkbox("Je comprends les implications")
+            with col2:
+                safety = st.text_input('Écrire "REBUILD" pour confirmer')
+
+            if st.button("Lancer la reconstruction"):
+                if confirm and safety.strip().upper() == "REBUILD":
+                    with st.spinner("Construction du cache…"):
+                        build_geometry_cache()       # reconstruit le fichier osm_cache.json
+                        st.cache_data.clear()        # purge cache Streamlit
+                    st.success("✅ Cache OSM mis à jour (géométries).")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+        # --- Reconstruire/Importer le cache des adresses
+        with st.expander("📍 Mettre à jour les adresses (OSM)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirmA = st.checkbox("Je confirme")
+            with col2:
+                safetyA = st.text_input('Écrire "IMPORT" pour confirmer')
+
+            if st.button("Lancer la mise à jour des adresses"):
+                if confirmA and safetyA.strip().upper() == "IMPORT":
+                    with st.spinner("Téléchargement des adresses OSM…"):
+                        build_addresses_cache()
+                        addr_cache = load_addresses_cache()
+                        count = db.import_addresses_from_cache(conn, addr_cache)
+                    st.success(f"✅ {count} adresses importées depuis OSM.")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
 
 # ============================================
 # MAIN

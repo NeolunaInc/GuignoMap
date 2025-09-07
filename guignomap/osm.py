@@ -127,13 +127,35 @@ def build_geometry_cache():
         # Sauvegarder le cache
         CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
         print(f"✅ Cache créé avec {len(geo)} rues géolocalisées")
-        return CACHE_FILE
+        return geo
         
     except Exception as e:
         print(f"❌ Erreur construction cache: {e}")
-        # Créer un cache de fallback
-        create_fallback_cache()
-        return CACHE_FILE
+
+        # 1) Si un ancien cache existe, on le conserve
+        if CACHE_FILE.exists():
+            try:
+                data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+                print(f"⚠️ Échec refresh: cache précédent conservé ({len(data)} rues).")
+                return data
+            except Exception:
+                pass
+
+        # 2) Dernier recours: petit fallback en mémoire (NE PAS l'écrire sur disque)
+        fallback = {
+            "Chemin Gascon": [[[45.75, -73.62], [45.76, -73.60]]],
+            "Boulevard de Mascouche": [[[45.74, -73.61], [45.75, -73.59]]],
+            "Montée Masson": [[[45.73, -73.63], [45.74, -73.62]]],
+            "Chemin Sainte-Marie": [[[45.75, -73.64], [45.76, -73.63]]],
+            "Rue Principale": [[[45.72, -73.61], [45.73, -73.60]]],
+            "Chemin des Anglais": [[[45.74, -73.65], [45.75, -73.64]]],
+            "Rue de l'Étang": [[[45.76, -73.62], [45.77, -73.61]]],
+            "Boulevard Raymond": [[[45.73, -73.60], [45.74, -73.59]]],
+            "Rue Sainte-Marie": [[[45.71, -73.62], [45.72, -73.61]]],
+            "Rue Brien": [[[45.70, -73.63], [45.71, -73.62]]],
+        }
+        print("⚠️ Fallback temporaire en mémoire utilisé (aucune écriture disque).")
+        return fallback
 
 def load_geometry_cache():
     """
