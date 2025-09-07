@@ -72,7 +72,7 @@ def render_header():
     # Bannière si disponible
     banner_file = ASSETS / "banner.png"
     if banner_file.exists():
-        st.image(str(banner_file), use_container_width=True)
+        st.image(str(banner_file), width=None)
 
 def render_metrics(stats):
     """Affiche les métriques principales"""
