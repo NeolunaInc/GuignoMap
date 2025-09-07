@@ -13,13 +13,15 @@ import overpy
 CACHE_FILE = Path(__file__).parent / "osm_cache.json"
 ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
-# Toutes les routes nommées "classiques" (SANS autoroutes)
+# Toutes les voies routières nommées de Mascouche, sauf autoroutes
 QUERY_STREETS_ALL = """
-[out:json][timeout:120];
+[out:json][timeout:180];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
-  way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
-  way["highway"~"^(trunk_link|primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
+  /* garder toute route avec un nom, sauf autoroutes */
+  way["highway"]["name"]["highway"!~"^motorway(_link)?$"](area.a);
+  /* optionnel: si tu veux éviter les trottoirs/pistes, décommente la ligne suivante */
+  /* way["highway"!~"^(footway|path|cycleway|steps|pedestrian)$"]["name"]["highway"!~"^motorway(_link)?$"](area.a); */
 );
 out tags geom;
 """
@@ -45,12 +47,12 @@ def generate_streets_csv(city="Mascouche"):
         result = api.query(QUERY_STREETS_ALL)
         
         # Filtrer les rues indésirables
-        skip_keywords = ["privé", "private", "allée", "impasse", "accès", "service"]
+        skip_keywords = []  # on ne filtre plus
         streets = []
         
         for way in result.ways:
             name = way.tags.get("name")
-            if name and not any(skip in name.lower() for skip in skip_keywords):
+            if name:
                 # Ignorer les rues trop petites (moins de 3 nœuds)
                 if hasattr(way, 'nodes') and len(way.nodes) >= 3:
                     streets.append(name)
@@ -96,26 +98,28 @@ def build_geometry_cache():
         result = api.query(QUERY_STREETS_ALL)
         
         geo = {}
-        skip_keywords = ["privé", "private", "allée", "impasse", "accès", "service"]
+        skip_keywords = []  # on ne filtre plus
         
         for way in result.ways:
             name = way.tags.get("name")
-            if not name or any(skip in name.lower() for skip in skip_keywords):
+            if not name:
                 continue
 
             coords = []
             # 1) Priorité à la géométrie renvoyée par Overpass
             if hasattr(way, "geometry") and way.geometry:
-                coords = [[float(p["lat"]), float(p["lon"])]
-                          for p in way.geometry
-                          if isinstance(p, dict) and "lat" in p and "lon" in p]
+                coords = [
+                    [float(p["lat"]), float(p["lon"])]
+                    for p in way.geometry
+                    if isinstance(p, dict) and "lat" in p and "lon" in p
+                ]
             # 2) Fallback si on a les nodes
             elif hasattr(way, "nodes") and way.nodes:
                 for node in way.nodes:
                     try:
                         coords.append([float(node.lat), float(node.lon)])
                     except Exception:
-                        pass
+                        continue
 
             if len(coords) >= 2:
                 geo.setdefault(name, []).append(coords)

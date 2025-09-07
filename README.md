@@ -4,11 +4,12 @@ Système de gestion de la collecte de denrées pour **Le Relais de Mascouche**.
 
 ## 🌟 Fonctionnalités
 
-- 🗺️ **Cartes interactives** avec géolocalisation des rues
+- 🗺️ **Cartes interactives** avec géolocalisation complète des rues
   - Centrage automatique sur Mascouche
   - Couleurs par statut (rouge/jaune/vert)
   - Rues non assignées en pointillés
   - Cache intelligent avec rechargement automatique
+  - **Couverture maximale** : toutes les voies nommées (sauf autoroutes)
 - 👥 **Gestion d'équipes** avec authentification
 - 📍 **Suivi par adresse** avec notes détaillées
 - 📊 **Tableaux de bord** en temps réel
@@ -91,7 +92,8 @@ GuignoMap/
 - Export des rapports
 - Mise à jour des données OSM avec cache intelligent
 - Visualisation claire des statuts avec légende interactive
-- Système de cache auto-actualisant (plus de "0 rues trouvées")
+- Système de cache auto-actualisant
+- **Couverture complète** : toutes les rues, allées, impasses, voies d'accès
 
 ### Pour les Bénévoles
 - Tournée assignée
@@ -100,6 +102,7 @@ GuignoMap/
 - Suivi en temps réel
 - Carte centrée automatiquement sur la zone de travail
 - Interface fluide avec rechargement intelligent des données
+- **Visibilité totale** des voies de collecte (y compris voies privées)
 
 ## 🎨 Thème visuel
 
@@ -122,23 +125,34 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - Import automatique depuis OpenStreetMap
 - Données de test intégrées
 
-### Cache OSM Intelligent
-- Géométries des rues mises en cache (`osm_cache.json`)
+### Cache OSM Révolutionnaire
+- **Couverture maximale** : toutes les voies nommées de Mascouche
+- **Exclusion ciblée** : seulement les autoroutes (motorway/motorway_link)
+- **Inclusion totale** : rues principales, résidentielles, voies d'accès, impasses, allées, voies privées
 - Cache Streamlit sensible aux modifications de fichier
 - Rechargement automatique sans intervention manuelle
 - Extraction robuste des coordonnées (geometry prioritaire, nodes en fallback)
-- Requête Overpass optimisée (trunk inclus, autoroutes exclues)
-- Gestion d'erreurs avancée pour éviter les "NoneType" crashes
+- Requête Overpass optimisée avec regex négative avancée
+- Gestion d'erreurs complète pour éviter les crashes
+
+### Couverture des voies
+- 🛣️ **Routes principales** : trunk, primary, secondary, tertiary
+- 🏘️ **Voies résidentielles** : residential, living_street, unclassified
+- 🚗 **Voies d'accès** : service, road, access
+- 🏠 **Voies privées** : private roads, allées privées
+- 🔚 **Impasses** : cul-de-sacs, dead ends
+- 🚫 **Exclusions** : autoroutes uniquement
 
 ### Architecture technique
-- **Frontend** : Streamlit avec cache intelligent
-- **Géolocalisation** : API Overpass OSM avec extraction robuste
-- **Données** : SQLite + cache JSON optimisé
-- **Performance** : Système de cache à plusieurs niveaux
+- **Frontend** : Streamlit avec cache intelligent à double sécurité
+- **Géolocalisation** : API Overpass OSM avec requête révolutionnaire
+- **Données** : SQLite + cache JSON optimisé pour performance maximale
+- **Couverture** : Système d'inclusion maximale (tout sauf autoroutes)
+- **Performance** : Cache à plusieurs niveaux avec auto-invalidation
 
 ## 📝 Support
 
 Développé pour **Le Relais de Mascouche** - Collecte de denrées 2025
 
 ---
-*Version 2.3 - Système de cache OSM robuste et intelligence automatique*
+*Version 3.0 - Couverture maximale OSM et système révolutionnaire*
