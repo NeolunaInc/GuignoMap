@@ -1,9 +1,36 @@
 [theme]
-base="dark"
-primaryColor="#A9CF3B"           # vert Relais (approx)
-backgroundColor="#0F1318"
-secondaryBackgroundColor="#1A1F26"
-textColor="#F2F3F5"
-font="sans serif"
+# Thème sombre avec les couleurs du Relais
+base = "dark"
+primaryColor = "#A9CF3B"              # Vert du Relais
+backgroundColor = "#0F1318"           # Fond très sombre
+secondaryBackgroundColor = "#1A1F26"  # Fond secondaire
+textColor = "#F2F3F5"                 # Texte clair
+font = "sans serif"
+
 [client]
-toolbarMode="minimal"
+# Configuration minimale de la toolbar
+toolbarMode = "minimal"
+showErrorDetails = false
+
+[runner]
+# Optimisations de performance
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true
+
+[server]
+# Configuration serveur
+headless = true
+runOnSave = true
+maxUploadSize = 10
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+# Collecte des stats d'usage (désactivé pour confidentialité)
+gatherUsageStats = false
+
+[deprecation]
+# Désactiver les avertissements de dépréciation
+showImageFormat = false
+showPyplotGlobalUse = false
