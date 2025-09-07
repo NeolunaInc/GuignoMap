@@ -175,7 +175,7 @@ def load_geometry_cache():
     """
     if not CACHE_FILE.exists():
         print("⚠️ Cache non trouvé, construction en cours...")
-        build_geometry_cache()
+        return build_geometry_cache()  # build_geometry_cache() gère déjà le fallback en mémoire
     
     try:
         with open(CACHE_FILE, 'r', encoding='utf-8') as f:
@@ -184,8 +184,8 @@ def load_geometry_cache():
             return cache
     except Exception as e:
         print(f"❌ Erreur chargement cache: {e}")
-        create_fallback_cache()
-        return json.loads(CACHE_FILE.read_text(encoding='utf-8'))
+        # Ne pas écrire de fallback sur disque ! Utiliser build_geometry_cache() qui gère le fallback en mémoire
+        return build_geometry_cache()
 
 def create_fallback_csv():
     """
