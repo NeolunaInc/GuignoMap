@@ -93,111 +93,137 @@ def render_metrics(stats):
         st.metric("Progression", f"{progress:.1f}%")
 
 def create_map(df, geo):
-    """Crée la carte Folium avec les rues"""
-    # Centre de Mascouche
-    center = [45.7475, -73.6005]
+    """Crée la carte Folium centrée sur Mascouche avec toutes les rues"""
+    # Limites de Mascouche
+    bounds = {
+        "north": 45.78,
+        "south": 45.70,
+        "east": -73.55,
+        "west": -73.70
+    }
+    center = [(bounds["north"] + bounds["south"]) / 2, 
+              (bounds["east"] + bounds["west"]) / 2]
     
     # Créer la carte
     m = folium.Map(
         location=center,
-        zoom_start=13,
+        zoom_start=12,  # Zoom pour voir toute la ville
         tiles="CartoDB positron",
-        control_scale=True
+        control_scale=True,
+        max_bounds=True,
+        min_zoom=11,
+        max_zoom=18
     )
     
-    # Vérifier qu'on a des données
-    if not geo or df.empty:
+    # Définir les limites de la carte sur Mascouche
+    m.fit_bounds([[bounds["south"], bounds["west"]], 
+                  [bounds["north"], bounds["east"]]])
+    
+    if not geo:
         st.warning("Aucune donnée géométrique disponible")
         return m
     
-    # Construction robuste du lookup avec gestion correcte des colonnes
+    # Construire le lookup des infos DB
     street_info = {}
-    for idx, row in df.iterrows():
-        name = str(row['name']) if 'name' in df.columns else str(row.get('name', ''))
-        
-        # Gestion sûre des colonnes qui peuvent ne pas exister
-        status = 'a_faire'
-        if 'status' in df.columns:
-            status = row['status'] if pd.notna(row['status']) else 'a_faire'
-        
-        team = ''
-        if 'team' in df.columns:
-            team = row['team'] if pd.notna(row['team']) else ''
-        
-        notes = ''
-        if 'notes' in df.columns:
-            notes = str(row['notes']) if pd.notna(row['notes']) else ''
-        
-        street_info[name] = {
-            'status': status,
-            'team': team,
-            'notes': notes
-        }
+    if not df.empty:
+        for idx, row in df.iterrows():
+            name = str(row['name']) if 'name' in df.columns else ''
+            status = row['status'] if 'status' in df.columns and pd.notna(row['status']) else 'a_faire'
+            team = row['team'] if 'team' in df.columns and pd.notna(row['team']) else ''
+            notes = str(row['notes']) if 'notes' in df.columns and pd.notna(row['notes']) else '0'
+            
+            street_info[name] = {
+                'status': status,
+                'team': str(team).strip() if team else '',
+                'notes': notes
+            }
     
     # Couleurs par statut
     status_colors = {
-        'terminee': '#22c55e',
-        'en_cours': '#f59e0b', 
-        'a_faire': '#ef4444'
+        'terminee': '#22c55e',  # Vert
+        'en_cours': '#f59e0b',  # Orange
+        'a_faire': '#ef4444'    # Rouge
     }
     
-    # Ajouter les rues
+    # Compteurs pour stats
+    stats = {"total": 0, "assigned": 0, "unassigned": 0}
+    
+    # Ajouter TOUTES les rues de la géométrie
     for name, paths in geo.items():
-        # Cherche l'info DB; si absente → défaut "a_faire" sans équipe
-        info = street_info.get(name, {'status': 'a_faire', 'team': '', 'notes': ''})
+        stats["total"] += 1
         
-        status = info.get('status', 'a_faire')
-        team = info.get('team', '')
+        # Info depuis DB ou défaut (rouge pointillé)
+        info = street_info.get(name, {
+            'status': 'a_faire',
+            'team': '',
+            'notes': '0'
+        })
         
-        # Nettoyer team (gérer NaN, None, etc.)
-        if team is None or (isinstance(team, float) and pd.isna(team)):
-            team = ''
-        team = str(team).strip() if team else ''
+        status = info['status']
+        team = info['team']
+        notes = info['notes']
         
-        notes = info.get('notes', '')
+        # Style: TOUJOURS pointillé si pas d'équipe
+        has_team = bool(team)
+        color = status_colors.get(status, '#ef4444')  # Rouge par défaut
+        opacity = 0.8 if has_team else 0.5
+        dash = None if has_team else '8,12'  # Pointillés si non assigné
+        weight = 6 if has_team else 4
         
-        # Déterminer la couleur et style
-        color = status_colors.get(status, '#ef4444')
-        opacity = 0.8 if team else 0.6
-        dash = None if team else '5,7'
+        if has_team:
+            stats["assigned"] += 1
+        else:
+            stats["unassigned"] += 1
         
-        # Tooltip
+        # Tooltip informatif
         tooltip_html = f"""
-        <strong>{name}</strong><br>
-        Statut: {status.replace('_', ' ').title()}<br>
-        Équipe: {team if team else 'Non assignée'}<br>
-        Notes: {notes}
+        <div style='font-family: sans-serif'>
+            <strong style='font-size: 14px'>{name}</strong><br>
+            <span style='color: {color}'>● Statut: {status.replace('_', ' ').title()}</span><br>
+            <span>📋 Équipe: {team if team else '⚠️ NON ASSIGNÉE'}</span><br>
+            <span>📝 Notes: {notes}</span>
+        </div>
         """
         
-        # Ajouter chaque segment
+        # Ajouter chaque segment de la rue
         for path in paths:
             if path and len(path) >= 2:
                 folium.PolyLine(
                     path,
                     color=color,
-                    weight=5,
+                    weight=weight,
                     opacity=opacity,
                     dash_array=dash,
                     tooltip=folium.Tooltip(tooltip_html, sticky=True)
                 ).add_to(m)
     
-    # Cadrer la carte sur toutes les lignes ajoutées
-    all_pts = [pt for paths in geo.values() for path in paths for pt in (path or [])]
-    if all_pts:
-        lats = [p[0] for p in all_pts]
-        lons = [p[1] for p in all_pts]
-        m.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
+    # Ajouter un marqueur au centre-ville
+    folium.Marker(
+        [45.7475, -73.6005],
+        popup="Centre-ville de Mascouche",
+        tooltip="Centre-ville",
+        icon=folium.Icon(color='red', icon='info-sign')
+    ).add_to(m)
     
-    # Légende
-    legend_html = '''
-    <div style="position: fixed; bottom: 50px; right: 50px; width: 180px;
+    # Légende améliorée
+    legend_html = f'''
+    <div style="position: fixed; bottom: 50px; right: 50px; width: 220px;
                 background: white; z-index:9999; font-size:14px;
-                border: 2px solid grey; border-radius: 10px; padding: 10px">
-        <strong>Légende</strong><br>
-        <span style="background:#22c55e; width:20px; height:10px; display:inline-block;"></span> Terminée<br>
-        <span style="background:#f59e0b; width:20px; height:10px; display:inline-block;"></span> En cours<br>
-        <span style="background:#ef4444; width:20px; height:10px; display:inline-block;"></span> À faire<br>
-        <em>Les rues non assignées apparaissent en pointillés</em>
+                border: 2px solid #8B0000; border-radius: 10px; padding: 15px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.2)">
+        <h4 style="margin: 0 0 10px 0; color: #8B0000;">Légende</h4>
+        <div><span style="background:#22c55e; width:30px; height:3px; display:inline-block;"></span> Terminée</div>
+        <div><span style="background:#f59e0b; width:30px; height:3px; display:inline-block;"></span> En cours</div>
+        <div><span style="background:#ef4444; width:30px; height:3px; display:inline-block;"></span> À faire</div>
+        <hr style="margin: 8px 0;">
+        <div><span style="border-bottom: 3px dashed #666; width:30px; display:inline-block;"></span> Non assignée</div>
+        <div><span style="border-bottom: 3px solid #666; width:30px; display:inline-block;"></span> Assignée</div>
+        <hr style="margin: 8px 0;">
+        <small>
+            <strong>Total:</strong> {stats["total"]} voies<br>
+            <strong>Assignées:</strong> {stats["assigned"]}<br>
+            <strong>Non assignées:</strong> {stats["unassigned"]}
+        </small>
     </div>
     '''
     m.get_root().html.add_child(folium.Element(legend_html))

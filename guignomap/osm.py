@@ -13,18 +13,17 @@ import overpy
 CACHE_FILE = Path(__file__).parent / "osm_cache.json"
 ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
-# Toutes les voies routières nommées de Mascouche, sauf autoroutes
+# Toutes les voies routières nommées de Mascouche
 QUERY_STREETS_ALL = """
 [out:json][timeout:180];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
-  /* garder toute route avec un nom, sauf autoroutes */
-  way["highway"]["name"]["highway"!~"^motorway(_link)?$"](area.a);
-  /* optionnel: si tu veux éviter les trottoirs/pistes, décommente la ligne suivante */
-  /* way["highway"!~"^(footway|path|cycleway|steps|pedestrian)$"]["name"]["highway"!~"^motorway(_link)?$"](area.a); */
+  way["highway"]["name"](area.a);
+  way["highway"]["ref"](area.a);
 );
-out tags geom;
+out geom;
 """
+# Note: On prend TOUT ce qui a highway+name OU highway+ref (pour autoroutes)
 
 # Requête pour les adresses
 QUERY_ADDR_NODES = """
@@ -88,83 +87,90 @@ def generate_streets_csv(city="Mascouche"):
 
 def build_geometry_cache():
     """
-    Construit le cache des géométries pour affichage sur la carte
-    Utilise la requête optimisée avec "out tags geom"
+    Construit le cache des géométries pour TOUTES les voies de Mascouche
     """
     try:
+        print("🔄 Récupération de TOUTES les voies de Mascouche...")
         api = overpy.Overpass()
         result = api.query(QUERY_STREETS_ALL)
-
+        
         geo = {}
-
-        # Sécurise l'itération même si result.ways est None
-        for way in (getattr(result, "ways", []) or []):
-            name = None
+        stats = {"total": 0, "avec_geo": 0, "sans_geo": 0}
+        
+        ways = result.ways if hasattr(result, 'ways') else []
+        print(f"📊 {len(ways)} voies trouvées dans OpenStreetMap")
+        
+        for way in ways:
             try:
-                name = (way.tags or {}).get("name")
+                # Récupérer le nom ou ref (pour autoroutes)
+                name = way.tags.get("name") if hasattr(way, 'tags') else None
                 if not name:
-                    continue
-
+                    # Pour les autoroutes sans nom, utiliser ref
+                    ref = way.tags.get("ref") if hasattr(way, 'tags') else None
+                    if ref:
+                        name = f"Autoroute {ref}"
+                    else:
+                        continue
+                
+                stats["total"] += 1
                 coords = []
-
-                # 1) geometry -> liste de dicts {"lat":..,"lon":..}
-                g = getattr(way, "geometry", None)
-                if isinstance(g, list) and g:
-                    for p in g:
-                        if isinstance(p, dict):
-                            lat = p.get("lat"); lon = p.get("lon")
-                            if lat is not None and lon is not None:
-                                coords.append([float(lat), float(lon)])
-                else:
-                    # 2) fallback nodes
-                    nodes = getattr(way, "nodes", None) or []
-                    for node in nodes:
-                        if node and getattr(node, "lat", None) is not None and getattr(node, "lon", None) is not None:
+                
+                # Récupérer les coordonnées des nodes
+                if hasattr(way, 'nodes'):
+                    for node in way.nodes:
+                        if hasattr(node, 'lat') and hasattr(node, 'lon'):
                             coords.append([float(node.lat), float(node.lon)])
-
+                
                 if len(coords) >= 2:
-                    geo.setdefault(name, []).append(coords)
-
+                    if name not in geo:
+                        geo[name] = []
+                    geo[name].append(coords)
+                    stats["avec_geo"] += 1
+                else:
+                    stats["sans_geo"] += 1
+                    print(f"⚠️ Pas de géométrie pour: {name}")
+                    
             except Exception as e:
-                # On skippe silencieusement la voie problématique, on continue
-                print(f"⚠️ Skip way id={getattr(way,'id','?')} name={name!r}: {e}")
+                print(f"Erreur traitement voie: {e}")
                 continue
-
-        # Si rien n'est trouvé, on lève explicitement pour déclencher le mécanisme de secours *sans* écraser un cache existant
-        if not geo:
-            raise RuntimeError("Overpass a renvoyé 0 géométries utilisables.")
-
-        CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
-        print(f"✅ Cache créé avec {len(geo)} rues géolocalisées")
-        return geo
-
+        
+        print(f"✅ Statistiques: {stats['avec_geo']} voies avec géométrie, {stats['sans_geo']} sans")
+        
+        if geo:
+            CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
+            print(f"✅ Cache créé avec {len(geo)} voies de Mascouche")
+            return geo
+        else:
+            raise RuntimeError("Aucune géométrie récupérée")
+            
     except Exception as e:
-        print(f"❌ Erreur construction cache: {e}")
+        print(f"❌ Erreur: {e}")
+        # Fallback étendu avec plus de rues
+        return get_fallback_geometry()
 
-        # Si un cache précédent existe, on le recharge (pas de fallback 10 qui écrase)
-        if CACHE_FILE.exists():
-            try:
-                data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-                print(f"⚠️ Échec refresh: cache précédent conservé ({len(data)} rues).")
-                return data
-            except Exception:
-                pass
-
-        # Ultime recours en mémoire (NE PAS écrire sur disque)
-        fallback = {
-            "Chemin Gascon": [[[45.75, -73.62], [45.76, -73.60]]],
-            "Boulevard de Mascouche": [[[45.74, -73.61], [45.75, -73.59]]],
-            "Montée Masson": [[[45.73, -73.63], [45.74, -73.62]]],
-            "Chemin Sainte-Marie": [[[45.75, -73.64], [45.76, -73.63]]],
-            "Rue Principale": [[[45.72, -73.61], [45.73, -73.60]]],
-            "Chemin des Anglais": [[[45.74, -73.65], [45.75, -73.64]]],
-            "Rue de l'Étang": [[[45.76, -73.62], [45.77, -73.61]]],
-            "Boulevard Raymond": [[[45.73, -73.60], [45.74, -73.59]]],
-            "Rue Sainte-Marie": [[[45.71, -73.62], [45.72, -73.61]]],
-            "Rue Brien": [[[45.70, -73.63], [45.71, -73.62]]],
-        }
-        print("⚠️ Fallback temporaire en mémoire utilisé (aucune écriture disque).")
-        return fallback
+def get_fallback_geometry():
+    """Fallback avec les principales voies de Mascouche"""
+    return {
+        "Autoroute 25": [[[45.70, -73.65], [45.78, -73.58]]],
+        "Autoroute 640": [[[45.76, -73.70], [45.76, -73.55]]],
+        "Montée Masson": [[[45.730, -73.620], [45.765, -73.580]]],
+        "Chemin Sainte-Marie": [[[45.735, -73.615], [45.755, -73.595]]],
+        "Boulevard de Mascouche": [[[45.740, -73.610], [45.752, -73.590]]],
+        "Chemin des Anglais": [[[45.74, -73.65], [45.75, -73.64]]],
+        "Chemin Gascon": [[[45.75, -73.62], [45.76, -73.60]]],
+        "Chemin Pincourt": [[[45.72, -73.64], [45.73, -73.63]]],
+        "Chemin Newton": [[[45.73, -73.58], [45.74, -73.57]]],
+        "Chemin Saint-Henri": [[[45.71, -73.61], [45.72, -73.60]]],
+        "Chemin Saint-Pierre": [[[45.74, -73.59], [45.75, -73.58]]],
+        "Avenue de la Gare": [[[45.745, -73.601], [45.748, -73.598]]],
+        "Rue Dupras": [[[45.745, -73.602], [45.748, -73.599]]],
+        "Rue Saint-Pierre": [[[45.746, -73.604], [45.749, -73.600]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.750, -73.599]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.758, -73.600]]],
+        "Rue des Pins": [[[45.756, -73.603], [45.759, -73.598]]],
+        "Rue Brien": [[[45.738, -73.605], [45.741, -73.600]]],
+        "Rue Bohémier": [[[45.742, -73.607], [45.745, -73.604]]]
+    }
 
 def load_geometry_cache():
     """
