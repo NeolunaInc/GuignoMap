@@ -106,7 +106,9 @@ def build_geometry_cache():
             coords = []
             # 1) Priorité à la géométrie renvoyée par Overpass
             if hasattr(way, "geometry") and way.geometry:
-                coords = [[float(p["lat"]), float(p["lon"])] for p in way.geometry if "lat" in p and "lon" in p]
+                coords = [[float(p["lat"]), float(p["lon"])]
+                          for p in way.geometry
+                          if isinstance(p, dict) and "lat" in p and "lon" in p]
             # 2) Fallback si on a les nodes
             elif hasattr(way, "nodes") and way.nodes:
                 for node in way.nodes:
