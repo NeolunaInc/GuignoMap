@@ -107,13 +107,16 @@ def create_map(df, geo):
     # Créer la carte
     m = folium.Map(
         location=center,
-        zoom_start=12,  # Zoom pour voir toute la ville
+        zoom_start=13,  # Zoom optimisé pour voir toute la ville
         tiles="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
         attr='© OpenStreetMap France',
         control_scale=True,
         max_bounds=True,
         min_zoom=11,
-        max_zoom=18
+        max_zoom=18,
+        prefer_canvas=True,
+        zoom_control=True,
+        scrollWheelZoom=True
     )
     
     # Ajouter plusieurs couches de fond
