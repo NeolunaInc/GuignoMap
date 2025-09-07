@@ -96,43 +96,54 @@ def build_geometry_cache():
     try:
         api = overpy.Overpass()
         result = api.query(QUERY_STREETS_ALL)
-        
+
         geo = {}
-        skip_keywords = []  # on ne filtre plus
-        
-        for way in result.ways:
-            name = way.tags.get("name")
-            if not name:
+
+        # Sécurise l'itération même si result.ways est None
+        for way in (getattr(result, "ways", []) or []):
+            name = None
+            try:
+                name = (way.tags or {}).get("name")
+                if not name:
+                    continue
+
+                coords = []
+
+                # 1) geometry -> liste de dicts {"lat":..,"lon":..}
+                g = getattr(way, "geometry", None)
+                if isinstance(g, list) and g:
+                    for p in g:
+                        if isinstance(p, dict):
+                            lat = p.get("lat"); lon = p.get("lon")
+                            if lat is not None and lon is not None:
+                                coords.append([float(lat), float(lon)])
+                else:
+                    # 2) fallback nodes
+                    nodes = getattr(way, "nodes", None) or []
+                    for node in nodes:
+                        if node and getattr(node, "lat", None) is not None and getattr(node, "lon", None) is not None:
+                            coords.append([float(node.lat), float(node.lon)])
+
+                if len(coords) >= 2:
+                    geo.setdefault(name, []).append(coords)
+
+            except Exception as e:
+                # On skippe silencieusement la voie problématique, on continue
+                print(f"⚠️ Skip way id={getattr(way,'id','?')} name={name!r}: {e}")
                 continue
 
-            coords = []
-            # 1) Priorité à la géométrie renvoyée par Overpass
-            if hasattr(way, "geometry") and way.geometry:
-                coords = [
-                    [float(p["lat"]), float(p["lon"])]
-                    for p in way.geometry
-                    if isinstance(p, dict) and "lat" in p and "lon" in p
-                ]
-            # 2) Fallback si on a les nodes
-            elif hasattr(way, "nodes") and way.nodes:
-                for node in way.nodes:
-                    try:
-                        coords.append([float(node.lat), float(node.lon)])
-                    except Exception:
-                        continue
+        # Si rien n'est trouvé, on lève explicitement pour déclencher le mécanisme de secours *sans* écraser un cache existant
+        if not geo:
+            raise RuntimeError("Overpass a renvoyé 0 géométries utilisables.")
 
-            if len(coords) >= 2:
-                geo.setdefault(name, []).append(coords)
-
-        # Sauvegarder le cache
         CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
         print(f"✅ Cache créé avec {len(geo)} rues géolocalisées")
         return geo
-        
+
     except Exception as e:
         print(f"❌ Erreur construction cache: {e}")
 
-        # 1) Si un ancien cache existe, on le conserve
+        # Si un cache précédent existe, on le recharge (pas de fallback 10 qui écrase)
         if CACHE_FILE.exists():
             try:
                 data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
@@ -141,7 +152,7 @@ def build_geometry_cache():
             except Exception:
                 pass
 
-        # 2) Dernier recours: petit fallback en mémoire (NE PAS l'écrire sur disque)
+        # Ultime recours en mémoire (NE PAS écrire sur disque)
         fallback = {
             "Chemin Gascon": [[[45.75, -73.62], [45.76, -73.60]]],
             "Boulevard de Mascouche": [[[45.74, -73.61], [45.75, -73.59]]],
