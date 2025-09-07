@@ -270,7 +270,7 @@ def build_addresses_cache():
                 if street_name not in addresses:
                     addresses[street_name] = []
                 addresses[street_name].append({
-                    "number": house_number,
+                    "number": str(house_number),  # Forcer en string
                     "lat": float(node.lat),
                     "lon": float(node.lon),
                     "type": "node"
@@ -282,39 +282,64 @@ def build_addresses_cache():
             street = way.tags.get("addr:street")
             if not num or not street:
                 continue
+            
+            # Récupérer le centre du way
             lat = getattr(way, "center_lat", None)
             lon = getattr(way, "center_lon", None)
+            
+            # Fallback si center_lat/lon non disponibles
             if lat is None or lon is None:
-                # (fallback vraiment au cas où)
                 nodes = getattr(way, "nodes", []) or []
                 if nodes:
                     try:
-                        lats = [float(n.lat) for n in nodes if getattr(n, "lat", None) is not None]
-                        lons = [float(n.lon) for n in nodes if getattr(n, "lon", None) is not None]
-                        if lats and lons:
-                            lat = sum(lats)/len(lats); lon = sum(lons)/len(lons)
-                    except:
-                        pass
+                        valid_lats = []
+                        valid_lons = []
+                        for n in nodes:
+                            if hasattr(n, 'lat') and hasattr(n, 'lon'):
+                                if n.lat is not None and n.lon is not None:
+                                    valid_lats.append(float(n.lat))
+                                    valid_lons.append(float(n.lon))
+                        if valid_lats and valid_lons:
+                            lat = sum(valid_lats) / len(valid_lats)
+                            lon = sum(valid_lons) / len(valid_lons)
+                    except Exception as e:
+                        print(f"Erreur calcul centre pour way: {e}")
+                        continue
+            
             if lat is not None and lon is not None:
                 addresses.setdefault(street, []).append({
-                    "number": str(num), "lat": float(lat), "lon": float(lon), "type": "way"
+                    "number": str(num),
+                    "lat": float(lat),
+                    "lon": float(lon),
+                    "type": "way"
                 })
         
         # Trier les adresses par numéro pour chaque rue
         for street_name in addresses:
-            addresses[street_name].sort(key=lambda x: int(''.join(filter(str.isdigit, x["number"]))) if any(c.isdigit() for c in x["number"]) else 0)
+            try:
+                # Tri numérique intelligent
+                addresses[street_name].sort(
+                    key=lambda x: (
+                        int(''.join(filter(str.isdigit, x["number"]))) 
+                        if any(c.isdigit() for c in x["number"]) 
+                        else float('inf')
+                    )
+                )
+            except:
+                # Si le tri échoue, garder l'ordre original
+                pass
         
         # Sauvegarder le cache
         ADDR_CACHE_FILE.write_text(json.dumps(addresses, indent=2), encoding="utf-8")
         total_addresses = sum(len(addrs) for addrs in addresses.values())
         print(f"✅ Cache adresses créé: {len(addresses)} rues, {total_addresses} adresses")
-        return ADDR_CACHE_FILE
+        return addresses
         
     except Exception as e:
         print(f"❌ Erreur construction cache adresses: {e}")
         # Créer un cache vide en cas d'erreur
         ADDR_CACHE_FILE.write_text(json.dumps({}), encoding="utf-8")
-        return ADDR_CACHE_FILE
+        return {}
 
 def load_addresses_cache():
     """
