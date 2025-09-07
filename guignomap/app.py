@@ -116,6 +116,34 @@ def create_map(df, geo):
         max_zoom=18
     )
     
+    # Ajouter plusieurs couches de fond
+    folium.TileLayer(
+        tiles='https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+        attr='© OpenStreetMap France',
+        name='OSM France (Détaillé)',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    folium.TileLayer(
+        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        attr='© CARTO',
+        name='CARTO Voyager',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    folium.TileLayer(
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr='© Esri',
+        name='Esri WorldStreetMap',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    # Ajouter le contrôle des couches
+    folium.LayerControl().add_to(m)
+    
     # Définir les limites de la carte sur Mascouche
     m.fit_bounds([[bounds["south"], bounds["west"]], 
                   [bounds["north"], bounds["east"]]])
