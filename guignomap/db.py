@@ -215,31 +215,63 @@ def teams(conn):
 # ---------- Fonctions pour les rues ----------
 def list_streets(conn, team=None):
     """Liste les rues, optionnellement filtrées par équipe"""
-    if team:
-        query = """
-            SELECT 
-                s.name, s.sector, s.team, s.status,
-                COUNT(n.id) as notes,
-                COUNT(DISTINCT n.address_number) as addresses_with_notes
-            FROM streets s
-            LEFT JOIN notes n ON s.name = n.street_name
-            WHERE s.team = ?
-            GROUP BY s.name, s.sector, s.team, s.status
-            ORDER BY s.status DESC, s.name
-        """
-        return pd.read_sql_query(query, conn, params=(team,))
-    else:
-        query = """
-            SELECT 
-                s.name, s.sector, s.team, s.status,
-                COUNT(n.id) as notes,
-                COUNT(DISTINCT n.address_number) as addresses_with_notes
-            FROM streets s
-            LEFT JOIN notes n ON s.name = n.street_name
-            GROUP BY s.name, s.sector, s.team, s.status
-            ORDER BY s.team, s.status DESC, s.name
-        """
-        return pd.read_sql_query(query, conn)
+    try:
+        if team:
+            query = """
+                SELECT 
+                    s.name, 
+                    COALESCE(s.sector, '') as sector, 
+                    COALESCE(s.team, '') as team, 
+                    COALESCE(s.status, 'a_faire') as status,
+                    COUNT(n.id) as notes,
+                    COUNT(DISTINCT n.address_number) as addresses_with_notes
+                FROM streets s
+                LEFT JOIN notes n ON s.name = n.street_name
+                WHERE s.team = ?
+                GROUP BY s.name, s.sector, s.team, s.status
+                ORDER BY 
+                    CASE s.status 
+                        WHEN 'a_faire' THEN 1 
+                        WHEN 'en_cours' THEN 2 
+                        WHEN 'terminee' THEN 3 
+                    END, 
+                    s.name
+            """
+            df = pd.read_sql_query(query, conn, params=(team,))
+        else:
+            query = """
+                SELECT 
+                    s.name, 
+                    COALESCE(s.sector, '') as sector, 
+                    COALESCE(s.team, '') as team, 
+                    COALESCE(s.status, 'a_faire') as status,
+                    COUNT(n.id) as notes,
+                    COUNT(DISTINCT n.address_number) as addresses_with_notes
+                FROM streets s
+                LEFT JOIN notes n ON s.name = n.street_name
+                GROUP BY s.name, s.sector, s.team, s.status
+                ORDER BY 
+                    s.team, 
+                    CASE s.status 
+                        WHEN 'a_faire' THEN 1 
+                        WHEN 'en_cours' THEN 2 
+                        WHEN 'terminee' THEN 3 
+                    END, 
+                    s.name
+            """
+            df = pd.read_sql_query(query, conn)
+        
+        # S'assurer que toutes les colonnes existent
+        for col in ['name', 'sector', 'team', 'status', 'notes', 'addresses_with_notes']:
+            if col not in df.columns:
+                df[col] = '' if col in ['sector', 'team'] else ('a_faire' if col == 'status' else 0)
+        
+        return df
+        
+    except Exception as e:
+        print(f"Erreur list_streets: {e}")
+        # Retourner un DataFrame vide avec la structure attendue
+        return pd.DataFrame(columns=['name', 'sector', 'team', 'status', 'notes', 'addresses_with_notes'])
 
 def get_unassigned_streets(conn):
     """Récupère les rues non assignées"""
@@ -453,18 +485,44 @@ def import_addresses_from_cache(conn, cache):
         conn.execute("DELETE FROM addresses")
         
         imported_count = 0
+        skipped_count = 0
+        
         for street_name, addresses in cache.items():
-            for addr in addresses:
+            # Vérifier que la rue existe dans la DB
+            cursor = conn.execute("SELECT COUNT(*) FROM streets WHERE name = ?", (street_name,))
+            if cursor.fetchone()[0] == 0:
+                # Si la rue n'existe pas, la créer
                 conn.execute(
-                    """INSERT INTO addresses (street_name, house_number, latitude, longitude, osm_type) 
-                       VALUES (?, ?, ?, ?, ?)""",
-                    (street_name, addr["number"], addr["lat"], addr["lon"], addr["type"])
+                    "INSERT OR IGNORE INTO streets(name, sector, team, status) VALUES (?, '', '', 'a_faire')",
+                    (street_name,)
                 )
-                imported_count += 1
+                print(f"➕ Rue ajoutée: {street_name}")
+            
+            for addr in addresses:
+                try:
+                    # Validation des données
+                    number = str(addr.get("number", "")).strip()
+                    lat = addr.get("lat")
+                    lon = addr.get("lon")
+                    osm_type = addr.get("type", "unknown")
+                    
+                    if not number or lat is None or lon is None:
+                        skipped_count += 1
+                        continue
+                    
+                    conn.execute(
+                        """INSERT INTO addresses (street_name, house_number, latitude, longitude, osm_type) 
+                           VALUES (?, ?, ?, ?, ?)""",
+                        (street_name, number, float(lat), float(lon), osm_type)
+                    )
+                    imported_count += 1
+                except Exception as e:
+                    print(f"⚠️ Erreur import adresse {addr}: {e}")
+                    skipped_count += 1
         
         conn.commit()
-        log_activity(conn, None, "ADDRESSES_IMPORTED", f"{imported_count} adresses importées depuis OSM")
-        print(f"✅ {imported_count} adresses importées en base de données")
+        log_activity(conn, None, "ADDRESSES_IMPORTED", f"{imported_count} adresses importées, {skipped_count} ignorées")
+        print(f"✅ {imported_count} adresses importées en base de données ({skipped_count} ignorées)")
         return imported_count
         
     except Exception as e:
