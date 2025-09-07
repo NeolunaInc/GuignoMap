@@ -18,8 +18,8 @@ QUERY_STREETS_ALL = """
 [out:json][timeout:120];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
-  way["highway"~"^(primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
-  way["highway"~"^(primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
+  way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
+  way["highway"~"^(trunk_link|primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
 );
 out tags geom;
 """
