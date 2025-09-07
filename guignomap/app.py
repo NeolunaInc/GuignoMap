@@ -260,7 +260,7 @@ def page_benevole(conn, geo):
         with st.form("login_volunteer"):
             col1, col2 = st.columns(2)
             with col1:
-                team_id = st.text_input("Code d'équipe")
+                team_id = st.text_input("Identifiant d'équipe")
             with col2:
                 password = st.text_input("Mot de passe", type="password")
             
@@ -380,8 +380,8 @@ def page_superviseur(conn, geo):
         
         with st.expander("Créer une équipe"):
             with st.form("new_team", clear_on_submit=True):
-                new_id = st.text_input("Code")
-                new_name = st.text_input("Nom")
+                new_id = st.text_input("Identifiant")
+                new_name = st.text_input("Équipe")
                 new_pass = st.text_input("Mot de passe", type="password")
                 
                 if st.form_submit_button("Créer"):
