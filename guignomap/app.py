@@ -108,7 +108,8 @@ def create_map(df, geo):
     m = folium.Map(
         location=center,
         zoom_start=12,  # Zoom pour voir toute la ville
-        tiles="CartoDB positron",
+        tiles="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
+        attr='© OpenStreetMap France',
         control_scale=True,
         max_bounds=True,
         min_zoom=11,
