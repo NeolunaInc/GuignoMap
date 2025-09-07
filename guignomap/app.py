@@ -198,9 +198,9 @@ def create_map(df, geo):
         # Style: TOUJOURS pointillé si pas d'équipe
         has_team = bool(team)
         color = status_colors.get(status, '#ef4444')  # Rouge par défaut
-        opacity = 0.8 if has_team else 0.5
+        opacity = 0.9 if has_team else 0.7
         dash = None if has_team else '8,12'  # Pointillés si non assigné
-        weight = 6 if has_team else 4
+        weight = 7 if has_team else 5
         
         if has_team:
             stats["assigned"] += 1

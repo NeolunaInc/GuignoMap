@@ -5,12 +5,16 @@ Système de gestion de la collecte de denrées pour **Le Relais de Mascouche**.
 ## 🌟 Fonctionnalités
 
 - 🗺️ **Cartes interactives** avec géolocalisation complète des rues
+  - **Fonds de carte multiples** : OSM France, CARTO Voyager, Esri WorldStreetMap
+  - **Sélecteur de couches** pour changer de fond à la volée
+  - **Zoom optimisé** (13) avec contrôles molette et boutons
+  - **Rendu Canvas** pour performances améliorées
+  - **Visibilité renforcée** : lignes plus épaisses et opaques
   - Centrage automatique sur Mascouche avec limites géographiques
   - Couleurs par statut (rouge/orange/vert)
   - Affichage différencié : lignes pleines (assignées) / pointillées (non assignées)
   - Cache intelligent avec rechargement automatique
   - **Couverture maximale** : TOUTES les voies nommées + autoroutes (ref)
-  - Zoom adaptatif avec contrôles min/max
   - Marqueur centre-ville et légende statistique avancée
 - 👥 **Gestion d'équipes** avec authentification
 - 📍 **Suivi par adresse** avec notes détaillées et import OSM
@@ -278,6 +282,20 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - **Couverture** : Système d'inclusion universelle (name + ref)
 - **Robustesse** : Fallback à tous les niveaux avec validation
 
+## 📝 Changelog v3.2
+
+### 🗺️ Améliorations cartographiques majeures
+- **Fonds multiples** : OSM France (détaillé), CARTO Voyager (moderne), Esri WorldStreetMap (professionnel)
+- **Sélecteur de couches** : Contrôle dynamique pour changer de fond à la volée
+- **Zoom optimisé** : zoom_start=13 pour meilleur cadrage de Mascouche
+- **Performances** : prefer_canvas=True pour rendu fluide + contrôles complets
+- **Visibilité** : weight 7/5 et opacity 0.9/0.7 pour meilleure lisibilité
+- **Navigation** : zoom_control et scrollWheelZoom activés
+
+### 🎯 Interface utilisateur
+- **Terminologie** : "Code" → "Identifiant", "Nom" → "Équipe" pour clarté
+- **UX** : Amélioration compréhension des champs par les utilisateurs
+
 ## 📝 Changelog v3.1
 
 ### 🔧 Corrections critiques
@@ -299,4 +317,4 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 Développé pour **Le Relais de Mascouche** - Collecte de denrées 2025
 
 ---
-*Version 3.1 - Corrections critiques + couverture universelle OSM*
+*Version 3.2 - Cartes multi-fonds + optimisations UX*
