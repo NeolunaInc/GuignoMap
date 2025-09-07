@@ -1,0 +1,92 @@
+# ===============================================
+# GITIGNORE POUR GUIGNO-MAP
+# ===============================================
+
+# ----------------------------------------
+# ENVIRONNEMENTS PYTHON
+# ----------------------------------------
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ----------------------------------------
+# BASES DE DONNÉES
+# ----------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+guigno_map.db
+
+# ----------------------------------------
+# CACHES & DONNÉES TEMPORAIRES
+# ----------------------------------------
+osm_cache.json
+*.cache
+*.tmp
+.DS_Store
+Thumbs.db
+
+# ----------------------------------------
+# LOGS & EXPORTS
+# ----------------------------------------
+*.log
+export_*.txt
+rapport_*.csv
+
+# ----------------------------------------
+# VS CODE & ÉDITEURS
+# ----------------------------------------
+.vscode/
+*.swp
+*.swo
+*~
+
+# ----------------------------------------
+# SYSTÈME WINDOWS/LINUX
+# ----------------------------------------
+*.Zone.Identifier
+.Trash-*
+Desktop.ini
+
+# ----------------------------------------
+# DÉPENDANCES NODE (si ajoutées plus tard)
+# ----------------------------------------
+node_modules/
+npm-debug.log*
+
+# ----------------------------------------
+# STREAMLIT
+# ----------------------------------------
+.streamlit/secrets.toml
+
+# ----------------------------------------
+# DONNÉES SENSIBLES
+# ----------------------------------------
+*.key
+*.pem
+.env
+config.ini
+
+# ----------------------------------------
+# FICHIERS DE SAUVEGARDE
+# ----------------------------------------
+*.bak
+*.backup
+*.save
+*~
+
+# ----------------------------------------
+# KEEP THESE FILES (exceptions)
+# ----------------------------------------
+!.streamlit/config.toml
+!guignomap/assets/
+!requirements.txt
+!README.md

@@ -1,0 +1,9 @@
+[theme]
+base="dark"
+primaryColor="#A9CF3B"           # vert Relais (approx)
+backgroundColor="#0F1318"
+secondaryBackgroundColor="#1A1F26"
+textColor="#F2F3F5"
+font="sans serif"
+[client]
+toolbarMode="minimal"
