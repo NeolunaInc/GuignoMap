@@ -4,6 +4,9 @@ import hashlib
 from datetime import datetime
 import json
 from pathlib import Path
+import os
+import secrets
+import string
 
 # Schéma amélioré de la base de données
 SCHEMA = """
@@ -84,7 +87,8 @@ def init_db(conn):
         # Créer un compte admin par défaut s'il n'existe pas
         cursor = conn.execute("SELECT COUNT(*) FROM teams WHERE id = 'ADMIN'")
         if cursor.fetchone()[0] == 0:
-            create_team(conn, 'ADMIN', 'Superviseur', 'admin123')
+            pwd = os.getenv("GM_ADMIN_PWD", "RELAIS2025")  # Par défaut RELAIS2025
+            create_team(conn, 'ADMIN', 'Superviseur', pwd)
         
         # AUTO-IMPORT : Si aucune rue n'existe, importer automatiquement depuis OSM
         cursor = conn.execute("SELECT COUNT(*) FROM streets")

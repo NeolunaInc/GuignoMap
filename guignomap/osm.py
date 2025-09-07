@@ -28,13 +28,13 @@ out tags geom;
 
 # Requête pour les adresses
 QUERY_ADDR_NODES = """
-[out:json][timeout:120];
+[out:json][timeout:180];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
   node["addr:housenumber"]["addr:street"](area.a);
   way["addr:housenumber"]["addr:street"](area.a);
 );
-out tags;
+out tags center;
 """
 
 def generate_streets_csv(city="Mascouche"):
@@ -46,18 +46,16 @@ def generate_streets_csv(city="Mascouche"):
         api = overpy.Overpass()
         result = api.query(QUERY_STREETS_ALL)
         
-        # Filtrer les rues indésirables
-        skip_keywords = []  # on ne filtre plus
         streets = []
-        
         for way in result.ways:
             name = way.tags.get("name")
-            if name:
-                # Ignorer les rues trop petites (moins de 3 nœuds)
-                if hasattr(way, 'nodes') and len(way.nodes) >= 3:
-                    streets.append(name)
-        
-        # Éliminer les doublons et trier
+            if not name:
+                continue
+            g = getattr(way, "geometry", None)
+            # garder si on a une vraie géométrie (>= 2 points)
+            if isinstance(g, list) and len(g) >= 2:
+                streets.append(name)
+
         streets = sorted(set(streets))
         
         # Assigner automatiquement des secteurs basés sur les patterns de noms
@@ -280,28 +278,27 @@ def build_addresses_cache():
         
         # Traiter les ways avec adresses
         for way in result.ways:
-            house_number = way.tags.get("addr:housenumber")
-            street_name = way.tags.get("addr:street")
-            
-            if house_number and street_name:
-                # Calculer le centroïde approximatif du way
-                if hasattr(way, 'nodes') and way.nodes:
+            num = way.tags.get("addr:housenumber")
+            street = way.tags.get("addr:street")
+            if not num or not street:
+                continue
+            lat = getattr(way, "center_lat", None)
+            lon = getattr(way, "center_lon", None)
+            if lat is None or lon is None:
+                # (fallback vraiment au cas où)
+                nodes = getattr(way, "nodes", []) or []
+                if nodes:
                     try:
-                        lats = [float(node.lat) for node in way.nodes]
-                        lons = [float(node.lon) for node in way.nodes]
-                        center_lat = sum(lats) / len(lats)
-                        center_lon = sum(lons) / len(lons)
-                        
-                        if street_name not in addresses:
-                            addresses[street_name] = []
-                        addresses[street_name].append({
-                            "number": house_number,
-                            "lat": center_lat,
-                            "lon": center_lon,
-                            "type": "way"
-                        })
+                        lats = [float(n.lat) for n in nodes if getattr(n, "lat", None) is not None]
+                        lons = [float(n.lon) for n in nodes if getattr(n, "lon", None) is not None]
+                        if lats and lons:
+                            lat = sum(lats)/len(lats); lon = sum(lons)/len(lons)
                     except:
-                        continue
+                        pass
+            if lat is not None and lon is not None:
+                addresses.setdefault(street, []).append({
+                    "number": str(num), "lat": float(lat), "lon": float(lon), "type": "way"
+                })
         
         # Trier les adresses par numéro pour chaque rue
         for street_name in addresses:
