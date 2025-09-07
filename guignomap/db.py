@@ -47,11 +47,25 @@ CREATE TABLE IF NOT EXISTS activity_log (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table des adresses OSM
+CREATE TABLE IF NOT EXISTS addresses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    street_name TEXT NOT NULL,
+    house_number TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    osm_type TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (street_name) REFERENCES streets(name)
+);
+
 -- Index pour améliorer les performances
 CREATE INDEX IF NOT EXISTS idx_streets_team ON streets(team);
 CREATE INDEX IF NOT EXISTS idx_streets_status ON streets(status);
 CREATE INDEX IF NOT EXISTS idx_notes_street ON notes(street_name);
 CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_addresses_street ON addresses(street_name);
+CREATE INDEX IF NOT EXISTS idx_addresses_number ON addresses(house_number);
 """
 
 def get_conn(db_path):
@@ -421,3 +435,72 @@ def export_notes_csv(conn):
     """
     df = pd.read_sql_query(query, conn)
     return df.to_csv(index=False).encode('utf-8')
+
+# ========================================
+# NOUVELLES FONCTIONS POUR LES ADRESSES
+# ========================================
+
+def import_addresses_from_cache(conn, cache):
+    """
+    Importe les adresses depuis le cache OSM vers la base de données
+    """
+    try:
+        # Vider la table existante
+        conn.execute("DELETE FROM addresses")
+        
+        imported_count = 0
+        for street_name, addresses in cache.items():
+            for addr in addresses:
+                conn.execute(
+                    """INSERT INTO addresses (street_name, house_number, latitude, longitude, osm_type) 
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (street_name, addr["number"], addr["lat"], addr["lon"], addr["type"])
+                )
+                imported_count += 1
+        
+        conn.commit()
+        log_activity(conn, None, "ADDRESSES_IMPORTED", f"{imported_count} adresses importées depuis OSM")
+        print(f"✅ {imported_count} adresses importées en base de données")
+        return imported_count
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"❌ Erreur import adresses: {e}")
+        return 0
+
+def get_addresses_for_street(conn, street_name):
+    """
+    Récupère toutes les adresses d'une rue depuis la base de données
+    """
+    query = """
+        SELECT 
+            house_number,
+            latitude,
+            longitude,
+            osm_type,
+            created_at
+        FROM addresses
+        WHERE street_name = ?
+        ORDER BY CAST(house_number AS INTEGER)
+    """
+    return pd.read_sql_query(query, conn, params=(street_name,))
+
+def get_addresses_stats(conn):
+    """
+    Récupère les statistiques des adresses
+    """
+    cursor = conn.execute("""
+        SELECT 
+            COUNT(DISTINCT street_name) as streets_with_addresses,
+            COUNT(*) as total_addresses,
+            COUNT(DISTINCT CASE WHEN osm_type = 'node' THEN id END) as node_addresses,
+            COUNT(DISTINCT CASE WHEN osm_type = 'way' THEN id END) as way_addresses
+        FROM addresses
+    """)
+    row = cursor.fetchone()
+    return {
+        "streets_with_addresses": row[0] or 0,
+        "total_addresses": row[1] or 0,
+        "node_addresses": row[2] or 0,
+        "way_addresses": row[3] or 0
+    }

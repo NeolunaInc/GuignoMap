@@ -11,15 +11,28 @@ import overpy
 
 # Configuration
 CACHE_FILE = Path(__file__).parent / "osm_cache.json"
+ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
-# Requête OSM optimisée - récupère SEULEMENT les rues principales
-QUERY_STREETS_FILTERED = """
-[out:json][timeout:60];
+# Requête OSM étendue - récupère TOUTES les rues nommées
+QUERY_STREETS_ALL = """
+[out:json][timeout:120];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
-  way["highway"~"^(primary|secondary|tertiary|residential)$"]["name"](area.a);
+  way["highway"~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
+  way["highway"~"^(motorway_link|trunk_link|primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
 );
 out tags geom;
+"""
+
+# Requête pour les adresses
+QUERY_ADDR_NODES = """
+[out:json][timeout:120];
+area["name"="Mascouche"]["boundary"="administrative"]->.a;
+(
+  node["addr:housenumber"]["addr:street"](area.a);
+  way["addr:housenumber"]["addr:street"](area.a);
+);
+out tags;
 """
 
 def generate_streets_csv(city="Mascouche"):
@@ -29,7 +42,7 @@ def generate_streets_csv(city="Mascouche"):
     """
     try:
         api = overpy.Overpass()
-        result = api.query(QUERY_STREETS_FILTERED)
+        result = api.query(QUERY_STREETS_ALL)
         
         # Filtrer les rues indésirables
         skip_keywords = ["privé", "private", "allée", "impasse", "accès", "service"]
@@ -76,11 +89,11 @@ def generate_streets_csv(city="Mascouche"):
 def build_geometry_cache():
     """
     Construit le cache des géométries pour affichage sur la carte
-    Utilise la même requête filtrée pour cohérence
+    Utilise la nouvelle requête étendue pour cohérence
     """
     try:
         api = overpy.Overpass()
-        result = api.query(QUERY_STREETS_FILTERED)
+        result = api.query(QUERY_STREETS_ALL)
         
         geo = {}
         skip_keywords = ["privé", "private", "allée", "impasse", "accès", "service"]
@@ -92,14 +105,23 @@ def build_geometry_cache():
             if not name or any(skip in name.lower() for skip in skip_keywords):
                 continue
             
-            # Récupérer les coordonnées
+            # Récupérer les coordonnées - geometry d'abord, puis fallback nodes
             coords = []
-            if hasattr(way, 'nodes'):
-                for node in way.nodes:
-                    try:
-                        coords.append([float(node.lat), float(node.lon)])
-                    except:
-                        continue
+            try:
+                # Méthode 1 : via way.geometry (liste de dicts {"lat", "lon"})
+                if hasattr(way, 'geometry') and way.geometry:
+                    coords = [[float(point['lat']), float(point['lon'])] for point in way.geometry]
+                else:
+                    # Fallback : via way.nodes
+                    if hasattr(way, 'nodes'):
+                        for node in way.nodes:
+                            try:
+                                coords.append([float(node.lat), float(node.lon)])
+                            except:
+                                continue
+            except Exception as e:
+                print(f"⚠️ Erreur coords pour {name}: {e}")
+                continue
             
             # Ajouter seulement si on a au moins 2 points
             if len(coords) >= 2:
@@ -197,3 +219,92 @@ def test_osm_connection():
     except:
         print("❌ Connexion OSM échouée")
         return False
+
+# ========================================
+# NOUVELLES FONCTIONS POUR LES ADRESSES
+# ========================================
+
+def build_addresses_cache():
+    """
+    Construit le cache des adresses OSM pour Mascouche
+    Récupère addr:housenumber + addr:street depuis OSM
+    """
+    try:
+        api = overpy.Overpass()
+        result = api.query(QUERY_ADDR_NODES)
+        
+        addresses = {}
+        
+        # Traiter les nodes avec adresses
+        for node in result.nodes:
+            house_number = node.tags.get("addr:housenumber")
+            street_name = node.tags.get("addr:street")
+            
+            if house_number and street_name:
+                if street_name not in addresses:
+                    addresses[street_name] = []
+                addresses[street_name].append({
+                    "number": house_number,
+                    "lat": float(node.lat),
+                    "lon": float(node.lon),
+                    "type": "node"
+                })
+        
+        # Traiter les ways avec adresses
+        for way in result.ways:
+            house_number = way.tags.get("addr:housenumber")
+            street_name = way.tags.get("addr:street")
+            
+            if house_number and street_name:
+                # Calculer le centroïde approximatif du way
+                if hasattr(way, 'nodes') and way.nodes:
+                    try:
+                        lats = [float(node.lat) for node in way.nodes]
+                        lons = [float(node.lon) for node in way.nodes]
+                        center_lat = sum(lats) / len(lats)
+                        center_lon = sum(lons) / len(lons)
+                        
+                        if street_name not in addresses:
+                            addresses[street_name] = []
+                        addresses[street_name].append({
+                            "number": house_number,
+                            "lat": center_lat,
+                            "lon": center_lon,
+                            "type": "way"
+                        })
+                    except:
+                        continue
+        
+        # Trier les adresses par numéro pour chaque rue
+        for street_name in addresses:
+            addresses[street_name].sort(key=lambda x: int(''.join(filter(str.isdigit, x["number"]))) if any(c.isdigit() for c in x["number"]) else 0)
+        
+        # Sauvegarder le cache
+        ADDR_CACHE_FILE.write_text(json.dumps(addresses, indent=2), encoding="utf-8")
+        total_addresses = sum(len(addrs) for addrs in addresses.values())
+        print(f"✅ Cache adresses créé: {len(addresses)} rues, {total_addresses} adresses")
+        return ADDR_CACHE_FILE
+        
+    except Exception as e:
+        print(f"❌ Erreur construction cache adresses: {e}")
+        # Créer un cache vide en cas d'erreur
+        ADDR_CACHE_FILE.write_text(json.dumps({}), encoding="utf-8")
+        return ADDR_CACHE_FILE
+
+def load_addresses_cache():
+    """
+    Charge le cache d'adresses depuis le fichier JSON
+    """
+    if not ADDR_CACHE_FILE.exists():
+        print("⚠️ Cache adresses non trouvé")
+        return {}
+    
+    try:
+        with open(ADDR_CACHE_FILE, 'r', encoding='utf-8') as f:
+            cache = json.load(f)
+            total_addresses = sum(len(addrs) for addrs in cache.values())
+            print(f"✅ Cache adresses chargé: {len(cache)} rues, {total_addresses} adresses")
+            return cache
+    except Exception as e:
+        print(f"❌ Erreur chargement cache adresses: {e}")
+        return {}

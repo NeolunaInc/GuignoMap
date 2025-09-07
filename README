@@ -1,1 +1,37 @@
 echo "Système de gestion de la collecte de denrées pour Le Relais de Mascouche." >> README.md
+
+
+🚀 Workflow futur pour vos modifications :
+Maintenant que tout est configuré, voici votre workflow quotidien :
+# 1. Modifier vos fichiers dans VS Code
+# (comme vous venez de faire avec app.py, osm.py, etc.)
+
+# 2. Voir ce qui a changé
+git status
+
+# 3. Ajouter les modifications
+git add .
+# ou spécifiquement : git add guignomap/app.py
+
+# 4. Commiter avec un message
+git commit -m "🔧 Description de vos changements"
+
+# 5. Push vers GitHub (maintenant ça marche !)
+git push
+
+🔗 Votre projet est maintenant accessible sur :
+https://github.com/NeolunaInc/GuignoMap
+
+📋 Commandes utiles pour la suite :
+# Voir l'historique
+git log --oneline
+
+# Voir les branches
+git branch -a
+
+# Synchroniser avec GitHub si quelqu'un d'autre contribue
+git pull
+
+# Voir le statut
+git status
+

@@ -14,7 +14,7 @@ from streamlit_folium import st_folium
 
 # Import des modules locaux
 import db
-from osm import build_geometry_cache, load_geometry_cache
+from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache
 
 # Configuration des chemins
 DB_PATH = Path(__file__).parent / "guigno_map.db"
@@ -110,8 +110,9 @@ def create_map(df, geo):
         st.warning("Aucune donnée géométrique disponible")
         return m
     
-    # Créer un dictionnaire pour lookup rapide
-    street_info = {row['name']: row for _, row in df.iterrows()}
+    # ⬇️ CHANGEMENT 1 : dict(str)->dict pour éviter les Series
+    # (si plusieurs lignes portent le même 'name', la dernière gagne)
+    street_info = df.set_index('name').to_dict(orient='index')
     
     # Couleurs par statut
     status_colors = {
@@ -123,14 +124,32 @@ def create_map(df, geo):
     # Ajouter les rues
     for name, paths in geo.items():
         info = street_info.get(name)
-        if not info:
+        
+        # ⬇️ CHANGEMENT 2 : test explicite au lieu de "if not info"
+        if info is None:
             continue
         
-        # Déterminer la couleur
-        status = info.get('status', 'a_faire')
-        team = info.get('team', '')
+        # -------------------------
+        # Normalisation des champs
+        # -------------------------
+        status = info.get('status')
+        # fallback si None/NaN/"" → 'a_faire'
+        if status is None or pd.isna(status) or (isinstance(status, str) and status.strip() == ""):
+            status = 'a_faire'
         
-        if not team:
+        team = info.get('team')
+        no_team = (
+            team is None or
+            (isinstance(team, str) and team.strip() == "") or
+            pd.isna(team)
+        )
+        
+        notes = info.get('notes')
+        if notes is None or (isinstance(notes, float) and pd.isna(notes)):
+            notes = 0
+        
+        # Déterminer la couleur
+        if no_team:
             color = '#9ca3af'  # Gris pour non assignée
             opacity = 0.5
         else:
@@ -141,8 +160,8 @@ def create_map(df, geo):
         tooltip_html = f"""
         <strong>{name}</strong><br>
         Statut: {status.replace('_', ' ').title()}<br>
-        Équipe: {team or 'Non assignée'}<br>
-        Notes: {info.get('notes', 0)}
+        Équipe: {team if not no_team else 'Non assignée'}<br>
+        Notes: {notes}
         """
         
         # Ajouter chaque segment
@@ -171,6 +190,7 @@ def create_map(df, geo):
     m.get_root().html.add_child(folium.Element(legend_html))
     
     return m
+
 
 # ============================================
 # PAGES
@@ -386,11 +406,20 @@ def page_superviseur(conn, geo):
                 use_container_width=True
             )
         
-        # Rafraîchir le cache
+        # Rafraîchir le cache géométries
         if st.button("🔄 Rafraîchir cache OSM", use_container_width=True):
             with st.spinner("Construction du cache..."):
                 build_geometry_cache()
                 st.success("Cache mis à jour!")
+                st.rerun()
+        
+        # Rafraîchir le cache adresses
+        if st.button("📍 Rafraîchir adresses (OSM)", use_container_width=True):
+            with st.spinner("Construction du cache adresses..."):
+                build_addresses_cache()
+                addr_cache = load_addresses_cache()
+                count = db.import_addresses_from_cache(conn, addr_cache)
+                st.success(f"✅ {count} adresses importées depuis OSM!")
                 st.rerun()
 
 # ============================================
