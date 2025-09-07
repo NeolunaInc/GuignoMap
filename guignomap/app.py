@@ -110,9 +110,15 @@ def create_map(df, geo):
         st.warning("Aucune donnée géométrique disponible")
         return m
     
-    # ⬇️ CHANGEMENT 1 : dict(str)->dict pour éviter les Series
-    # (si plusieurs lignes portent le même 'name', la dernière gagne)
-    street_info = df.set_index('name').to_dict(orient='index')
+    # ⬇️ CHANGEMENT 1 : Construction robuste du lookup avec valeurs par défaut normalisées
+    street_info = {}
+    for _, row in df.iterrows():
+        name = str(row.get('name'))
+        street_info[name] = {
+            'status': (row.get('status') if pd.notna(row.get('status')) else 'a_faire'),
+            'team': (row.get('team') if pd.notna(row.get('team')) else ''),
+            'notes': (row.get('notes') if 'notes' in row and pd.notna(row.get('notes')) else '')
+        }
     
     # Couleurs par statut
     status_colors = {
@@ -123,42 +129,29 @@ def create_map(df, geo):
     
     # Ajouter les rues
     for name, paths in geo.items():
+        # Cherche l'info DB; si absente → défaut "a_faire" sans équipe
         info = street_info.get(name)
-        
-        # ⬇️ CHANGEMENT 2 : test explicite au lieu de "if not info"
         if info is None:
-            continue
+            info = {'status': 'a_faire', 'team': '', 'notes': ''}
         
-        # -------------------------
-        # Normalisation des champs
-        # -------------------------
-        status = info.get('status')
-        # fallback si None/NaN/"" → 'a_faire'
-        if status is None or pd.isna(status) or (isinstance(status, str) and status.strip() == ""):
-            status = 'a_faire'
+        status = info.get('status', 'a_faire')
+        team = info.get('team', '')
+        if team is None or (isinstance(team, float) and pd.isna(team)):
+            team = ''
         
-        team = info.get('team')
-        no_team = (
-            team is None or
-            (isinstance(team, str) and team.strip() == "") or
-            pd.isna(team)
-        )
-        
-        notes = info.get('notes')
-        if notes is None or (isinstance(notes, float) and pd.isna(notes)):
-            notes = 0
+        notes = info.get('notes', '')
         
         # Déterminer la couleur et style
         # nouveau : couleur = statut; si non assignée → pointillés + légère transparence
         color = status_colors.get(status, '#ef4444')
-        opacity = 0.8 if not no_team else 0.6
-        dash = None if not no_team else '5,7'
+        opacity = 0.8 if team else 0.6
+        dash = None if team else '5,7'
         
         # Tooltip
         tooltip_html = f"""
         <strong>{name}</strong><br>
         Statut: {status.replace('_', ' ').title()}<br>
-        Équipe: {team if not no_team else 'Non assignée'}<br>
+        Équipe: {team if team else 'Non assignée'}<br>
         Notes: {notes}
         """
         
