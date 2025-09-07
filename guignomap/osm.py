@@ -26,6 +26,17 @@ out body;
 out skel qt;             /* nœuds = lat/lon disponibles */
 """
 
+# Requête améliorée pour le cache géométrique (avec coordonnées directes)
+QUERY_STREETS_FILTERED = """
+[out:json][timeout:120];
+area["name"="Mascouche"]["boundary"="administrative"]->.a;
+(
+  way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"]["name"](area.a);
+  way["highway"~"^(trunk_link|primary_link|secondary_link|tertiary_link)$"]["name"](area.a);
+);
+out tags geom;
+"""
+
 # Requête pour les adresses
 QUERY_ADDR_NODES = """
 [out:json][timeout:120];
@@ -91,11 +102,11 @@ def generate_streets_csv(city="Mascouche"):
 def build_geometry_cache():
     """
     Construit le cache des géométries pour affichage sur la carte
-    Utilise la nouvelle requête étendue pour cohérence
+    Utilise la nouvelle requête avec "out tags geom" pour plus de fiabilité
     """
     try:
         api = overpy.Overpass()
-        result = api.query(QUERY_STREETS_ALL)
+        result = api.query(QUERY_STREETS_FILTERED)
         
         geo = {}
         skip_keywords = ["privé", "private", "allée", "impasse", "accès", "service"]
@@ -107,30 +118,25 @@ def build_geometry_cache():
             if not name or any(skip in name.lower() for skip in skip_keywords):
                 continue
             
-            # Récupérer les coordonnées du way, en privilégiant les nœuds (plus fiable ici)
+            # Récupérer les coordonnées
             coords = []
+            # 1) priorité à 'geometry' (présent grâce à "out tags geom")
+            if hasattr(way, "geometry") and way.geometry:
+                coords = [
+                    [float(p["lat"]), float(p["lon"])]
+                    for p in way.geometry
+                    if isinstance(p, dict) and "lat" in p and "lon" in p
+                ]
+            # 2) repli sur 'nodes'
+            elif hasattr(way, "nodes") and way.nodes:
+                for node in way.nodes:
+                    try:
+                        coords.append([float(node.lat), float(node.lon)])
+                    except Exception:
+                        continue
 
-            # 1) Nœuds (après "out body; >; out skel qt" ce sont des Node avec lat/lon)
-            for node in (getattr(way, "nodes", None) or []):
-                try:
-                    coords.append([float(node.lat), float(node.lon)])
-                except Exception:
-                    continue
-
-            # 2) Fallback éventuel sur 'geometry' (si présent)
-            if not coords:
-                geom = getattr(way, "geometry", None)
-                if geom:
-                    for p in geom or []:
-                        try:
-                            coords.append([float(p.get("lat")), float(p.get("lon"))])
-                        except Exception:
-                            continue
-
-            # 3) Si toujours rien, on ignore proprement ce tronçon
+            # Si pas assez de coordonnées, on ignore ce tronçon
             if len(coords) < 2:
-                # log facultatif
-                # print(f"⚠️ Pas de coords exploitables pour {name}")
                 continue
             
             # Ajouter les coordonnées au cache

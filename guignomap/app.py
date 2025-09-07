@@ -14,7 +14,7 @@ from streamlit_folium import st_folium
 
 # Import des modules locaux
 import db
-from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache
+from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
 
 # Configuration des chemins
 DB_PATH = Path(__file__).parent / "guigno_map.db"
@@ -407,10 +407,11 @@ def page_superviseur(conn, geo):
         
         # Rafraîchir le cache géométries
         if st.button("🔄 Rafraîchir cache OSM", use_container_width=True):
-            with st.spinner("Construction du cache..."):
-                build_geometry_cache()
-                st.success("Cache mis à jour!")
-                st.rerun()
+            with st.spinner("Construction du cache…"):
+                build_geometry_cache()   # reconstruit le fichier osm_cache.json
+                st.cache_data.clear()    # purge le cache Streamlit
+            st.success("Cache mis à jour !")
+            st.rerun()
         
         # Rafraîchir le cache adresses
         if st.button("📍 Rafraîchir adresses (OSM)", use_container_width=True):
@@ -439,11 +440,12 @@ def main():
     db.init_db(conn)
     
     # Cache géométrique
-    @st.cache_data(ttl=3600)
-    def get_geo():
+    @st.cache_data(ttl=None)
+    def get_geo(_sig):
         return load_geometry_cache()
-    
-    geo = get_geo()
+
+    sig = int(CACHE_FILE.stat().st_mtime_ns) if CACHE_FILE.exists() else 0
+    geo = get_geo(sig)
     
     # Sidebar
     with st.sidebar:
