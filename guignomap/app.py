@@ -562,69 +562,163 @@ def page_accueil(conn, geo):
         st_folium(m, height=600, width=None, returned_objects=[])
 
 def page_benevole(conn, geo):
-    """Interface bénévole"""
-    st.header("👥 Espace Bénévole")
+    """Interface bénévole moderne avec vue limitée"""
     
-    # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
         render_login_card("benevole", conn)
         return
     
-    # Interface connectée
     team_id = st.session_state.auth["team_id"]
-    st.subheader(f"Équipe: {team_id}")
     
+    # Header d'équipe personnalisé
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #165b33, #c41e3a);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
+    ">
+        <h2 style="color: white; margin: 0;">🎅 Équipe {team_id}</h2>
+        <p style="color: #FFD700; margin: 0.5rem 0 0 0;">Bonne collecte!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Stats de l'équipe
     df_team = db.list_streets(conn, team=team_id)
-    
     if df_team.empty:
-        st.info("Aucune rue assignée à votre équipe.")
+        st.warning("Aucune rue assignée. Contactez votre superviseur.")
         return
     
-    # Sélection de la rue
-    selected_street = st.selectbox(
-        "Sélectionner une rue",
-        df_team['name'].tolist()
-    )
+    done = len(df_team[df_team['status'] == 'terminee'])
+    total = len(df_team)
+    progress = (done / total * 100) if total > 0 else 0
     
-    if selected_street:
-        st.markdown("---")
-        st.markdown(f"#### 📍 {selected_street}")
+    # Mini dashboard équipe
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("📍 Vos rues", total)
+    with col2:
+        st.metric("✅ Complétées", done)
+    with col3:
+        st.metric("🎯 Progression", f"{progress:.0f}%")
+    
+    # Barre de progression
+    st.progress(progress / 100)
+    
+    # Tabs modernisés
+    tab1, tab2, tab3 = st.tabs(["🗺️ Ma carte", "📝 Collecte", "📊 Historique"])
+    
+    with tab1:
+        # CARTE LIMITÉE AUX RUES DE L'ÉQUIPE
+        st.markdown("### Vos rues assignées")
         
-        # Formulaire pour notes
-        with st.form(f"note_{selected_street}", clear_on_submit=True):
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                address = st.text_input("N° civique")
-            with col2:
-                comment = st.text_area("Commentaire", height=100)
-            
-            if st.form_submit_button("Ajouter la note"):
-                if address and comment:
-                    db.add_note_for_address(conn, selected_street, team_id, address, comment)
-                    st.success("Note ajoutée!")
-                    st.rerun()
-        
-        # Changement de statut
-        current_status = df_team[df_team['name'] == selected_street]['status'].iloc[0]
-        
-        new_status = st.radio(
-            "Statut de la rue",
-            ['a_faire', 'en_cours', 'terminee'],
-            index=['a_faire', 'en_cours', 'terminee'].index(current_status),
-            format_func=lambda x: x.replace('_', ' ').title(),
-            horizontal=True
+        # Créer une carte avec SEULEMENT les rues de l'équipe
+        m = folium.Map(
+            location=[45.7475, -73.6005],
+            zoom_start=14,
+            tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+            attr='© CARTO'
         )
         
-        if st.button("Mettre à jour le statut"):
-            db.set_status(conn, selected_street, new_status)
-            st.success("Statut mis à jour!")
-            st.rerun()
+        # Filtrer geo pour n'afficher QUE les rues de l'équipe
+        team_streets = df_team['name'].tolist()
         
-        # Notes existantes
-        notes = db.get_street_addresses_with_notes(conn, selected_street)
-        if not notes.empty:
-            st.markdown("#### Notes existantes")
-            st.dataframe(notes[['address_number', 'comment', 'created_at']], use_container_width=True)
+        for street_name in team_streets:
+            if street_name in geo:
+                status = df_team[df_team['name'] == street_name]['status'].iloc[0]
+                
+                # Couleurs selon statut
+                colors = {
+                    'terminee': '#22c55e',
+                    'en_cours': '#f59e0b',
+                    'a_faire': '#ef4444'
+                }
+                color = colors.get(status, '#ef4444')
+                
+                # Ajouter les segments de cette rue
+                for path in geo[street_name]:
+                    if path and len(path) >= 2:
+                        folium.PolyLine(
+                            path,
+                            color=color,
+                            weight=8,  # Plus épais pour mobile
+                            opacity=0.9,
+                            tooltip=f"{street_name} - {status.replace('_', ' ').title()}"
+                        ).add_to(m)
+        
+        # Centrer sur les rues de l'équipe
+        if team_streets and team_streets[0] in geo:
+            first_street = geo[team_streets[0]][0]
+            if first_street:
+                m.location = first_street[0]
+        
+        st_folium(m, height=400, width=None, returned_objects=[])
+    
+    with tab2:
+        st.markdown("### 📋 Checklist de collecte")
+        
+        # Liste interactive des rues
+        for _, row in df_team.iterrows():
+            street = row['name']
+            status = row['status']
+            notes_count = row.get('notes', 0)
+            
+            # Carte de rue stylisée
+            status_emoji = {'terminee': '✅', 'en_cours': '🚶', 'a_faire': '⭕'}
+            status_color = {'terminee': '#22c55e', 'en_cours': '#f59e0b', 'a_faire': '#ef4444'}
+            
+            with st.expander(f"{status_emoji.get(status, '⭕')} **{street}** ({notes_count} notes)"):
+                
+                # Changement rapide de statut
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if st.button("⭕ À faire", key=f"todo_{street}", use_container_width=True):
+                        db.set_status(conn, street, 'a_faire')
+                        st.rerun()
+                with col2:
+                    if st.button("🚶 En cours", key=f"progress_{street}", use_container_width=True):
+                        db.set_status(conn, street, 'en_cours')
+                        st.rerun()
+                with col3:
+                    if st.button("✅ Terminée", key=f"done_{street}", use_container_width=True):
+                        db.set_status(conn, street, 'terminee')
+                        st.rerun()
+                
+                st.markdown("---")
+                
+                # Ajout de note rapide
+                st.markdown("**Ajouter une note:**")
+                with st.form(f"note_{street}", clear_on_submit=True):
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        num = st.text_input("N°", placeholder="123")
+                    with col2:
+                        note = st.text_input("Note", placeholder="Personne absente")
+                    
+                    if st.form_submit_button("➕ Ajouter"):
+                        if num and note:
+                            db.add_note_for_address(conn, street, team_id, num, note)
+                            st.success("Note ajoutée!")
+                            st.rerun()
+                
+                # Notes existantes
+                notes = db.get_street_addresses_with_notes(conn, street)
+                if not notes.empty:
+                    st.markdown("**Notes existantes:**")
+                    for _, n in notes.iterrows():
+                        st.markdown(f"• **{n['address_number']}** : {n['comment']}")
+    
+    with tab3:
+        st.markdown("### 📊 Votre historique")
+        try:
+            notes = db.get_team_notes(conn, team_id)
+            if not notes.empty:
+                st.dataframe(notes, use_container_width=True)
+            else:
+                st.info("Aucune note encore")
+        except:
+            st.info("Historique non disponible")
 
 def page_superviseur(conn, geo):
     """Interface superviseur"""
