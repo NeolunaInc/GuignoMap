@@ -120,6 +120,111 @@ def render_header():
     
     st.markdown("</div>", unsafe_allow_html=True)
 
+def render_login_card(role="benevole", conn=None):
+    """Carte de connexion moderne avec design festif"""
+    
+    # Container de connexion stylisé
+    st.markdown("""
+    <div style="
+        max-width: 400px;
+        margin: 3rem auto;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,215,0,0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    ">
+    """, unsafe_allow_html=True)
+    
+    # Icône et titre
+    if role == "superviseur":
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 3rem;">👔</div>
+            <h2 style="color: #FFD700; margin: 1rem 0;">Espace Superviseur</h2>
+            <p style="color: #cbd5e1;">Gérez la collecte et les équipes</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_superviseur", clear_on_submit=False):
+            password = st.text_input(
+                "🔐 Mot de passe",
+                type="password",
+                placeholder="Entrez le mot de passe superviseur"
+            )
+            
+            col1, col2, col3 = st.columns([1,2,1])
+            with col2:
+                submit = st.form_submit_button(
+                    "🚀 Connexion",
+                    use_container_width=True
+                )
+            
+            if submit:
+                if db.verify_team(conn, "ADMIN", password):
+                    st.session_state.auth = {"role": "supervisor", "team_id": "ADMIN"}
+                    st.success("✅ Bienvenue dans l'espace superviseur!")
+                    st.balloons()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Mot de passe incorrect")
+    
+    else:  # Bénévole
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 3rem;">🎅</div>
+            <h2 style="color: #FFD700; margin: 1rem 0;">Espace Bénévole</h2>
+            <p style="color: #cbd5e1;">Accédez à vos rues assignées</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_benevole", clear_on_submit=False):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                team_id = st.text_input(
+                    "👥 Identifiant d'équipe",
+                    placeholder="Ex: EQ001"
+                )
+            
+            with col2:
+                password = st.text_input(
+                    "🔐 Mot de passe",
+                    type="password",
+                    placeholder="Mot de passe équipe"
+                )
+            
+            col1, col2, col3 = st.columns([1,2,1])
+            with col2:
+                submit = st.form_submit_button(
+                    "🎄 Connexion",
+                    use_container_width=True
+                )
+            
+            if submit:
+                if db.verify_team(conn, team_id, password):
+                    st.session_state.auth = {"role": "volunteer", "team_id": team_id}
+                    st.success(f"✅ Bienvenue équipe {team_id}!")
+                    st.snow()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Identifiants incorrects")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Aide en bas
+    st.markdown("""
+    <div style="text-align: center; margin-top: 2rem; color: #8b92a4;">
+        <small>
+        Besoin d'aide? Contactez votre superviseur<br>
+        📞 450-474-4133
+        </small>
+    </div>
+    """, unsafe_allow_html=True)
+
 def render_metrics(stats):
     """Affiche les métriques principales"""
     progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
@@ -335,20 +440,7 @@ def page_benevole(conn, geo):
     
     # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
-        with st.form("login_volunteer"):
-            col1, col2 = st.columns(2)
-            with col1:
-                team_id = st.text_input("Identifiant d'équipe")
-            with col2:
-                password = st.text_input("Mot de passe", type="password")
-            
-            if st.form_submit_button("Se connecter", use_container_width=True):
-                if db.verify_team(conn, team_id, password):
-                    st.session_state.auth = {"role": "volunteer", "team_id": team_id}
-                    st.success("✅ Connexion réussie!")
-                    st.rerun()
-                else:
-                    st.error("❌ Identifiants incorrects")
+        render_login_card("benevole", conn)
         return
     
     # Interface connectée
@@ -413,16 +505,7 @@ def page_superviseur(conn, geo):
     
     # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
-        with st.form("login_supervisor"):
-            password = st.text_input("Mot de passe superviseur", type="password")
-            
-            if st.form_submit_button("Accéder", use_container_width=True):
-                if db.verify_team(conn, "ADMIN", password):
-                    st.session_state.auth = {"role": "supervisor", "team_id": "ADMIN"}
-                    st.success("✅ Accès autorisé")
-                    st.rerun()
-                else:
-                    st.error("❌ Mot de passe incorrect")
+        render_login_card("superviseur", conn)
         return
     
     # Métriques
