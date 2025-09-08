@@ -1036,6 +1036,15 @@ def page_accueil_v2(conn, geo):
         m = create_festive_map(df_all, geo)
         st_folium(m, height=750, width=None, returned_objects=[])
     
+    # CSS pour réduire l'espace après la carte
+    st.markdown("""
+    <style>
+    div[data-testid="stVerticalBlock"] > div:has(iframe) {
+        margin-bottom: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     # Call to action
     st.markdown("""
     <div style="
@@ -1044,7 +1053,7 @@ def page_accueil_v2(conn, geo):
         background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05));
         border: 2px solid rgba(255,215,0,0.3);
         border-radius: 15px;
-        margin-top: 2rem;
+        margin-top: 1rem;
     ">
         <h3>🎅 Prêt à participer ?</h3>
         <p>Choisissez votre rôle dans le menu de gauche pour commencer</p>
@@ -1617,21 +1626,23 @@ def main():
     
     # Navigation modernisée dans la sidebar
     with st.sidebar:
-        # Logo tout en haut (collé au bord)
+        # CSS pour la sidebar sans position absolue
         st.markdown("""
-        <div style="
-            text-align: center;
-            padding: 1rem 0 2rem 0;
-            margin: -1rem 0 2rem 0;
-        ">
+        <style>
+        .css-1d391kg { padding-top: 1rem !important; }
+        .stSidebar > div:first-child { padding-top: 1rem !important; }
+        </style>
         """, unsafe_allow_html=True)
         
-        # Afficher le logo s'il existe
+        # Logo en haut de la sidebar (position normale)
         logo_path = ASSETS / "logo.png"
         if logo_path.exists():
-            st.image(str(logo_path), width=200, use_column_width=False)
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.image(str(logo_path), width=150)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
         else:
-            # Placeholder si pas de logo
+            # Placeholder centré
             st.markdown("""
             <div style="
                 background: linear-gradient(135deg, #c41e3a, #165b33);
@@ -1639,8 +1650,7 @@ def main():
                 padding: 2rem;
                 color: white;
                 text-align: center;
-                width: 200px;
-                margin: 0 auto;
+                margin: 1rem 0;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             ">
                 <div style="font-size: 2.5rem;">🎁</div>
@@ -1648,8 +1658,7 @@ def main():
                 <small>Espace réservé</small>
             </div>
             """, unsafe_allow_html=True)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
         
         # Navigation
         st.markdown("### 🎄 Navigation")
@@ -1712,6 +1721,10 @@ def main():
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Bannière en bas de page
+    if (ASSETS / "banner.png").exists():
+        st.image(str(ASSETS / "banner.png"), use_column_width=True)
 
 if __name__ == "__main__":
     main()
