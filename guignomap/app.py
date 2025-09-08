@@ -1361,7 +1361,10 @@ def page_gestionnaire_v2(conn, geo):
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
-        TECH_PIN = st.secrets.get("TECH_PIN", "")
+        try:
+            TECH_PIN = st.secrets.get("TECH_PIN", "")
+        except:
+            TECH_PIN = ""  # Pas de fichier secrets.toml
 
         if "tech_ok" not in st.session_state:
             st.session_state.tech_ok = False
@@ -1526,8 +1529,11 @@ def page_superviseur(conn, geo):
     with tabs[4]:
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
-        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
-        TECH_PIN = st.secrets.get("TECH_PIN", "")
+        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")  
+        try:
+            TECH_PIN = st.secrets.get("TECH_PIN", "")
+        except:
+            TECH_PIN = ""  # Pas de fichier secrets.toml
 
         if "tech_ok" not in st.session_state:
             st.session_state.tech_ok = False
@@ -1610,6 +1616,40 @@ def main():
     render_header()
     
     # Navigation modernisée dans la sidebar
+    with st.sidebar:
+        st.markdown("## 🎄 Navigation")
+        
+        # Bouton déconnexion
+        if st.session_state.auth:
+            if st.button("🚪 Déconnexion", use_container_width=True):
+                st.session_state.auth = None
+                st.rerun()
+        
+        # Navigation selon le rôle
+        if st.session_state.auth:
+            role = st.session_state.auth.get("role")
+            if role == "supervisor":
+                page_gestionnaire_v2(conn, geo)
+            elif role == "volunteer":
+                page_benevole(conn, geo)
+        else:
+            # Page d'accueil sans authentification
+            choice = st.radio("Choisissez votre interface:", [
+                "🎁 Accueil",
+                "🎅 Bénévole",
+                "👔 Gestionnaire"
+            ])
+            
+            if choice == "🎁 Accueil":
+                page_accueil_v2(conn, geo)
+            elif choice == "🎅 Bénévole":
+                render_login_card("benevole", conn)
+            elif choice == "👔 Gestionnaire":
+                render_login_card("gestionnaire", conn)
+
+# Lancement de l'application
+if __name__ == "__main__":
+    main()
     with st.sidebar:
         st.markdown("""
         <div style="

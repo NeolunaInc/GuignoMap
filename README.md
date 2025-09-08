@@ -28,6 +28,8 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 ### 🗺️ Améliorations cartographiques
 - **Choix de fonds de carte** : OpenStreetMap France, CARTO Voyager, Esri
 - **Zoom optimisé** centré sur Mascouche
+- **Zone d'affichage agrandie** : 90% de l'écran sur PC
+- **Gestion d'erreur robuste** : secrets.toml optionnel
 - **Visibilité améliorée** des rues avec lignes plus épaisses
 - **Récupération complète** de toutes les rues via OSM
 
