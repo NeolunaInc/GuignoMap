@@ -138,20 +138,20 @@ def render_login_card(role="benevole", conn=None):
     """, unsafe_allow_html=True)
     
     # Icône et titre
-    if role == "superviseur":
+    if role == "superviseur" or role == "gestionnaire":
         st.markdown("""
         <div style="text-align: center; margin-bottom: 2rem;">
             <div style="font-size: 3rem;">👔</div>
-            <h2 style="color: #FFD700; margin: 1rem 0;">Espace Superviseur</h2>
+            <h2 style="color: #FFD700; margin: 1rem 0;">Espace Gestionnaire</h2>
             <p style="color: #cbd5e1;">Gérez la collecte et les équipes</p>
         </div>
         """, unsafe_allow_html=True)
         
-        with st.form("login_superviseur", clear_on_submit=False):
+        with st.form("login_gestionnaire", clear_on_submit=False):
             password = st.text_input(
                 "🔐 Mot de passe",
                 type="password",
-                placeholder="Entrez le mot de passe superviseur"
+                placeholder="Entrez le mot de passe gestionnaire"
             )
             
             col1, col2, col3 = st.columns([1,2,1])
@@ -164,7 +164,7 @@ def render_login_card(role="benevole", conn=None):
             if submit:
                 if db.verify_team(conn, "ADMIN", password):
                     st.session_state.auth = {"role": "supervisor", "team_id": "ADMIN"}
-                    st.success("✅ Bienvenue dans l'espace superviseur!")
+                    st.success("✅ Bienvenue dans l'espace gestionnaire!")
                     st.balloons()
                     time.sleep(1)
                     st.rerun()
@@ -219,7 +219,7 @@ def render_login_card(role="benevole", conn=None):
     st.markdown("""
     <div style="text-align: center; margin-top: 2rem; color: #8b92a4;">
         <small>
-        Besoin d'aide? Contactez votre superviseur<br>
+        Besoin d'aide? Contactez votre gestionnaire<br>
         📞 450-474-4133
         </small>
     </div>
@@ -542,6 +542,74 @@ def create_map(df, geo):
 
 
 # ============================================
+# UTILITAIRES EXPORT
+# ============================================
+
+def export_excel_professionnel(conn):
+    """Export Excel avec mise en forme professionnelle"""
+    try:
+        import xlsxwriter
+        from io import BytesIO
+        
+        output = BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        
+        # Feuille 1 : Résumé
+        summary = workbook.add_worksheet('Résumé Guignolée 2025')
+        
+        # Styles
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#c41e3a',
+            'font_color': 'white',
+            'align': 'center',
+            'border': 1
+        })
+        
+        data_format = workbook.add_format({
+            'align': 'center',
+            'border': 1
+        })
+        
+        # En-têtes
+        summary.merge_range(0, 0, 0, 4, 'GUIGNOLÉE 2025 - LE RELAIS DE MASCOUCHE', header_format)
+        
+        # Stats
+        stats = db.extended_stats(conn)
+        summary.write(2, 0, 'Total Rues:', header_format)
+        summary.write(2, 1, stats['total'], data_format)
+        summary.write(3, 0, 'Terminées:', header_format)
+        summary.write(3, 1, stats['done'], data_format)
+        summary.write(4, 0, 'Progression:', header_format)
+        summary.write(4, 1, f"{(stats['done']/stats['total']*100) if stats['total'] > 0 else 0:.1f}%", data_format)
+        
+        # Feuille 2 : Détails par rue
+        details = workbook.add_worksheet('Détails par rue')
+        df = db.list_streets(conn)
+        
+        # Headers
+        headers = ['Rue', 'Secteur', 'Équipe', 'Statut', 'Notes']
+        for col, header in enumerate(headers):
+            details.write(0, col, header, header_format)
+        
+        # Data
+        for row, (_, data) in enumerate(df.iterrows(), 1):
+            details.write(row, 0, data.get('name', ''), data_format)
+            details.write(row, 1, data.get('sector', ''), data_format)
+            details.write(row, 2, data.get('team', ''), data_format)
+            details.write(row, 3, data.get('status', ''), data_format)
+            details.write(row, 4, str(data.get('notes', 0)), data_format)
+        
+        workbook.close()
+        output.seek(0)
+        return output.getvalue()
+        
+    except ImportError:
+        # Fallback si xlsxwriter n'est pas disponible
+        return db.export_to_csv(conn)
+
+
+# ============================================
 # PAGES
 # ============================================
 
@@ -560,6 +628,130 @@ def page_accueil(conn, geo):
     if not df_all.empty:
         m = create_map(df_all, geo)
         st_folium(m, height=600, width=None, returned_objects=[])
+
+def page_accueil_v2(conn, geo):
+    """Page d'accueil moderne version 2.0"""
+    
+    # Hero section festif
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 3rem 1rem;
+        background: linear-gradient(135deg, rgba(196,30,58,0.1), rgba(22,91,51,0.1));
+        border-radius: 20px;
+        margin-bottom: 2rem;
+    ">
+        <h1 style="font-size: 3rem; margin: 0;">🎄 Bienvenue sur Guigno-Map 🎄</h1>
+        <p style="font-size: 1.3rem; color: #666; margin: 1rem 0;">
+            Votre plateforme digitale pour la Guignolée 2025
+        </p>
+        <p style="color: #888;">
+            Gérez efficacement votre collecte de denrées avec une interface moderne
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Stats en temps réel - Version améliorée
+    stats = db.extended_stats(conn)
+    progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+    
+    st.markdown("### 📊 État de la collecte en temps réel")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+        ">
+            <div style="font-size: 3rem;">🏘️</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{stats['total']}</div>
+            <div>Total Rues</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        ">
+            <div style="font-size: 3rem;">✅</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{stats['done']}</div>
+            <div>Complétées</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+        ">
+            <div style="font-size: 3rem;">🚶</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{stats.get('partial', 0)}</div>
+            <div>En Cours</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(196,30,58,0.3);
+        ">
+            <div style="font-size: 3rem;">🎯</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{progress:.0f}%</div>
+            <div>Progression</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Barre de progression globale
+    st.markdown("### 🎄 Progression globale de la collecte")
+    st.progress(progress / 100)
+    
+    # Carte générale
+    st.markdown("### 🗺️ Vue d'ensemble de Mascouche")
+    df_all = db.list_streets(conn)
+    if not df_all.empty:
+        m = create_map(df_all, geo)
+        st_folium(m, height=500, width=None, returned_objects=[])
+    
+    # Call to action
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05));
+        border: 2px solid rgba(255,215,0,0.3);
+        border-radius: 15px;
+        margin-top: 2rem;
+    ">
+        <h3>🎅 Prêt à participer ?</h3>
+        <p>Choisissez votre rôle dans le menu de gauche pour commencer</p>
+        <p style="font-size: 0.9rem; color: #666;">
+            Bénévoles : Accédez à vos rues assignées<br>
+            Gestionnaires : Supervisez toute la collecte
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 def page_benevole(conn, geo):
     """Interface bénévole moderne avec vue limitée"""
@@ -719,6 +911,205 @@ def page_benevole(conn, geo):
                 st.info("Aucune note encore")
         except:
             st.info("Historique non disponible")
+
+def page_benevole_v2(conn, geo):
+    """Interface bénévole moderne v2 - Alias pour compatibilité"""
+    return page_benevole(conn, geo)
+
+def page_gestionnaire_v2(conn, geo):
+    """Interface gestionnaire moderne (ancien superviseur)"""
+    st.header("👔 Tableau de Bord Gestionnaire")
+    
+    # Vérifier l'authentification
+    if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
+        render_login_card("gestionnaire", conn)
+        return
+    
+    # Dashboard moderne
+    render_dashboard_gestionnaire(conn, geo)
+    
+    # Tabs
+    tabs = st.tabs([
+        "📊 Vue d'ensemble",
+        "👥 Équipes",
+        "🗺️ Assignation",
+        "📥 Export",
+        "🛠 Tech"
+    ])
+    
+    with tabs[0]:
+        # Carte générale
+        st.markdown("### Carte générale")
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            m = create_map(df_all, geo)
+            st_folium(m, height=600, width=None, returned_objects=[])
+        
+        # Activité récente
+        st.markdown("### Activité récente")
+        try:
+            recent = db.recent_activity(conn, limit=10)
+            if not recent.empty:
+                st.dataframe(recent, use_container_width=True)
+            else:
+                st.info("Aucune activité récente")
+        except:
+            st.info("Historique d'activité non disponible")
+    
+    with tabs[1]:
+        # Gestion des équipes
+        st.markdown("### Gestion des équipes")
+        
+        with st.expander("Créer une équipe"):
+            with st.form("new_team", clear_on_submit=True):
+                new_id = st.text_input("Identifiant")
+                new_name = st.text_input("Équipe")
+                new_pass = st.text_input("Mot de passe", type="password")
+                
+                if st.form_submit_button("Créer"):
+                    if all([new_id, new_name, new_pass]):
+                        if db.create_team(conn, new_id, new_name, new_pass):
+                            st.success(f"Équipe {new_id} créée")
+                            st.rerun()
+        
+        # Liste des équipes
+        try:
+            teams_df = db.get_all_teams(conn)
+            if not teams_df.empty:
+                st.dataframe(teams_df, use_container_width=True)
+            else:
+                st.info("Aucune équipe créée")
+        except:
+            st.info("Liste des équipes non disponible")
+    
+    with tabs[2]:
+        # Assignation
+        st.markdown("### Assignation des rues")
+        
+        try:
+            unassigned = db.get_unassigned_streets(conn)
+            
+            if not unassigned.empty:
+                with st.form("assign"):
+                    team = st.selectbox("Équipe", db.teams(conn))
+                    streets = st.multiselect("Rues", unassigned['name'].tolist())
+                    
+                    if st.form_submit_button("Assigner"):
+                        if team and streets:
+                            db.assign_streets_to_team(conn, streets, team)
+                            st.success("Rues assignées!")
+                            st.rerun()
+            else:
+                st.success("Toutes les rues sont assignées!")
+        except:
+            st.warning("Fonction d'assignation non disponible")
+        
+        # Tableau des assignations
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            st.dataframe(
+                df_all[['name', 'sector', 'team', 'status']],
+                use_container_width=True
+            )
+    
+    with tabs[3]:
+        # Export amélioré
+        st.markdown("### Export des données")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.download_button(
+                "📥 Export CSV Standard",
+                db.export_to_csv(conn),
+                "rapport_rues.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        
+        with col2:
+            try:
+                excel_data = export_excel_professionnel(conn)
+                st.download_button(
+                    "📊 Export Excel Pro",
+                    excel_data,
+                    "guignolee_2025_rapport.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            except:
+                st.button("📊 Excel (Non disponible)", disabled=True, use_container_width=True)
+        
+        with col3:
+            try:
+                st.download_button(
+                    "📝 Export Notes",
+                    db.export_notes_csv(conn),
+                    "rapport_notes.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
+            except:
+                st.button("📝 Notes (Non disponible)", disabled=True, use_container_width=True)
+
+    with tabs[4]:
+        st.markdown("### 🛠 Opérations techniques (protégées)")
+
+        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
+        TECH_PIN = st.secrets.get("TECH_PIN", "")
+
+        if "tech_ok" not in st.session_state:
+            st.session_state.tech_ok = False
+
+        if not st.session_state.tech_ok:
+            pin = st.text_input("Entrer le PIN technique", type="password")
+            if st.button("Déverrouiller"):
+                if TECH_PIN and pin == TECH_PIN:
+                    st.session_state.tech_ok = True
+                    st.success("Accès technique déverrouillé.")
+                    st.rerun()
+                else:
+                    st.error("PIN invalide.")
+            st.stop()
+
+        st.info("⚠️ Ces actions sont lourdes et n'affectent pas les statuts/notes. Elles régénèrent les caches OSM.")
+
+        # --- Reconstruire le cache géométrique (lourd)
+        with st.expander("🔄 Reconstruire cache OSM (géométries)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirm = st.checkbox("Je comprends les implications")
+            with col2:
+                safety = st.text_input('Écrire "REBUILD" pour confirmer')
+
+            if st.button("Lancer la reconstruction"):
+                if confirm and safety.strip().upper() == "REBUILD":
+                    with st.spinner("Construction du cache…"):
+                        build_geometry_cache()       # reconstruit le fichier osm_cache.json
+                        st.cache_data.clear()        # purge cache Streamlit
+                    st.success("✅ Cache OSM mis à jour (géométries).")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+        # --- Reconstruire/Importer le cache des adresses
+        with st.expander("📍 Mettre à jour les adresses (OSM)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirmA = st.checkbox("Je confirme")
+            with col2:
+                safetyA = st.text_input('Écrire "IMPORT" pour confirmer')
+
+            if st.button("Lancer la mise à jour des adresses"):
+                if confirmA and safetyA.strip().upper() == "IMPORT":
+                    with st.spinner("Téléchargement des adresses OSM…"):
+                        build_addresses_cache()
+                        addr_cache = load_addresses_cache()
+                        count = db.import_addresses_from_cache(conn, addr_cache)
+                    st.success(f"✅ {count} adresses importées depuis OSM.")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
 
 def page_superviseur(conn, geo):
     """Interface superviseur"""
@@ -891,81 +1282,113 @@ def page_superviseur(conn, geo):
 # ============================================
 
 def main():
-    """Point d'entrée principal"""
+    """Point d'entrée principal - Version 2.0 Guignolée"""
     
-    # CSS
+    # CSS moderne
     inject_css()
     
-    # Header
-    render_header()
-    
-    # DB
+    # Connexion DB
     conn = db.get_conn(DB_PATH)
     db.init_db(conn)
+    st.session_state['conn'] = conn
     
-    # Cache géométrique avec gestion d'erreur améliorée
+    # Cache géométrique
     @st.cache_data(ttl=None)
     def get_geo(_sig):
-        try:
-            geo_data = load_geometry_cache()
-            if not geo_data:
-                st.warning("⚠️ Cache géométrique vide. Utilisez l'onglet Tech pour reconstruire.")
-                return {}
-            return geo_data
-        except Exception as e:
-            st.error(f"Erreur chargement cache: {e}")
-            return {}
-
+        data = load_geometry_cache()
+        return data if data else {}
+    
     sig = int(CACHE_FILE.stat().st_mtime_ns) if CACHE_FILE.exists() else 0
     geo = get_geo(sig)
     
-    # Vérifier l'intégrité des données au démarrage
-    if not geo:
-        st.warning("""
-        ⚠️ **Aucune donnée géométrique disponible**
-        
-        Pour initialiser l'application :
-        1. Allez dans **Superviseur** → **Onglet Tech**
-        2. Lancez **Reconstruire cache OSM**
-        """)
+    # Header festif
+    render_header()
     
-    # Sidebar
+    # Navigation modernisée dans la sidebar
     with st.sidebar:
-        if st.session_state.auth:
-            role = st.session_state.auth.get("role", "").replace("_", " ").title()
-            team = st.session_state.auth.get("team_id", "")
-            st.success(f"**{role}** ({team})")
-            
-            if st.button("Se déconnecter", use_container_width=True):
-                st.session_state.auth = None
-                st.rerun()
+        st.markdown("""
+        <div style="
+            text-align: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            border-radius: 15px;
+            margin-bottom: 1rem;
+        ">
+            <h3 style="color: white; margin: 0.5rem 0;">Navigation</h3>
+        </div>
+        """, unsafe_allow_html=True)
         
-        page = st.radio(
-            "Navigation",
-            ["🏠 Accueil", "👥 Bénévole", "🎯 Superviseur"],
-            label_visibility="collapsed"
-        )
+        # Boutons de navigation stylisés
+        if st.button("🏠 **Accueil**", use_container_width=True):
+            st.session_state.page = "accueil"
+        
+        if st.button("🎅 **Espace Bénévole**", use_container_width=True):
+            st.session_state.page = "benevole"
+        
+        if st.button("👔 **Espace Gestionnaire**", use_container_width=True):
+            st.session_state.page = "gestionnaire"
         
         st.markdown("---")
         
-        if st.toggle("🔄 Auto-refresh (15s)"):
-            time.sleep(15)
-            st.rerun()
+        # Infos utilisateur
+        if st.session_state.auth:
+            role = st.session_state.auth.get("role", "")
+            team = st.session_state.auth.get("team_id", "")
+            
+            st.markdown(f"""
+            <div style="
+                background: rgba(255,255,255,0.1);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+            ">
+                <strong>Connecté:</strong><br>
+                {role.title()} - {team}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("� Déconnexion", use_container_width=True):
+                st.session_state.auth = None
+                st.rerun()
         
-        # Infos
+        # Compteur temps réel
+        st.markdown("---")
+        stats = db.extended_stats(conn)
         st.markdown(f"""
-        **Version:** 3.0  
-        **MAJ:** {datetime.now().strftime('%H:%M')}  
-        **Rues:** {len(geo)}
-        """)
+        <div style="text-align: center;">
+            <h4>État de la collecte</h4>
+            <div style="font-size: 2rem; color: #FFD700;">
+                {stats['done']}/{stats['total']}
+            </div>
+            <small>Rues complétées</small>
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Routing
-    if page == "🏠 Accueil":
-        page_accueil(conn, geo)
-    elif page == "👥 Bénévole":
-        page_benevole(conn, geo)
-    elif page == "🎯 Superviseur":
-        page_superviseur(conn, geo)
+    # Routing pages
+    page = st.session_state.get('page', 'accueil')
+    
+    if page == "accueil":
+        page_accueil_v2(conn, geo)
+    elif page == "benevole":
+        page_benevole_v2(conn, geo)
+    elif page == "gestionnaire":
+        page_gestionnaire_v2(conn, geo)
+    
+    # Footer festif
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 2rem;
+        margin-top: 3rem;
+        border-top: 2px solid rgba(255,215,0,0.3);
+        color: #8b92a4;
+    ">
+        <p>
+            🎄 Guignolée 2025 - Le Relais de Mascouche 🎄<br>
+            <small>Ensemble, redonnons espoir | 📞 450-474-4133</small>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
