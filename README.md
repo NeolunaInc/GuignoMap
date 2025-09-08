@@ -282,6 +282,15 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - **Couverture** : Système d'inclusion universelle (name + ref)
 - **Robustesse** : Fallback à tous les niveaux avec validation
 
+## 📝 Changelog v3.3
+
+### 🎄 Thème Guignolée festif
+- **Header moderne** : Design spécial Guignolée 2025 avec dégradé rouge/vert
+- **Animations** : Flocons de neige CSS pour ambiance festive
+- **Branding** : "🎅 GUIGNOLÉE 2025 🎁" avec police Manrope
+- **Stats temps réel** : Progression visible directement dans le header
+- **Support logo** : Détection automatique du logo Guignolée
+
 ## 📝 Changelog v3.2
 
 ### 🗺️ Améliorations cartographiques majeures
@@ -317,4 +326,4 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 Développé pour **Le Relais de Mascouche** - Collecte de denrées 2025
 
 ---
-*Version 3.2 - Cartes multi-fonds + optimisations UX*
+*Version 3.3 - Thème Guignolée festif + header moderne*

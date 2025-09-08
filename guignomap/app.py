@@ -44,35 +44,81 @@ def inject_css():
         st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 def render_header():
-    """Header avec logo et bannière si disponibles"""
-    st.markdown('<div class="brand-header">', unsafe_allow_html=True)
+    """Header moderne avec logo Guignolée et design festif"""
     
-    col1, col2, col3 = st.columns([1, 6, 2])
+    # Container principal avec fond festif
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, #c41e3a 0%, #165b33 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    ">
+        <!-- Flocons de neige animés en CSS -->
+        <div style="position: absolute; width: 100%; height: 100%; opacity: 0.1;">
+            <span style="position: absolute; top: 10%; left: 10%; font-size: 2rem;">❄️</span>
+            <span style="position: absolute; top: 20%; left: 80%; font-size: 1.5rem;">❄️</span>
+            <span style="position: absolute; top: 60%; left: 30%; font-size: 1.8rem;">❄️</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([2, 5, 2])
     
     with col1:
-        logo_file = ASSETS / "logo.png"
-        if logo_file.exists():
-            st.image(str(logo_file), width=80)
+        # Logo Guignolée
+        if (ASSETS / "guignolee.png").exists():
+            st.image(str(ASSETS / "guignolee.png"), width=150)
     
     with col2:
         st.markdown("""
-        <div class="brand-title">Guigno-Map</div>
-        <p class="brand-sub">Suivi en temps réel de la collecte — Le Relais de Mascouche</p>
+        <div style="text-align: center;">
+            <h1 style="
+                color: white;
+                font-family: 'Manrope', sans-serif;
+                font-size: 2.5rem;
+                margin: 0;
+                text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+                letter-spacing: 2px;
+            ">🎅 GUIGNOLÉE 2025 🎁</h1>
+            <p style="
+                color: #FFD700;
+                font-size: 1.2rem;
+                margin: 0.5rem 0 0 0;
+                font-weight: 600;
+            ">Le Relais de Mascouche - 1er décembre</p>
+            <p style="
+                color: rgba(255,255,255,0.9);
+                font-size: 1rem;
+                margin-top: 0.5rem;
+            ">Système de gestion de collecte</p>
+        </div>
         """, unsafe_allow_html=True)
     
     with col3:
-        st.link_button(
-            "💝 Faire un don",
-            "https://www.relaismascouche.org/",
-            use_container_width=True
-        )
+        # Stats en temps réel
+        stats = db.extended_stats(st.session_state.get('conn'))
+        progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+        
+        st.markdown(f"""
+        <div style="
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+        ">
+            <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">
+                {progress:.0f}%
+            </div>
+            <div style="color: white; font-size: 0.9rem;">
+                Complété
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Bannière si disponible
-    banner_file = ASSETS / "banner.png"
-    if banner_file.exists():
-        st.image(str(banner_file), width=None)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 def render_metrics(stats):
     """Affiche les métriques principales"""
