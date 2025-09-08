@@ -15,15 +15,15 @@ ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
 # Toutes les voies routières nommées de Mascouche
 QUERY_STREETS_ALL = """
-[out:json][timeout:180];
+[out:json][timeout:300];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (
-  way["highway"]["name"](area.a);
-  way["highway"]["ref"](area.a);
+  way["highway"~"^(primary|secondary|tertiary|residential|service|unclassified|living_street|pedestrian|track|road|busway|footway|path)$"](area.a);
 );
-out geom;
+(._;>;);
+out body;
 """
-# Note: On prend TOUT ce qui a highway+name OU highway+ref (pour autoroutes)
+# Note: Récupère TOUS les types de voies incluant petites rues, allées, chemins piétonniers
 
 # Requête pour les adresses
 QUERY_ADDR_NODES = """
