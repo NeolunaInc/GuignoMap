@@ -243,6 +243,133 @@ def render_metrics(stats):
     with col4:
         st.metric("Progression", f"{progress:.1f}%")
 
+def render_dashboard_gestionnaire(conn, geo):
+    """Dashboard moderne pour gestionnaires avec KPIs visuels"""
+    
+    # KPIs principaux en cartes colorées
+    stats = db.extended_stats(conn)
+    progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+    
+    st.markdown("### 📊 Tableau de bord en temps réel")
+    
+    # Ligne de KPIs avec icônes festives
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+        ">
+            <div style="font-size: 2.5rem;">🏘️</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{stats['total']}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Total Rues</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        ">
+            <div style="font-size: 2.5rem;">✅</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{stats['done']}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Terminées</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+        ">
+            <div style="font-size: 2.5rem;">🚶</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{stats.get('partial', 0)}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">En cours</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        # Nombre d'équipes actives
+        teams_count = len(db.teams(conn))
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        ">
+            <div style="font-size: 2.5rem;">👥</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{teams_count}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Équipes</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(196,30,58,0.3);
+        ">
+            <div style="font-size: 2.5rem;">🎯</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{progress:.0f}%</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Progression</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Barre de progression visuelle
+    st.markdown("### 🎄 Progression globale")
+    st.progress(progress / 100)
+    
+    # Graphique par secteur (si disponible)
+    st.markdown("### 📈 Performance par équipe")
+    try:
+        teams_stats = db.stats_by_team(conn)
+        if not teams_stats.empty:
+            # Graphique en barres colorées
+            import plotly.express as px
+            fig = px.bar(
+                teams_stats, 
+                x='team', 
+                y='progress',
+                color='progress',
+                color_continuous_scale=['#ef4444', '#f59e0b', '#22c55e'],
+                labels={'team': 'Équipe', 'progress': 'Progression (%)'},
+                title="Performance des équipes"
+            )
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Aucune statistique d'équipe disponible")
+    except Exception as e:
+        st.warning("Graphiques non disponibles (module plotly manquant)")
+        # Fallback vers un tableau simple
+        try:
+            teams_stats = db.stats_by_team(conn)
+            if not teams_stats.empty:
+                st.dataframe(teams_stats, use_container_width=True)
+        except:
+            st.info("Aucune statistique d'équipe disponible")
+
 def create_map(df, geo):
     """Crée la carte Folium centrée sur Mascouche avec toutes les rues"""
     # Limites de Mascouche
@@ -508,9 +635,8 @@ def page_superviseur(conn, geo):
         render_login_card("superviseur", conn)
         return
     
-    # Métriques
-    stats = db.extended_stats(conn)
-    render_metrics(stats)
+    # Dashboard moderne
+    render_dashboard_gestionnaire(conn, geo)
     
     # Tabs
     tabs = st.tabs([
