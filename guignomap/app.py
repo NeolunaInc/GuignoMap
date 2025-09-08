@@ -615,8 +615,16 @@ def export_excel_professionnel(conn):
 
 def detect_mobile():
     """Détecte si l'utilisateur est sur mobile"""
-    # Mobile-first approach pour l'instant
-    return True
+    try:
+        # Récupérer les paramètres de l'URL pour forcer le mode mobile
+        query_params = st.experimental_get_query_params()
+        if 'mobile' in query_params:
+            return True
+        
+        # Mobile-first approach pour l'instant
+        return True
+    except:
+        return False
 
 def show_notification(message, type="success"):
     """Affiche une notification stylisée"""
@@ -881,7 +889,7 @@ def page_accueil(conn, geo):
     df_all = db.list_streets(conn)
     if not df_all.empty:
         m = create_map(df_all, geo)
-        st_folium(m, height=600, width=None, returned_objects=[])
+        st_folium(m, height=800, width=None, returned_objects=[])
 
 def page_accueil_v2(conn, geo):
     """Page d'accueil festive avec compte à rebours"""
@@ -1026,7 +1034,7 @@ def page_accueil_v2(conn, geo):
     df_all = db.list_streets(conn)
     if not df_all.empty:
         m = create_festive_map(df_all, geo)
-        st_folium(m, height=500, width=None, returned_objects=[])
+        st_folium(m, height=750, width=None, returned_objects=[])
     
     # Call to action
     st.markdown("""
@@ -1142,7 +1150,7 @@ def page_benevole(conn, geo):
             if first_street:
                 m.location = first_street[0]
         
-        st_folium(m, height=400, width=None, returned_objects=[])
+        st_folium(m, height=650, width=None, returned_objects=[])
     
     with tab2:
         st.markdown("### 📋 Checklist de collecte")
@@ -1240,7 +1248,7 @@ def page_gestionnaire_v2(conn, geo):
         df_all = db.list_streets(conn)
         if not df_all.empty:
             m = create_map(df_all, geo)
-            st_folium(m, height=600, width=None, returned_objects=[])
+            st_folium(m, height=800, width=None, returned_objects=[])
         
         # Activité récente
         st.markdown("### Activité récente")
@@ -1435,7 +1443,7 @@ def page_superviseur(conn, geo):
         df_all = db.list_streets(conn)
         if not df_all.empty:
             m = create_map(df_all, geo)
-            st_folium(m, height=600, width=None, returned_objects=[])
+            st_folium(m, height=800, width=None, returned_objects=[])
         
         # Activité récente
         st.markdown("### Activité récente")
