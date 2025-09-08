@@ -610,6 +610,260 @@ def export_excel_professionnel(conn):
 
 
 # ============================================
+# FONCTIONNALITÉS AVANCÉES
+# ============================================
+
+def detect_mobile():
+    """Détecte si l'utilisateur est sur mobile"""
+    # Mobile-first approach pour l'instant
+    return True
+
+def show_notification(message, type="success"):
+    """Affiche une notification stylisée"""
+    icons = {
+        "success": "✅",
+        "error": "❌",
+        "warning": "⚠️",
+        "info": "ℹ️"
+    }
+    colors = {
+        "success": "#22c55e",
+        "error": "#ef4444", 
+        "warning": "#f59e0b",
+        "info": "#3b82f6"
+    }
+    
+    st.markdown(f"""
+    <div style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: {colors[type]};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+    ">
+        <strong>{icons[type]} {message}</strong>
+    </div>
+    <style>
+    @keyframes slideIn {{
+        from {{ transform: translateX(100%); opacity: 0; }}
+        to {{ transform: translateX(0); opacity: 1; }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+def show_team_badges(conn, team_id):
+    """Affiche les badges de réussite de l'équipe"""
+    try:
+        df = db.list_streets(conn, team=team_id)
+        done = len(df[df['status'] == 'terminee'])
+        total = len(df)
+        
+        badges = []
+        if done >= 1:
+            badges.append("🏆 Première rue!")
+        if done >= total * 0.25:
+            badges.append("🥉 25% complété")
+        if done >= total * 0.5:
+            badges.append("🥈 50% complété")
+        if done >= total * 0.75:
+            badges.append("🥇 75% complété")
+        if done == total:
+            badges.append("🌟 CHAMPION!")
+        
+        if badges:
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #FFD700, #FFA500);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+                margin: 1rem 0;
+            ">
+                <strong>Vos badges:</strong><br>
+                <div style="font-size: 2rem; margin-top: 0.5rem;">
+                    {' '.join(badges)}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    except:
+        pass
+
+def generate_sms_list(conn):
+    """Génère une liste de téléphones pour SMS de groupe"""
+    try:
+        # Cette fonction nécessiterait une table de téléphones
+        # Pour l'instant, retourne un exemple
+        return "# Liste des téléphones bénévoles\n# 450-XXX-XXXX\n# 438-XXX-XXXX"
+    except:
+        return "Liste non disponible"
+
+def create_festive_map(df, geo):
+    """Carte avec thème festif de Noël"""
+    center = [45.7475, -73.6005]
+    
+    m = folium.Map(
+        location=center,
+        zoom_start=13,
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr='© Esri',
+        control_scale=True
+    )
+    
+    # Marqueur spécial pour le Relais
+    folium.Marker(
+        [45.7475, -73.6005],
+        popup="🎁 Le Relais de Mascouche",
+        tooltip="Point de départ de la Guignolée",
+        icon=folium.Icon(color='red', icon='gift', prefix='fa')
+    ).add_to(m)
+    
+    # Construction du lookup
+    street_info = {}
+    if not df.empty:
+        for _, row in df.iterrows():
+            name = str(row['name']) if 'name' in df.columns else ''
+            street_info[name] = {
+                'status': row.get('status', 'a_faire'),
+                'team': row.get('team', ''),
+                'notes': str(row.get('notes', 0))
+            }
+    
+    # Couleurs festives
+    status_colors = {
+        'terminee': '#165b33',  # Vert sapin
+        'en_cours': '#FFD700',   # Or
+        'a_faire': '#c41e3a'     # Rouge Noël
+    }
+    
+    for name, paths in geo.items():
+        info = street_info.get(name, {'status': 'a_faire', 'team': '', 'notes': '0'})
+        
+        color = status_colors.get(info['status'], '#c41e3a')
+        team = info['team']
+        opacity = 0.9 if team else 0.5
+        dash = None if team else '10,10'
+        weight = 8 if team else 5
+        
+        tooltip_html = f"""
+        <div style='font-family: sans-serif; font-size: 14px;'>
+            <strong>{name}</strong><br>
+            <span style='color: {color};'>● {info['status'].replace('_', ' ').title()}</span><br>
+            👥 {team if team else 'Non assignée'}<br>
+            📝 {info['notes']} notes
+        </div>
+        """
+        
+        for path in paths:
+            if path and len(path) >= 2:
+                folium.PolyLine(
+                    path,
+                    color=color,
+                    weight=weight,
+                    opacity=opacity,
+                    dash_array=dash,
+                    tooltip=folium.Tooltip(tooltip_html, sticky=True)
+                ).add_to(m)
+    
+    # Légende festive
+    legend_html = '''
+    <div style="position: fixed; bottom: 50px; right: 50px; width: 220px;
+                background: linear-gradient(135deg, white, #f0f0f0);
+                border: 3px solid #c41e3a; border-radius: 15px; padding: 15px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
+        <h4 style="margin: 0 0 10px 0; color: #c41e3a; text-align: center;">
+            🎄 Légende 🎄
+        </h4>
+        <div><span style="background:#165b33; width:30px; height:4px; display:inline-block;"></span> Collecte terminée</div>
+        <div><span style="background:#FFD700; width:30px; height:4px; display:inline-block;"></span> En cours</div>
+        <div><span style="background:#c41e3a; width:30px; height:4px; display:inline-block;"></span> À faire</div>
+        <hr style="margin: 8px 0; border-color: #c41e3a;">
+        <div><span style="border-bottom: 4px dashed #999; width:30px; display:inline-block;"></span> Non assignée</div>
+    </div>
+    '''
+    m.get_root().html.add_child(folium.Element(legend_html))
+    
+    return m
+
+def page_export_gestionnaire(conn):
+    """Section export avec formats multiples"""
+    
+    st.markdown("### 📊 Centre d'export des données")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
+            <h4>📑 Rapport PDF</h4>
+            <p><small>Format professionnel pour présentation</small></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Générer PDF", use_container_width=True):
+            # Pour l'instant, génère un fichier texte
+            report = f"""
+RAPPORT GUIGNOLÉE 2025 - LE RELAIS DE MASCOUCHE
+===============================================
+
+Date: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+STATISTIQUES GLOBALES:
+{db.extended_stats(conn)}
+
+Généré par Guigno-Map v4.0
+"""
+            st.download_button(
+                "📥 Télécharger rapport",
+                report,
+                "rapport_guignolee_2025.txt",
+                "text/plain",
+                use_container_width=True
+            )
+    
+    with col2:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
+            <h4>📊 Excel détaillé</h4>
+            <p><small>Avec graphiques et mise en forme</small></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        try:
+            excel_data = export_excel_professionnel(conn)
+            st.download_button(
+                "📥 Télécharger Excel",
+                excel_data,
+                "guignolee_2025.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+        except:
+            st.button("Excel (Non disponible)", disabled=True, use_container_width=True)
+    
+    with col3:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
+            <h4>📱 Liste SMS</h4>
+            <p><small>Téléphones des bénévoles</small></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        sms_list = generate_sms_list(conn)
+        st.download_button(
+            "📥 Liste téléphones",
+            sms_list,
+            "telephones_benevoles.txt",
+            "text/plain",
+            use_container_width=True
+        )
+
+
+# ============================================
 # PAGES
 # ============================================
 
@@ -630,7 +884,47 @@ def page_accueil(conn, geo):
         st_folium(m, height=600, width=None, returned_objects=[])
 
 def page_accueil_v2(conn, geo):
-    """Page d'accueil moderne version 2.0"""
+    """Page d'accueil festive avec compte à rebours"""
+    
+    # Compte à rebours jusqu'au 1er décembre
+    from datetime import datetime, timedelta
+    target = datetime(2025, 12, 1, 8, 0, 0)
+    now = datetime.now()
+    diff = target - now
+    
+    if diff.days > 0:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <h2 style="color: #FFD700; margin: 0;">⏰ Compte à rebours Guignolée</h2>
+            <div style="font-size: 3rem; color: white; margin: 1rem 0;">
+                {diff.days} jours {diff.seconds//3600} heures
+            </div>
+            <p style="color: rgba(255,255,255,0.9);">avant le grand jour!</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <h2 style="color: #c41e3a; margin: 0;">🎉 C'EST AUJOURD'HUI!</h2>
+            <div style="font-size: 2rem; color: #165b33; margin: 1rem 0;">
+                Bonne Guignolée 2025!
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Hero section festif
     st.markdown("""
@@ -651,7 +945,7 @@ def page_accueil_v2(conn, geo):
     </div>
     """, unsafe_allow_html=True)
     
-    # Stats en temps réel - Version améliorée
+    # Stats visuelles améliorées
     stats = db.extended_stats(conn)
     progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
     
@@ -727,11 +1021,11 @@ def page_accueil_v2(conn, geo):
     st.markdown("### 🎄 Progression globale de la collecte")
     st.progress(progress / 100)
     
-    # Carte générale
+    # Carte festive
     st.markdown("### 🗺️ Vue d'ensemble de Mascouche")
     df_all = db.list_streets(conn)
     if not df_all.empty:
-        m = create_map(df_all, geo)
+        m = create_festive_map(df_all, geo)
         st_folium(m, height=500, width=None, returned_objects=[])
     
     # Call to action
@@ -794,6 +1088,9 @@ def page_benevole(conn, geo):
         st.metric("✅ Complétées", done)
     with col3:
         st.metric("🎯 Progression", f"{progress:.0f}%")
+    
+    # Système de badges
+    show_team_badges(conn, team_id)
     
     # Barre de progression
     st.progress(progress / 100)

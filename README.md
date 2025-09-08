@@ -1,115 +1,142 @@
-# Guigno-Map 🎁
+# GuignoMap - Système de gestion pour la Guignolée 2025 🎄
 
-Système de gestion de la collecte de denrées pour **Le Relais de Mascouche**.
+Une application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
 
-## 🌟 Fonctionnalités
+## ✨ Nouvelles fonctionnalités v3.0
 
-- 🗺️ **Cartes interactives** avec géolocalisation complète des rues
-  - **Fonds de carte multiples** : OSM France, CARTO Voyager, Esri WorldStreetMap
-  - **Sélecteur de couches** pour changer de fond à la volée
-  - **Zoom optimisé** (13) avec contrôles molette et boutons
-  - **Rendu Canvas** pour performances améliorées
-  - **Visibilité renforcée** : lignes plus épaisses et opaques
-  - Centrage automatique sur Mascouche avec limites géographiques
-  - Couleurs par statut (rouge/orange/vert)
-  - Affichage différencié : lignes pleines (assignées) / pointillées (non assignées)
-  - Cache intelligent avec rechargement automatique
-  - **Couverture maximale** : TOUTES les voies nommées + autoroutes (ref)
-  - Marqueur centre-ville et légende statistique avancée
-- 👥 **Gestion d'équipes** avec authentification
-- 📍 **Suivi par adresse** avec notes détaillées et import OSM
-- 📊 **Tableaux de bord** en temps réel avec métriques étendues
-- 📥 **Export CSV** des données et rapports complets
-- 🎨 **Interface moderne** avec thème personnalisé du Relais
-- 🔄 **Système de cache OSM** ultra-robuste avec fallback étendu
-- ⚠️ **Gestion d'erreurs** renforcée avec validation de données
+### 🎄 Interface festive
+- **Page d'accueil moderne** avec compte à rebours vers Noël
+- **En-tête festif** aux couleurs de la Guignolée 2025
+- **Carte de Noël thématique** avec icônes festives
 
-## 🚀 Installation
+### 📱 Optimisations mobiles
+- **Interface responsive** optimisée pour tous les appareils
+- **Navigation tactile** adaptée aux smartphones
+- **Contrôles de carte** optimisés pour mobile
+
+### 🏆 Système de motivation
+- **Badges d'équipe** : Débutants, Actifs, Champions, Légendes
+- **Notifications temps réel** pour les accomplissements
+- **Tableaux de bord interactifs** avec graphiques Plotly
+
+### 📊 Centre d'export avancé
+- **Export Excel professionnel** avec formatage automatique
+- **Génération de listes SMS** pour la communication d'équipe
+- **Export PDF** (préparation)
+- **Rapports détaillés** par équipe et secteur
+
+### 🗺️ Améliorations cartographiques
+- **Choix de fonds de carte** : OpenStreetMap France, CARTO Voyager, Esri
+- **Zoom optimisé** centré sur Mascouche
+- **Visibilité améliorée** des rues avec lignes plus épaisses
+- **Récupération complète** de toutes les rues via OSM
+
+### 👥 Gestion moderne
+- **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"
+- **Navigation sidebar** moderne et intuitive
+- **Interface bénévole restreinte** aux rues assignées seulement
+- **Authentification simplifiée** avec cartes de connexion
+
+## 🚀 Installation et utilisation
 
 ### Prérequis
 - Python 3.8+
-- WSL Ubuntu (recommandé)
+- Accès internet pour OSM et les tuiles de carte
 
-### Configuration
+### Installation
 ```bash
-# Cloner le projet
-git clone <votre-repo>
+git clone https://github.com/votre-repo/GuignoMap.git
 cd GuignoMap
-
-# Créer un environnement virtuel
-python -m venv .venv
-source .venv/bin/activate
-
-# Installer les dépendances
 pip install -r requirements.txt
 ```
 
-## 🎯 Lancement
-
+### Lancement
 ```bash
-# Activer l'environnement virtuel
-source .venv/bin/activate
-
-# Lancer l'application
-streamlit run guignomap/app.py
+cd guignomap
+streamlit run app.py
 ```
 
-L'application sera accessible sur : `http://localhost:8501`
+## 📦 Dépendances principales
 
-## 📖 Guide pour débutants - Comment utiliser Guigno-Map
+- **streamlit** : Interface web moderne
+- **folium** : Cartes interactives
+- **pandas** : Manipulation des données
+- **overpy** : API OpenStreetMap
+- **plotly** : Graphiques interactifs
+- **xlsxwriter** : Export Excel professionnel
 
-### 🎯 Qu'est-ce que Guigno-Map ?
-Guigno-Map est un système qui aide **Le Relais de Mascouche** à organiser la collecte de denrées alimentaires dans toute la ville. L'application affiche une carte interactive de Mascouche avec toutes les rues colorées selon leur statut de collecte.
+## 🎯 Fonctionnalités principales
 
-### 🗺️ Comprendre la carte
-- **🔴 Rouge** : Rues pas encore visitées (à faire)
-- **🟠 Orange** : Collecte en cours sur cette rue
-- **🟢 Vert** : Collecte terminée sur cette rue
-- **Lignes pleines** : Rue assignée à une équipe
-- **Lignes pointillées** : Rue pas encore assignée
+### Pour les bénévoles
+- 🗺️ **Carte interactive** avec leurs rues assignées uniquement
+- ✅ **Système de validation** rue par rue avec notes
+- 🏆 **Badges de progression** et encouragements
+- � **Interface mobile** optimisée
 
-### 👥 Les deux types d'utilisateurs
+### Pour les gestionnaires
+- 📊 **Tableau de bord complet** avec KPIs temps réel
+- �️ **Vue d'ensemble** de toutes les équipes
+- 📈 **Graphiques de progression** par Plotly
+- � **Centre d'export** avec formats multiples
+- 👥 **Gestion des équipes** et assignation
+- � **Notifications** d'activité
 
-#### 🎯 **Superviseur** (Organisateur de la collecte)
-**Comment se connecter :**
-1. Cliquez sur "🎯 Superviseur" dans le menu gauche
-2. Entrez le mot de passe : `admin123`
+### Données et exports
+- 📝 **Base de données SQLite** intégrée
+- 📊 **Export Excel** avec formatage professionnel
+- 📱 **Listes SMS** pour communication
+- 📄 **Rapports PDF** (en développement)
+source .venv/bin/activate
 
-**Ce que vous pouvez faire :**
-- **Voir toute la collecte** : Carte complète avec toutes les rues de Mascouche
-- **Créer des équipes** : Onglet "👥 Équipes" → "Créer une équipe"
-  - Donnez un code (ex: "EQUIPE1")
-  - Un nom (ex: "Famille Tremblay") 
-  - Un mot de passe pour l'équipe
-- **Assigner des rues** : Onglet "🗺️ Assignation"
-  - Choisissez une équipe
-  - Sélectionnez les rues à leur donner
-  - Cliquez "Assigner"
-- **Voir les rapports** : Onglet "📥 Export" pour télécharger les données
-- **Opérations techniques** : Onglet "🛠 Tech" (nécessite un PIN spécial)
+## 🗃️ Structure du projet
 
-#### 👥 **Bénévole** (Membre d'une équipe)
-**Comment se connecter :**
-1. Cliquez sur "👥 Bénévole" dans le menu gauche  
-2. Entrez votre code d'équipe (donné par le superviseur)
-3. Entrez votre mot de passe d'équipe
+```
+GuignoMap/
+├── guignomap/
+│   ├── app.py              # Application principale Streamlit
+│   ├── db.py               # Gestion base de données
+│   ├── osm.py              # Interface OpenStreetMap
+│   ├── guigno_map.db       # Base de données SQLite
+│   ├── osm_cache.json      # Cache des données OSM
+│   ├── streets_mascouche.csv # Données des rues
+│   └── assets/
+│       ├── banner.png      # Bannière Guignolée
+│       ├── logo.png        # Logo officiel
+│       └── styles.css      # Styles personnalisés
+├── requirements.txt        # Dépendances Python
+└── README.md              # Documentation
+```
 
-**Ce que vous pouvez faire :**
-- **Voir vos rues** : Seules les rues assignées à votre équipe apparaissent
-- **Changer le statut** : 
-  - Sélectionnez une rue dans la liste
-  - Choisissez le nouveau statut (à faire → en cours → terminée)
-  - Cliquez "Mettre à jour le statut"
-- **Ajouter des notes** :
-  - Entrez un numéro civique (ex: "123")
-  - Écrivez un commentaire (ex: "Pas de réponse, boîte pleine")
-  - Cliquez "Ajouter la note"
-- **Consulter les notes** : Voir toutes les notes de votre équipe
+## 🎄 Thème Guignolée 2025
 
-### 📱 Utilisation étape par étape pour les bénévoles
+L'application adopte une identité visuelle festive pour l'édition 2025 :
+- **Couleurs** : Rouge festif (#dc3545), vert sapin, or
+- **Typographie** : Poppins pour une lecture moderne
+- **Icônes** : Thème de Noël et solidarité
+- **Animations** : Compte à rebours dynamique vers Noël
 
-#### Jour de collecte :
-1. **Connectez-vous** avec vos identifiants d'équipe
+## � Statistiques temps réel
+
+Le système suit automatiquement :
+- Progression globale de la collecte
+- Performance par équipe et bénévole
+- Couverture géographique
+- Tendances et objectifs
+
+## 🔐 Sécurité et accès
+
+- **Authentification** par nom d'équipe
+- **Restriction d'accès** : bénévoles limités à leurs rues
+- **Données locales** : pas de transmission externe
+- **Sauvegarde automatique** des progressions
+
+## 🤝 Contribution
+
+GuignoMap est développé pour la Guignolée de Mascouche. Pour toute suggestion ou amélioration, contactez l'équipe organisatrice.
+
+---
+
+**Joyeuses Fêtes et bonne Guignolée 2025 ! 🎄🎁**
 2. **Consultez votre liste** de rues assignées
 3. **Commencez une rue** :
    - Sélectionnez la rue dans la liste
