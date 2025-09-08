@@ -165,7 +165,7 @@ def render_login_card(role="benevole", conn=None):
                 if db.verify_team(conn, "ADMIN", password):
                     st.session_state.auth = {"role": "supervisor", "team_id": "ADMIN"}
                     st.success("✅ Bienvenue dans l'espace gestionnaire!")
-                    st.balloons()
+                    st.snow()
                     time.sleep(1)
                     st.rerun()
                 else:
@@ -1617,82 +1617,60 @@ def main():
     
     # Navigation modernisée dans la sidebar
     with st.sidebar:
-        st.markdown("## 🎄 Navigation")
-        
-        # Bouton déconnexion
-        if st.session_state.auth:
-            if st.button("🚪 Déconnexion", use_container_width=True):
-                st.session_state.auth = None
-                st.rerun()
-        
-        # Navigation selon le rôle
-        if st.session_state.auth:
-            role = st.session_state.auth.get("role")
-            if role == "supervisor":
-                page_gestionnaire_v2(conn, geo)
-            elif role == "volunteer":
-                page_benevole(conn, geo)
-        else:
-            # Page d'accueil sans authentification
-            choice = st.radio("Choisissez votre interface:", [
-                "🎁 Accueil",
-                "🎅 Bénévole",
-                "👔 Gestionnaire"
-            ])
-            
-            if choice == "🎁 Accueil":
-                page_accueil_v2(conn, geo)
-            elif choice == "🎅 Bénévole":
-                render_login_card("benevole", conn)
-            elif choice == "👔 Gestionnaire":
-                render_login_card("gestionnaire", conn)
-
-# Lancement de l'application
-if __name__ == "__main__":
-    main()
-    with st.sidebar:
+        # Logo tout en haut (collé au bord)
         st.markdown("""
         <div style="
             text-align: center;
-            padding: 1rem;
-            background: linear-gradient(135deg, #c41e3a, #165b33);
-            border-radius: 15px;
-            margin-bottom: 1rem;
+            padding: 1rem 0 2rem 0;
+            margin: -1rem 0 2rem 0;
         ">
-            <h3 style="color: white; margin: 0.5rem 0;">Navigation</h3>
-        </div>
         """, unsafe_allow_html=True)
         
-        # Boutons de navigation stylisés
-        if st.button("🏠 **Accueil**", use_container_width=True):
-            st.session_state.page = "accueil"
-        
-        if st.button("🎅 **Espace Bénévole**", use_container_width=True):
-            st.session_state.page = "benevole"
-        
-        if st.button("👔 **Espace Gestionnaire**", use_container_width=True):
-            st.session_state.page = "gestionnaire"
-        
-        st.markdown("---")
-        
-        # Infos utilisateur
-        if st.session_state.auth:
-            role = st.session_state.auth.get("role", "")
-            team = st.session_state.auth.get("team_id", "")
-            
-            st.markdown(f"""
+        # Afficher le logo s'il existe
+        logo_path = ASSETS / "logo.png"
+        if logo_path.exists():
+            st.image(str(logo_path), width=200, use_column_width=False)
+        else:
+            # Placeholder si pas de logo
+            st.markdown("""
             <div style="
-                background: rgba(255,255,255,0.1);
-                padding: 1rem;
-                border-radius: 10px;
+                background: linear-gradient(135deg, #c41e3a, #165b33);
+                border-radius: 15px;
+                padding: 2rem;
+                color: white;
                 text-align: center;
+                width: 200px;
+                margin: 0 auto;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             ">
-                <strong>Connecté:</strong><br>
-                {role.title()} - {team}
+                <div style="font-size: 2.5rem;">🎁</div>
+                <div style="font-weight: bold; font-size: 1.2rem;">LOGO</div>
+                <small>Espace réservé</small>
             </div>
             """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Navigation
+        st.markdown("### 🎄 Navigation")
+        
+        # Boutons de navigation stylisés
+        if st.button("🏠 Accueil", use_container_width=True):
+            st.session_state.page = "accueil"
+            st.rerun()
+        
+        if st.button("🎅 Bénévole", use_container_width=True):
+            st.session_state.page = "benevole"
+            st.rerun()
             
-            if st.button("� Déconnexion", use_container_width=True):
+        if st.button("👔 Gestionnaire", use_container_width=True):
+            st.session_state.page = "gestionnaire"  
+            st.rerun()
+        
+        # Déconnexion si connecté
+        if st.session_state.auth:
+            st.markdown("---")
+            if st.button("🚪 Déconnexion", use_container_width=True):
                 st.session_state.auth = None
                 st.rerun()
         

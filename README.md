@@ -320,6 +320,18 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - **Stats temps réel** : Progression visible directement dans le header
 - **Support logo** : Détection automatique du logo Guignolée
 
+### 🖼️ Sidebar avec logo intégré
+- **Logo professionnel** : Espace dédié 200px en haut de sidebar
+- **Positionnement optimal** : Collé au bord supérieur sans espace vide
+- **Fallback élégant** : Placeholder festif avec dégradé Guignolée si logo absent
+- **Navigation moderne** : Boutons stylisés Accueil/Bénévole/Gestionnaire
+- **Branding complet** : Cohérence visuelle avec header festif
+
+### 🎨 Effets de connexion festifs
+- **Connexion bénévole** : Effet neige (`st.snow()`) pour ambiance hivernale
+- **Connexion gestionnaire** : Effet neige unifié pour cohérence thématique
+- **Messages personnalisés** : Accueil par équipe avec design festif
+
 ## 📝 Changelog v3.2
 
 ### 🗺️ Améliorations cartographiques majeures
@@ -355,4 +367,4 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 Développé pour **Le Relais de Mascouche** - Collecte de denrées 2025
 
 ---
-*Version 3.3 - Thème Guignolée festif + header moderne*
+*Version 3.4 - Interface sidebar complète avec logo intégré et effets festifs*
