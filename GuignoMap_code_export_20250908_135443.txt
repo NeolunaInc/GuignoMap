@@ -1,0 +1,3968 @@
+================================================================================
+                    GUIGNO-MAP - EXPORT CODE COMPLET POUR AUDIT
+                           Le Relais de Mascouche - v3.5
+================================================================================
+
+================================================================================
+FICHIER: .gitignore
+================================================================================
+# ===============================================
+# GITIGNORE POUR GUIGNO-MAP
+# ===============================================
+
+# ----------------------------------------
+# ENVIRONNEMENTS PYTHON
+# ----------------------------------------
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ----------------------------------------
+# BASES DE DONNÉES
+# ----------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+guigno_map.db
+
+# ----------------------------------------
+# CACHES & DONNÉES TEMPORAIRES
+# ----------------------------------------
+osm_cache.json
+*.cache
+*.tmp
+.DS_Store
+Thumbs.db
+
+# ----------------------------------------
+# LOGS & EXPORTS
+# ----------------------------------------
+*.log
+export_*.txt
+rapport_*.csv
+
+# ----------------------------------------
+# VS CODE & ÉDITEURS
+# ----------------------------------------
+.vscode/
+*.swp
+*.swo
+*~
+
+# ----------------------------------------
+# SYSTÈME WINDOWS/LINUX
+# ----------------------------------------
+*.Zone.Identifier
+.Trash-*
+Desktop.ini
+
+# ----------------------------------------
+# DÉPENDANCES NODE (si ajoutées plus tard)
+# ----------------------------------------
+node_modules/
+npm-debug.log*
+
+# ----------------------------------------
+# STREAMLIT
+# ----------------------------------------
+.streamlit/secrets.toml
+
+# ----------------------------------------
+# DONNÉES SENSIBLES
+# ----------------------------------------
+*.key
+*.pem
+.env
+config.ini
+
+# ----------------------------------------
+# FICHIERS DE SAUVEGARDE
+# ----------------------------------------
+*.bak
+*.backup
+*.save
+*~
+
+# ----------------------------------------
+# KEEP THESE FILES (exceptions)
+# ----------------------------------------
+!.streamlit/config.toml
+!guignomap/assets/
+!requirements.txt
+!README.md
+
+
+
+================================================================================
+FICHIER: README.md
+================================================================================
+# GuignoMap - Système de gestion pour la Guignolée 2025 🎄
+
+Une application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
+
+## ✨ Nouvelles fonctionnalités v3.0
+
+### 🎄 Interface festive
+- **Page d'accueil moderne** avec compte à rebours vers Noël
+- **En-tête festif** aux couleurs de la Guignolée 2025
+- **Carte de Noël thématique** avec icônes festives
+
+### 📱 Optimisations mobiles
+- **Interface responsive** optimisée pour tous les appareils
+- **Navigation tactile** adaptée aux smartphones
+- **Contrôles de carte** optimisés pour mobile
+
+### 🏆 Système de motivation
+- **Badges d'équipe** : Débutants, Actifs, Champions, Légendes
+- **Notifications temps réel** pour les accomplissements
+- **Tableaux de bord interactifs** avec graphiques Plotly
+
+### 📊 Centre d'export avancé
+- **Export Excel professionnel** avec formatage automatique
+- **Génération de listes SMS** pour la communication d'équipe
+- **Export PDF** (préparation)
+- **Rapports détaillés** par équipe et secteur
+
+### 🗺️ Améliorations cartographiques
+- **Choix de fonds de carte** : OpenStreetMap France, CARTO Voyager, Esri
+- **Zoom optimisé** centré sur Mascouche
+- **Zone d'affichage agrandie** : 90% de l'écran sur PC
+- **Gestion d'erreur robuste** : secrets.toml optionnel
+- **Visibilité améliorée** des rues avec lignes plus épaisses
+- **Récupération complète** de toutes les rues via OSM
+
+### 👥 Gestion moderne
+- **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"
+- **Navigation sidebar** moderne et intuitive
+- **Interface bénévole restreinte** aux rues assignées seulement
+- **Authentification simplifiée** avec cartes de connexion
+
+## 🚀 Installation et utilisation
+
+### Prérequis
+- Python 3.8+
+- Accès internet pour OSM et les tuiles de carte
+
+### Installation
+```bash
+git clone https://github.com/votre-repo/GuignoMap.git
+cd GuignoMap
+pip install -r requirements.txt
+```
+
+### Lancement
+```bash
+cd guignomap
+streamlit run app.py
+```
+
+## 📦 Dépendances principales
+
+- **streamlit** : Interface web moderne
+- **folium** : Cartes interactives
+- **pandas** : Manipulation des données
+- **overpy** : API OpenStreetMap
+- **plotly** : Graphiques interactifs
+- **xlsxwriter** : Export Excel professionnel
+
+## 🎯 Fonctionnalités principales
+
+### Pour les bénévoles
+- 🗺️ **Carte interactive** avec leurs rues assignées uniquement
+- ✅ **Système de validation** rue par rue avec notes
+- 🏆 **Badges de progression** et encouragements
+- � **Interface mobile** optimisée
+
+### Pour les gestionnaires
+- 📊 **Tableau de bord complet** avec KPIs temps réel
+- �️ **Vue d'ensemble** de toutes les équipes
+- 📈 **Graphiques de progression** par Plotly
+- � **Centre d'export** avec formats multiples
+- 👥 **Gestion des équipes** et assignation
+- � **Notifications** d'activité
+
+### Données et exports
+- 📝 **Base de données SQLite** intégrée
+- 📊 **Export Excel** avec formatage professionnel
+- 📱 **Listes SMS** pour communication
+- 📄 **Rapports PDF** (en développement)
+source .venv/bin/activate
+
+## 🗃️ Structure du projet
+
+```
+GuignoMap/
+├── guignomap/
+│   ├── app.py              # Application principale Streamlit
+│   ├── db.py               # Gestion base de données
+│   ├── osm.py              # Interface OpenStreetMap
+│   ├── guigno_map.db       # Base de données SQLite
+│   ├── osm_cache.json      # Cache des données OSM
+│   ├── streets_mascouche.csv # Données des rues
+│   └── assets/
+│       ├── banner.png      # Bannière Guignolée
+│       ├── logo.png        # Logo officiel
+│       └── styles.css      # Styles personnalisés
+├── requirements.txt        # Dépendances Python
+└── README.md              # Documentation
+```
+
+## 🎄 Thème Guignolée 2025
+
+L'application adopte une identité visuelle festive pour l'édition 2025 :
+- **Couleurs** : Rouge festif (#dc3545), vert sapin, or
+- **Typographie** : Poppins pour une lecture moderne
+- **Icônes** : Thème de Noël et solidarité
+- **Animations** : Compte à rebours dynamique vers Noël
+
+## � Statistiques temps réel
+
+Le système suit automatiquement :
+- Progression globale de la collecte
+- Performance par équipe et bénévole
+- Couverture géographique
+- Tendances et objectifs
+
+## 🔐 Sécurité et accès
+
+- **Authentification** par nom d'équipe
+- **Restriction d'accès** : bénévoles limités à leurs rues
+- **Données locales** : pas de transmission externe
+- **Sauvegarde automatique** des progressions
+
+## 🤝 Contribution
+
+GuignoMap est développé pour la Guignolée de Mascouche. Pour toute suggestion ou amélioration, contactez l'équipe organisatrice.
+
+---
+
+**Joyeuses Fêtes et bonne Guignolée 2025 ! 🎄🎁**
+2. **Consultez votre liste** de rues assignées
+3. **Commencez une rue** :
+   - Sélectionnez la rue dans la liste
+   - Changez le statut de "À faire" à "En cours"
+4. **Pendant la collecte** :
+   - Ajoutez des notes pour les adresses spéciales
+   - Ex: "145 - Famille absente, denrées déposées"
+5. **Terminez la rue** :
+   - Une fois la rue complète, changez le statut à "Terminée"
+6. **Passez à la rue suivante**
+
+### 🆘 Que faire si...
+
+#### ❓ **Je ne vois pas mes rues**
+- Vérifiez que vous êtes connecté comme bénévole
+- Demandez au superviseur si des rues vous ont été assignées
+
+#### ❓ **Je ne peux pas me connecter**
+- Vérifiez votre code d'équipe et mot de passe
+- Contactez le superviseur pour confirmation
+
+#### ❓ **La carte ne s'affiche pas**
+- Actualisez la page (F5)
+- Le superviseur peut reconstruire les données dans l'onglet Tech
+
+#### ❓ **Je veux voir toute la ville**
+- Seuls les superviseurs voient toute la carte
+- Les bénévoles ne voient que leurs rues assignées
+
+### 💡 Conseils pratiques
+
+#### Pour les **superviseurs** :
+- Créez les équipes AVANT d'assigner des rues
+- Assignez des secteurs logiques (ex: même quartier)
+- Consultez régulièrement l'onglet "Vue d'ensemble" pour le suivi
+- Exportez les données à la fin pour les rapports
+
+#### Pour les **bénévoles** :
+- Changez le statut dès que vous commencez une rue
+- Ajoutez des notes pour les situations particulières
+- N'oubliez pas de marquer "Terminée" quand c'est fini
+- Utilisez l'auto-refresh pour voir les mises à jour des autres équipes
+
+### 🎨 Interface rapide
+- **Menu gauche** : Navigation principale
+- **Carte centrale** : Vue géographique avec couleurs
+- **Légende en bas à droite** : Explication des couleurs et statistiques
+- **Auto-refresh** : Active le rafraîchissement automatique toutes les 15 secondes
+
+## 🔐 Connexion
+
+### Superviseur
+- **Portail** : 🎯 Superviseur
+- **Mot de passe** : `admin123`
+- **Fonctions** : Gestion complète + opérations techniques
+
+### Bénévoles
+- **Portail** : 👥 Bénévole
+- **Identifiants** : Créés par le superviseur
+
+## 📁 Structure du projet
+
+```
+GuignoMap/
+├── guignomap/
+│   ├── app.py              # Application principale
+│   ├── db.py               # Gestion base de données robuste
+│   ├── osm.py              # Intégration OpenStreetMap + adresses
+│   ├── guigno_map.db       # Base SQLite
+│   ├── osm_cache.json      # Cache géométries
+│   ├── osm_addresses.json  # Cache adresses OSM
+│   └── assets/
+│       ├── styles.css      # Styles personnalisés
+│       ├── logo.png        # Logo du Relais
+│       └── banner.png      # Bannière (optionnel)
+├── .streamlit/
+│   └── config.toml         # Configuration Streamlit
+├── requirements.txt        # Dépendances Python
+└── README.md              # Documentation
+```
+
+## 🛠️ Technologies
+
+- **Frontend** : Streamlit + CSS personnalisé
+- **Backend** : Python + SQLite avec gestion d'erreurs
+- **Cartes** : Folium + OpenStreetMap + API Overpass
+- **Données** : Pandas + Overpy avec validation robuste
+
+## 📊 Fonctionnalités détaillées
+
+### Pour les Superviseurs
+- Vue d'ensemble avec carte complète de Mascouche
+- Gestion des équipes avec création/suppression
+- Assignation intelligente des rues
+- Export des rapports (rues + notes)
+- **Onglet Tech** protégé par PIN pour :
+  - Reconstruction du cache géométrique OSM
+  - Import/mise à jour des adresses depuis OSM
+  - Gestion d'erreurs avancée avec fallback
+- Visualisation complète : autoroutes, rues principales, voies privées
+- Statistiques en temps réel avec compteurs dynamiques
+
+### Pour les Bénévoles
+- Interface dédiée à leur tournée assignée
+- Ajout de notes par adresse civique
+- Mise à jour du statut des rues (à faire → en cours → terminée)
+- Consultation des notes existantes
+- Carte centrée sur leur zone de travail
+- Ajout de notes par adresse
+- Mise à jour du statut des rues
+- Suivi en temps réel
+- Carte centrée automatiquement sur la zone de travail
+- Interface fluide avec rechargement intelligent des données
+- **Visibilité totale** des voies de collecte (y compris voies privées)
+
+## 🎨 Thème visuel
+
+Interface moderne aux couleurs du **Relais de Mascouche** :
+- Rouge bordeaux (#8B0000)
+- Or (#FFD700)
+- Design responsive
+- Animations fluides
+
+### Légende de la carte améliorée
+- 🟢 **Vert** : Rues terminées
+- � **Orange** : Rues en cours
+- 🔴 **Rouge** : Rues à faire
+- **Lignes pleines** : Rues assignées à une équipe
+- **Lignes pointillées** : Rues non assignées
+- **Compteurs dynamiques** : Total, assignées, non assignées
+- **Marqueur centre-ville** : Point de référence Mascouche
+
+## 🚧 Développement
+
+### Base de données renforcée
+- Tables : `streets`, `teams`, `notes`, `activity_log`, `addresses`
+- Import automatique depuis OpenStreetMap avec validation
+- Gestion d'erreurs et création automatique des rues manquantes
+- Données de test intégrées et fallback robuste
+
+### Système OSM révolutionnaire v3.1
+- **Couverture maximale** : TOUTES les voies nommées + autoroutes (ref)
+- **Requête optimisée** : `highway+name OU highway+ref`
+- **Cache multi-niveaux** : géométries + adresses OSM
+- **Fallback étendu** : 19 voies principales de Mascouche
+- **Gestion d'erreurs** : validation, retry, récupération automatique
+- **Import adresses** : numéros civiques avec tri intelligent
+- **Performance** : cache Streamlit sensible aux modifications
+
+### Couverture des voies complète
+- 🛣️ **Autoroutes** : A-25, A-640 (via ref)
+- 🏘️ **Voies principales** : Montée Masson, Chemin Sainte-Marie
+- 🚗 **Voies résidentielles** : toutes les rues nommées
+- 🏠 **Voies d'accès** : service, private roads
+- 🔚 **Impasses et allées** : couverture totale
+- ✅ **Inclusions** : TOUT sauf limitation technique OSM
+
+### Améliorations critiques v3.1
+- **🐛 Fix create_map()** : Gestion robuste des colonnes DataFrame
+- **🔧 Fix build_addresses_cache()** : Validation types et tri intelligent  
+- **🛡️ Fix import_addresses_from_cache()** : Création automatique des rues
+- **⚡ Fix list_streets()** : COALESCE pour éviter les NULL
+- **🎯 UI améliorée** : Limites géographiques et zoom adaptatif
+- **📊 Statistiques** : Compteurs en temps réel dans la légende
+
+### Architecture technique
+- **Frontend** : Streamlit avec gestion d'erreur globale
+- **Géolocalisation** : API Overpass OSM avec requête universelle
+- **Données** : SQLite + cache JSON double (géo + adresses)
+- **Couverture** : Système d'inclusion universelle (name + ref)
+- **Robustesse** : Fallback à tous les niveaux avec validation
+
+## 📝 Changelog v3.3
+
+### 🎄 Thème Guignolée festif
+- **Header moderne** : Design spécial Guignolée 2025 avec dégradé rouge/vert
+- **Animations** : Flocons de neige CSS pour ambiance festive
+- **Branding** : "🎅 GUIGNOLÉE 2025 🎁" avec police Manrope
+- **Stats temps réel** : Progression visible directement dans le header
+- **Support logo** : Détection automatique du logo Guignolée
+
+### 🖼️ Sidebar avec logo intégré
+- **Logo professionnel** : Espace dédié 200px en haut de sidebar
+- **Positionnement optimal** : Collé au bord supérieur sans espace vide
+- **Fallback élégant** : Placeholder festif avec dégradé Guignolée si logo absent
+- **Navigation moderne** : Boutons stylisés Accueil/Bénévole/Gestionnaire
+- **Branding complet** : Cohérence visuelle avec header festif
+
+### 🎨 Effets de connexion festifs
+- **Connexion bénévole** : Effet neige (`st.snow()`) pour ambiance hivernale
+- **Connexion gestionnaire** : Effet neige unifié pour cohérence thématique
+- **Messages personnalisés** : Accueil par équipe avec design festif
+
+## 📝 Changelog v3.2
+
+### 🗺️ Améliorations cartographiques majeures
+- **Fonds multiples** : OSM France (détaillé), CARTO Voyager (moderne), Esri WorldStreetMap (professionnel)
+- **Sélecteur de couches** : Contrôle dynamique pour changer de fond à la volée
+- **Zoom optimisé** : zoom_start=13 pour meilleur cadrage de Mascouche
+- **Performances** : prefer_canvas=True pour rendu fluide + contrôles complets
+- **Visibilité** : weight 7/5 et opacity 0.9/0.7 pour meilleure lisibilité
+- **Navigation** : zoom_control et scrollWheelZoom activés
+
+### 🎯 Interface utilisateur
+- **Terminologie** : "Code" → "Identifiant", "Nom" → "Équipe" pour clarté
+- **UX** : Amélioration compréhension des champs par les utilisateurs
+
+## 📝 Changelog v3.1
+
+### 🔧 Corrections critiques
+- **create_map()** : Gestion robuste colonnes pandas + limites géographiques
+- **build_addresses_cache()** : Tri numérique intelligent + gestion d'erreurs
+- **import_addresses_from_cache()** : Validation + création automatique rues
+- **list_streets()** : COALESCE pour colonnes NULL + structure garantie
+- **Requête OSM** : Inclusion autoroutes via ref + couverture maximale
+
+### ✨ Nouvelles fonctionnalités  
+- **Carte centrée Mascouche** : Bounds géographiques + zoom adaptatif
+- **Légende avancée** : Statistiques temps réel + compteurs dynamiques
+- **Marqueur centre-ville** : Point de référence visuel
+- **Fallback étendu** : 19 voies principales + autoroutes
+- **Gestion d'erreurs** : Messages informatifs + récupération automatique
+
+## 📝 Support
+
+Développé pour **Le Relais de Mascouche** - Collecte de denrées 2025
+
+---
+*Version 3.4 - Interface sidebar complète avec logo intégré et effets festifs*
+
+
+
+================================================================================
+FICHIER: requirements.txt
+================================================================================
+streamlit==1.36.0
+pandas==2.2.2
+folium==0.17.0
+streamlit-folium==0.21.0
+overpy==0.7
+plotly==5.18.0
+
+
+================================================================================
+FICHIER: guignomap/__init__.py
+================================================================================
+
+
+
+================================================================================
+FICHIER: guignomap/app.py
+================================================================================
+"""
+Guigno-Map - Application de gestion de collecte de denrées
+Le Relais de Mascouche
+Version 3.0 - Production
+"""
+
+from pathlib import Path
+import time
+from datetime import datetime
+import pandas as pd
+import streamlit as st
+import folium
+from streamlit_folium import st_folium
+
+# Import des modules locaux
+import db
+from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
+
+# Configuration des chemins
+DB_PATH = Path(__file__).parent / "guigno_map.db"
+ASSETS = Path(__file__).parent / "assets"
+
+# Configuration Streamlit
+st.set_page_config(
+    page_title="Guigno-Map | Relais de Mascouche",
+    page_icon="🎁",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Initialisation session
+if "auth" not in st.session_state:
+    st.session_state.auth = None
+
+# ============================================
+# COMPOSANTS UI
+# ============================================
+
+def inject_css():
+    """Charge le CSS depuis le fichier externe"""
+    css_file = ASSETS / "styles.css"
+    if css_file.exists():
+        css = css_file.read_text(encoding="utf-8")
+        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+def render_header():
+    """Header moderne avec logo Guignolée et design festif"""
+    
+    # Container principal avec fond festif
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, #c41e3a 0%, #165b33 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    ">
+        <!-- Flocons de neige animés en CSS -->
+        <div style="position: absolute; width: 100%; height: 100%; opacity: 0.1;">
+            <span style="position: absolute; top: 10%; left: 10%; font-size: 2rem;">❄️</span>
+            <span style="position: absolute; top: 20%; left: 80%; font-size: 1.5rem;">❄️</span>
+            <span style="position: absolute; top: 60%; left: 30%; font-size: 1.8rem;">❄️</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([2, 5, 2])
+    
+    with col1:
+        # Logo Guignolée
+        if (ASSETS / "guignolee.png").exists():
+            st.image(str(ASSETS / "guignolee.png"), width=150)
+    
+    with col2:
+        st.markdown("""
+        <div style="text-align: center;">
+            <h1 style="
+                color: white;
+                font-family: 'Manrope', sans-serif;
+                font-size: 2.5rem;
+                margin: 0;
+                text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+                letter-spacing: 2px;
+            ">🎅 GUIGNOLÉE 2025 🎁</h1>
+            <p style="
+                color: #FFD700;
+                font-size: 1.2rem;
+                margin: 0.5rem 0 0 0;
+                font-weight: 600;
+            ">Le Relais de Mascouche - 1er décembre</p>
+            <p style="
+                color: rgba(255,255,255,0.9);
+                font-size: 1rem;
+                margin-top: 0.5rem;
+            ">Système de gestion de collecte</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        # Stats en temps réel
+        stats = db.extended_stats(st.session_state.get('conn'))
+        progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+        
+        st.markdown(f"""
+        <div style="
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+        ">
+            <div style="color: #FFD700; font-size: 2rem; font-weight: bold;">
+                {progress:.0f}%
+            </div>
+            <div style="color: white; font-size: 0.9rem;">
+                Complété
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+def render_login_card(role="benevole", conn=None):
+    """Carte de connexion moderne avec design festif"""
+    
+    # Container de connexion stylisé
+    st.markdown("""
+    <div style="
+        max-width: 400px;
+        margin: 3rem auto;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,215,0,0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    ">
+    """, unsafe_allow_html=True)
+    
+    # Icône et titre
+    if role == "superviseur" or role == "gestionnaire":
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 3rem;">👔</div>
+            <h2 style="color: #FFD700; margin: 1rem 0;">Espace Gestionnaire</h2>
+            <p style="color: #cbd5e1;">Gérez la collecte et les équipes</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_gestionnaire", clear_on_submit=False):
+            password = st.text_input(
+                "🔐 Mot de passe",
+                type="password",
+                placeholder="Entrez le mot de passe gestionnaire"
+            )
+            
+            col1, col2, col3 = st.columns([1,2,1])
+            with col2:
+                submit = st.form_submit_button(
+                    "🚀 Connexion",
+                    use_container_width=True
+                )
+            
+            if submit:
+                if db.verify_team(conn, "ADMIN", password):
+                    st.session_state.auth = {"role": "supervisor", "team_id": "ADMIN"}
+                    st.success("✅ Bienvenue dans l'espace gestionnaire!")
+                    st.snow()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Mot de passe incorrect")
+    
+    else:  # Bénévole
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 3rem;">🎅</div>
+            <h2 style="color: #FFD700; margin: 1rem 0;">Espace Bénévole</h2>
+            <p style="color: #cbd5e1;">Accédez à vos rues assignées</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_benevole", clear_on_submit=False):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                team_id = st.text_input(
+                    "👥 Identifiant d'équipe",
+                    placeholder="Ex: EQ001"
+                )
+            
+            with col2:
+                password = st.text_input(
+                    "🔐 Mot de passe",
+                    type="password",
+                    placeholder="Mot de passe équipe"
+                )
+            
+            col1, col2, col3 = st.columns([1,2,1])
+            with col2:
+                submit = st.form_submit_button(
+                    "🎄 Connexion",
+                    use_container_width=True
+                )
+            
+            if submit:
+                if db.verify_team(conn, team_id, password):
+                    st.session_state.auth = {"role": "volunteer", "team_id": team_id}
+                    st.success(f"✅ Bienvenue équipe {team_id}!")
+                    st.snow()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Identifiants incorrects")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Aide en bas
+    st.markdown("""
+    <div style="text-align: center; margin-top: 2rem; color: #8b92a4;">
+        <small>
+        Besoin d'aide? Contactez votre gestionnaire<br>
+        📞 450-474-4133
+        </small>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_metrics(stats):
+    """Affiche les métriques principales"""
+    progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Rues", stats['total'])
+    
+    with col2:
+        st.metric("Rues Terminées", stats['done'])
+    
+    with col3:
+        st.metric("En Cours", stats.get('partial', 0))
+    
+    with col4:
+        st.metric("Progression", f"{progress:.1f}%")
+
+def render_dashboard_gestionnaire(conn, geo):
+    """Dashboard moderne pour gestionnaires avec KPIs visuels"""
+    
+    # KPIs principaux en cartes colorées
+    stats = db.extended_stats(conn)
+    progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+    
+    st.markdown("### 📊 Tableau de bord en temps réel")
+    
+    # Ligne de KPIs avec icônes festives
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+        ">
+            <div style="font-size: 2.5rem;">🏘️</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{stats['total']}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Total Rues</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        ">
+            <div style="font-size: 2.5rem;">✅</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{stats['done']}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Terminées</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+        ">
+            <div style="font-size: 2.5rem;">🚶</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{stats.get('partial', 0)}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">En cours</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        # Nombre d'équipes actives
+        teams_count = len(db.teams(conn))
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        ">
+            <div style="font-size: 2.5rem;">👥</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{teams_count}</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Équipes</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(196,30,58,0.3);
+        ">
+            <div style="font-size: 2.5rem;">🎯</div>
+            <div style="color: white; font-size: 2rem; font-weight: bold;">{progress:.0f}%</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Progression</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Barre de progression visuelle
+    st.markdown("### 🎄 Progression globale")
+    st.progress(progress / 100)
+    
+    # Graphique par secteur (si disponible)
+    st.markdown("### 📈 Performance par équipe")
+    try:
+        teams_stats = db.stats_by_team(conn)
+        if not teams_stats.empty:
+            # Graphique en barres colorées
+            import plotly.express as px
+            fig = px.bar(
+                teams_stats, 
+                x='team', 
+                y='progress',
+                color='progress',
+                color_continuous_scale=['#ef4444', '#f59e0b', '#22c55e'],
+                labels={'team': 'Équipe', 'progress': 'Progression (%)'},
+                title="Performance des équipes"
+            )
+            fig.update_layout(
+                plot_bgcolor='rgba(0,0,0,0)',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font_color='white'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Aucune statistique d'équipe disponible")
+    except Exception as e:
+        st.warning("Graphiques non disponibles (module plotly manquant)")
+        # Fallback vers un tableau simple
+        try:
+            teams_stats = db.stats_by_team(conn)
+            if not teams_stats.empty:
+                st.dataframe(teams_stats, use_container_width=True)
+        except:
+            st.info("Aucune statistique d'équipe disponible")
+
+def create_map(df, geo):
+    """Crée la carte Folium centrée sur Mascouche avec toutes les rues"""
+    # Limites de Mascouche
+    bounds = {
+        "north": 45.78,
+        "south": 45.70,
+        "east": -73.55,
+        "west": -73.70
+    }
+    center = [(bounds["north"] + bounds["south"]) / 2, 
+              (bounds["east"] + bounds["west"]) / 2]
+    
+    # Créer la carte
+    m = folium.Map(
+        location=center,
+        zoom_start=13,  # Zoom optimisé pour voir toute la ville
+        tiles="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png",
+        attr='© OpenStreetMap France',
+        control_scale=True,
+        max_bounds=True,
+        min_zoom=11,
+        max_zoom=18,
+        prefer_canvas=True,
+        zoom_control=True,
+        scrollWheelZoom=True
+    )
+    
+    # Ajouter plusieurs couches de fond
+    folium.TileLayer(
+        tiles='https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+        attr='© OpenStreetMap France',
+        name='OSM France (Détaillé)',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    folium.TileLayer(
+        tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        attr='© CARTO',
+        name='CARTO Voyager',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    folium.TileLayer(
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr='© Esri',
+        name='Esri WorldStreetMap',
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    # Ajouter le contrôle des couches
+    folium.LayerControl().add_to(m)
+    
+    # Définir les limites de la carte sur Mascouche
+    m.fit_bounds([[bounds["south"], bounds["west"]], 
+                  [bounds["north"], bounds["east"]]])
+    
+    if not geo:
+        st.warning("Aucune donnée géométrique disponible")
+        return m
+    
+    # Construire le lookup des infos DB
+    street_info = {}
+    if not df.empty:
+        for idx, row in df.iterrows():
+            name = str(row['name']) if 'name' in df.columns else ''
+            status = row['status'] if 'status' in df.columns and pd.notna(row['status']) else 'a_faire'
+            team = row['team'] if 'team' in df.columns and pd.notna(row['team']) else ''
+            notes = str(row['notes']) if 'notes' in df.columns and pd.notna(row['notes']) else '0'
+            
+            street_info[name] = {
+                'status': status,
+                'team': str(team).strip() if team else '',
+                'notes': notes
+            }
+    
+    # Couleurs par statut
+    status_colors = {
+        'terminee': '#22c55e',  # Vert
+        'en_cours': '#f59e0b',  # Orange
+        'a_faire': '#ef4444'    # Rouge
+    }
+    
+    # Compteurs pour stats
+    stats = {"total": 0, "assigned": 0, "unassigned": 0}
+    
+    # Ajouter TOUTES les rues de la géométrie
+    for name, paths in geo.items():
+        stats["total"] += 1
+        
+        # Info depuis DB ou défaut (rouge pointillé)
+        info = street_info.get(name, {
+            'status': 'a_faire',
+            'team': '',
+            'notes': '0'
+        })
+        
+        status = info['status']
+        team = info['team']
+        notes = info['notes']
+        
+        # Style: TOUJOURS pointillé si pas d'équipe
+        has_team = bool(team)
+        color = status_colors.get(status, '#ef4444')  # Rouge par défaut
+        opacity = 0.9 if has_team else 0.7
+        dash = None if has_team else '8,12'  # Pointillés si non assigné
+        weight = 7 if has_team else 5
+        
+        if has_team:
+            stats["assigned"] += 1
+        else:
+            stats["unassigned"] += 1
+        
+        # Tooltip informatif
+        tooltip_html = f"""
+        <div style='font-family: sans-serif'>
+            <strong style='font-size: 14px'>{name}</strong><br>
+            <span style='color: {color}'>● Statut: {status.replace('_', ' ').title()}</span><br>
+            <span>📋 Équipe: {team if team else '⚠️ NON ASSIGNÉE'}</span><br>
+            <span>📝 Notes: {notes}</span>
+        </div>
+        """
+        
+        # Ajouter chaque segment de la rue
+        for path in paths:
+            if path and len(path) >= 2:
+                folium.PolyLine(
+                    path,
+                    color=color,
+                    weight=weight,
+                    opacity=opacity,
+                    dash_array=dash,
+                    tooltip=folium.Tooltip(tooltip_html, sticky=True)
+                ).add_to(m)
+    
+    # Ajouter un marqueur au centre-ville
+    folium.Marker(
+        [45.7475, -73.6005],
+        popup="Centre-ville de Mascouche",
+        tooltip="Centre-ville",
+        icon=folium.Icon(color='red', icon='info-sign')
+    ).add_to(m)
+    
+    # Légende améliorée
+    legend_html = f'''
+    <div style="position: fixed; bottom: 50px; right: 50px; width: 220px;
+                background: white; z-index:9999; font-size:14px;
+                border: 2px solid #8B0000; border-radius: 10px; padding: 15px;
+                box-shadow: 0 0 15px rgba(0,0,0,0.2)">
+        <h4 style="margin: 0 0 10px 0; color: #8B0000;">Légende</h4>
+        <div><span style="background:#22c55e; width:30px; height:3px; display:inline-block;"></span> Terminée</div>
+        <div><span style="background:#f59e0b; width:30px; height:3px; display:inline-block;"></span> En cours</div>
+        <div><span style="background:#ef4444; width:30px; height:3px; display:inline-block;"></span> À faire</div>
+        <hr style="margin: 8px 0;">
+        <div><span style="border-bottom: 3px dashed #666; width:30px; display:inline-block;"></span> Non assignée</div>
+        <div><span style="border-bottom: 3px solid #666; width:30px; display:inline-block;"></span> Assignée</div>
+        <hr style="margin: 8px 0;">
+        <small>
+            <strong>Total:</strong> {stats["total"]} voies<br>
+            <strong>Assignées:</strong> {stats["assigned"]}<br>
+            <strong>Non assignées:</strong> {stats["unassigned"]}
+        </small>
+    </div>
+    '''
+    m.get_root().html.add_child(folium.Element(legend_html))
+    
+    return m
+
+
+# ============================================
+# UTILITAIRES EXPORT
+# ============================================
+
+def export_excel_professionnel(conn):
+    """Export Excel avec mise en forme professionnelle"""
+    try:
+        import xlsxwriter
+        from io import BytesIO
+        
+        output = BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        
+        # Feuille 1 : Résumé
+        summary = workbook.add_worksheet('Résumé Guignolée 2025')
+        
+        # Styles
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#c41e3a',
+            'font_color': 'white',
+            'align': 'center',
+            'border': 1
+        })
+        
+        data_format = workbook.add_format({
+            'align': 'center',
+            'border': 1
+        })
+        
+        # En-têtes
+        summary.merge_range(0, 0, 0, 4, 'GUIGNOLÉE 2025 - LE RELAIS DE MASCOUCHE', header_format)
+        
+        # Stats
+        stats = db.extended_stats(conn)
+        summary.write(2, 0, 'Total Rues:', header_format)
+        summary.write(2, 1, stats['total'], data_format)
+        summary.write(3, 0, 'Terminées:', header_format)
+        summary.write(3, 1, stats['done'], data_format)
+        summary.write(4, 0, 'Progression:', header_format)
+        summary.write(4, 1, f"{(stats['done']/stats['total']*100) if stats['total'] > 0 else 0:.1f}%", data_format)
+        
+        # Feuille 2 : Détails par rue
+        details = workbook.add_worksheet('Détails par rue')
+        df = db.list_streets(conn)
+        
+        # Headers
+        headers = ['Rue', 'Secteur', 'Équipe', 'Statut', 'Notes']
+        for col, header in enumerate(headers):
+            details.write(0, col, header, header_format)
+        
+        # Data
+        for row, (_, data) in enumerate(df.iterrows(), 1):
+            details.write(row, 0, data.get('name', ''), data_format)
+            details.write(row, 1, data.get('sector', ''), data_format)
+            details.write(row, 2, data.get('team', ''), data_format)
+            details.write(row, 3, data.get('status', ''), data_format)
+            details.write(row, 4, str(data.get('notes', 0)), data_format)
+        
+        workbook.close()
+        output.seek(0)
+        return output.getvalue()
+        
+    except ImportError:
+        # Fallback si xlsxwriter n'est pas disponible
+        return db.export_to_csv(conn)
+
+
+# ============================================
+# FONCTIONNALITÉS AVANCÉES
+# ============================================
+
+def detect_mobile():
+    """Détecte si l'utilisateur est sur mobile"""
+    try:
+        # Récupérer les paramètres de l'URL pour forcer le mode mobile
+        query_params = st.experimental_get_query_params()
+        if 'mobile' in query_params:
+            return True
+        
+        # Mobile-first approach pour l'instant
+        return True
+    except:
+        return False
+
+def show_notification(message, type="success"):
+    """Affiche une notification stylisée"""
+    icons = {
+        "success": "✅",
+        "error": "❌",
+        "warning": "⚠️",
+        "info": "ℹ️"
+    }
+    colors = {
+        "success": "#22c55e",
+        "error": "#ef4444", 
+        "warning": "#f59e0b",
+        "info": "#3b82f6"
+    }
+    
+    st.markdown(f"""
+    <div style="
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: {colors[type]};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+    ">
+        <strong>{icons[type]} {message}</strong>
+    </div>
+    <style>
+    @keyframes slideIn {{
+        from {{ transform: translateX(100%); opacity: 0; }}
+        to {{ transform: translateX(0); opacity: 1; }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+def show_team_badges(conn, team_id):
+    """Affiche les badges de réussite de l'équipe"""
+    try:
+        df = db.list_streets(conn, team=team_id)
+        done = len(df[df['status'] == 'terminee'])
+        total = len(df)
+        
+        badges = []
+        if done >= 1:
+            badges.append("🏆 Première rue!")
+        if done >= total * 0.25:
+            badges.append("🥉 25% complété")
+        if done >= total * 0.5:
+            badges.append("🥈 50% complété")
+        if done >= total * 0.75:
+            badges.append("🥇 75% complété")
+        if done == total:
+            badges.append("🌟 CHAMPION!")
+        
+        if badges:
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #FFD700, #FFA500);
+                padding: 1rem;
+                border-radius: 10px;
+                text-align: center;
+                margin: 1rem 0;
+            ">
+                <strong>Vos badges:</strong><br>
+                <div style="font-size: 2rem; margin-top: 0.5rem;">
+                    {' '.join(badges)}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    except:
+        pass
+
+def generate_sms_list(conn):
+    """Génère une liste de téléphones pour SMS de groupe"""
+    try:
+        # Cette fonction nécessiterait une table de téléphones
+        # Pour l'instant, retourne un exemple
+        return "# Liste des téléphones bénévoles\n# 450-XXX-XXXX\n# 438-XXX-XXXX"
+    except:
+        return "Liste non disponible"
+
+def create_festive_map(df, geo):
+    """Carte avec thème festif de Noël"""
+    center = [45.7475, -73.6005]
+    
+    m = folium.Map(
+        location=center,
+        zoom_start=13,
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attr='© Esri',
+        control_scale=True
+    )
+    
+    # Marqueur spécial pour le Relais
+    folium.Marker(
+        [45.7475, -73.6005],
+        popup="🎁 Le Relais de Mascouche",
+        tooltip="Point de départ de la Guignolée",
+        icon=folium.Icon(color='red', icon='gift', prefix='fa')
+    ).add_to(m)
+    
+    # Construction du lookup
+    street_info = {}
+    if not df.empty:
+        for _, row in df.iterrows():
+            name = str(row['name']) if 'name' in df.columns else ''
+            street_info[name] = {
+                'status': row.get('status', 'a_faire'),
+                'team': row.get('team', ''),
+                'notes': str(row.get('notes', 0))
+            }
+    
+    # Couleurs festives
+    status_colors = {
+        'terminee': '#165b33',  # Vert sapin
+        'en_cours': '#FFD700',   # Or
+        'a_faire': '#c41e3a'     # Rouge Noël
+    }
+    
+    for name, paths in geo.items():
+        info = street_info.get(name, {'status': 'a_faire', 'team': '', 'notes': '0'})
+        
+        color = status_colors.get(info['status'], '#c41e3a')
+        team = info['team']
+        opacity = 0.9 if team else 0.5
+        dash = None if team else '10,10'
+        weight = 8 if team else 5
+        
+        tooltip_html = f"""
+        <div style='font-family: sans-serif; font-size: 14px;'>
+            <strong>{name}</strong><br>
+            <span style='color: {color};'>● {info['status'].replace('_', ' ').title()}</span><br>
+            👥 {team if team else 'Non assignée'}<br>
+            📝 {info['notes']} notes
+        </div>
+        """
+        
+        for path in paths:
+            if path and len(path) >= 2:
+                folium.PolyLine(
+                    path,
+                    color=color,
+                    weight=weight,
+                    opacity=opacity,
+                    dash_array=dash,
+                    tooltip=folium.Tooltip(tooltip_html, sticky=True)
+                ).add_to(m)
+    
+    # Légende festive
+    legend_html = '''
+    <div style="position: fixed; bottom: 50px; right: 50px; width: 220px;
+                background: linear-gradient(135deg, white, #f0f0f0);
+                border: 3px solid #c41e3a; border-radius: 15px; padding: 15px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
+        <h4 style="margin: 0 0 10px 0; color: #c41e3a; text-align: center;">
+            🎄 Légende 🎄
+        </h4>
+        <div><span style="background:#165b33; width:30px; height:4px; display:inline-block;"></span> Collecte terminée</div>
+        <div><span style="background:#FFD700; width:30px; height:4px; display:inline-block;"></span> En cours</div>
+        <div><span style="background:#c41e3a; width:30px; height:4px; display:inline-block;"></span> À faire</div>
+        <hr style="margin: 8px 0; border-color: #c41e3a;">
+        <div><span style="border-bottom: 4px dashed #999; width:30px; display:inline-block;"></span> Non assignée</div>
+    </div>
+    '''
+    m.get_root().html.add_child(folium.Element(legend_html))
+    
+    return m
+
+def page_export_gestionnaire(conn):
+    """Section export avec formats multiples"""
+    
+    st.markdown("### 📊 Centre d'export des données")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
+            <h4>📑 Rapport PDF</h4>
+            <p><small>Format professionnel pour présentation</small></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("Générer PDF", use_container_width=True):
+            # Pour l'instant, génère un fichier texte
+            report = f"""
+RAPPORT GUIGNOLÉE 2025 - LE RELAIS DE MASCOUCHE
+===============================================
+
+Date: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+STATISTIQUES GLOBALES:
+{db.extended_stats(conn)}
+
+Généré par Guigno-Map v4.0
+"""
+            st.download_button(
+                "📥 Télécharger rapport",
+                report,
+                "rapport_guignolee_2025.txt",
+                "text/plain",
+                use_container_width=True
+            )
+    
+    with col2:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
+            <h4>📊 Excel détaillé</h4>
+            <p><small>Avec graphiques et mise en forme</small></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        try:
+            excel_data = export_excel_professionnel(conn)
+            st.download_button(
+                "📥 Télécharger Excel",
+                excel_data,
+                "guignolee_2025.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+        except:
+            st.button("Excel (Non disponible)", disabled=True, use_container_width=True)
+    
+    with col3:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
+            <h4>📱 Liste SMS</h4>
+            <p><small>Téléphones des bénévoles</small></p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        sms_list = generate_sms_list(conn)
+        st.download_button(
+            "📥 Liste téléphones",
+            sms_list,
+            "telephones_benevoles.txt",
+            "text/plain",
+            use_container_width=True
+        )
+
+
+# ============================================
+# PAGES
+# ============================================
+
+def page_accueil(conn, geo):
+    """Page d'accueil"""
+    st.markdown("### 🎁 Bienvenue sur Guigno-Map!")
+    st.info("Sélectionnez votre mode dans le menu de gauche pour commencer.")
+    
+    st.markdown("---")
+    st.markdown("#### 📊 Aperçu de la collecte")
+    
+    stats = db.extended_stats(conn)
+    render_metrics(stats)
+    
+    df_all = db.list_streets(conn)
+    if not df_all.empty:
+        m = create_map(df_all, geo)
+        st_folium(m, height=800, width=None, returned_objects=[])
+
+def page_accueil_v2(conn, geo):
+    """Page d'accueil festive avec compte à rebours"""
+    
+    # Compte à rebours jusqu'au 1er décembre
+    from datetime import datetime, timedelta
+    target = datetime(2025, 12, 1, 8, 0, 0)
+    now = datetime.now()
+    diff = target - now
+    
+    if diff.days > 0:
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <h2 style="color: #FFD700; margin: 0;">⏰ Compte à rebours Guignolée</h2>
+            <div style="font-size: 3rem; color: white; margin: 1rem 0;">
+                {diff.days} jours {diff.seconds//3600} heures
+            </div>
+            <p style="color: rgba(255,255,255,0.9);">avant le grand jour!</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <h2 style="color: #c41e3a; margin: 0;">🎉 C'EST AUJOURD'HUI!</h2>
+            <div style="font-size: 2rem; color: #165b33; margin: 1rem 0;">
+                Bonne Guignolée 2025!
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Hero section festif
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 3rem 1rem;
+        background: linear-gradient(135deg, rgba(196,30,58,0.1), rgba(22,91,51,0.1));
+        border-radius: 20px;
+        margin-bottom: 2rem;
+    ">
+        <h1 style="font-size: 3rem; margin: 0;">🎄 Bienvenue sur Guigno-Map 🎄</h1>
+        <p style="font-size: 1.3rem; color: #666; margin: 1rem 0;">
+            Votre plateforme digitale pour la Guignolée 2025
+        </p>
+        <p style="color: #888;">
+            Gérez efficacement votre collecte de denrées avec une interface moderne
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Stats visuelles améliorées
+    stats = db.extended_stats(conn)
+    progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+    
+    st.markdown("### 📊 État de la collecte en temps réel")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(34,197,94,0.3);
+        ">
+            <div style="font-size: 3rem;">🏘️</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{stats['total']}</div>
+            <div>Total Rues</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        ">
+            <div style="font-size: 3rem;">✅</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{stats['done']}</div>
+            <div>Complétées</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+        ">
+            <div style="font-size: 3rem;">🚶</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{stats.get('partial', 0)}</div>
+            <div>En Cours</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div style="
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(196,30,58,0.3);
+        ">
+            <div style="font-size: 3rem;">🎯</div>
+            <div style="font-size: 2.5rem; font-weight: bold;">{progress:.0f}%</div>
+            <div>Progression</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Barre de progression globale
+    st.markdown("### 🎄 Progression globale de la collecte")
+    st.progress(progress / 100)
+    
+    # Carte festive
+    st.markdown("### 🗺️ Vue d'ensemble de Mascouche")
+    df_all = db.list_streets(conn)
+    if not df_all.empty:
+        m = create_festive_map(df_all, geo)
+        st_folium(m, height=750, width=None, returned_objects=[])
+    
+    # CSS pour réduire l'espace après la carte
+    st.markdown("""
+    <style>
+    div[data-testid="stVerticalBlock"] > div:has(iframe) {
+        margin-bottom: 0 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Call to action
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05));
+        border: 2px solid rgba(255,215,0,0.3);
+        border-radius: 15px;
+        margin-top: 1rem;
+    ">
+        <h3>🎅 Prêt à participer ?</h3>
+        <p>Choisissez votre rôle dans le menu de gauche pour commencer</p>
+        <p style="font-size: 0.9rem; color: #666;">
+            Bénévoles : Accédez à vos rues assignées<br>
+            Gestionnaires : Supervisez toute la collecte
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def page_benevole(conn, geo):
+    """Interface bénévole moderne avec vue limitée"""
+    
+    if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
+        render_login_card("benevole", conn)
+        return
+    
+    team_id = st.session_state.auth["team_id"]
+    
+    # Header d'équipe personnalisé
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #165b33, #c41e3a);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
+    ">
+        <h2 style="color: white; margin: 0;">🎅 Équipe {team_id}</h2>
+        <p style="color: #FFD700; margin: 0.5rem 0 0 0;">Bonne collecte!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Stats de l'équipe
+    df_team = db.list_streets(conn, team=team_id)
+    if df_team.empty:
+        st.warning("Aucune rue assignée. Contactez votre superviseur.")
+        return
+    
+    done = len(df_team[df_team['status'] == 'terminee'])
+    total = len(df_team)
+    progress = (done / total * 100) if total > 0 else 0
+    
+    # Mini dashboard équipe
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("📍 Vos rues", total)
+    with col2:
+        st.metric("✅ Complétées", done)
+    with col3:
+        st.metric("🎯 Progression", f"{progress:.0f}%")
+    
+    # Système de badges
+    show_team_badges(conn, team_id)
+    
+    # Barre de progression
+    st.progress(progress / 100)
+    
+    # Tabs modernisés
+    tab1, tab2, tab3 = st.tabs(["🗺️ Ma carte", "📝 Collecte", "📊 Historique"])
+    
+    with tab1:
+        # CARTE LIMITÉE AUX RUES DE L'ÉQUIPE
+        st.markdown("### Vos rues assignées")
+        
+        # Créer une carte avec SEULEMENT les rues de l'équipe
+        m = folium.Map(
+            location=[45.7475, -73.6005],
+            zoom_start=14,
+            tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+            attr='© CARTO'
+        )
+        
+        # Filtrer geo pour n'afficher QUE les rues de l'équipe
+        team_streets = df_team['name'].tolist()
+        
+        for street_name in team_streets:
+            if street_name in geo:
+                status = df_team[df_team['name'] == street_name]['status'].iloc[0]
+                
+                # Couleurs selon statut
+                colors = {
+                    'terminee': '#22c55e',
+                    'en_cours': '#f59e0b',
+                    'a_faire': '#ef4444'
+                }
+                color = colors.get(status, '#ef4444')
+                
+                # Ajouter les segments de cette rue
+                for path in geo[street_name]:
+                    if path and len(path) >= 2:
+                        folium.PolyLine(
+                            path,
+                            color=color,
+                            weight=8,  # Plus épais pour mobile
+                            opacity=0.9,
+                            tooltip=f"{street_name} - {status.replace('_', ' ').title()}"
+                        ).add_to(m)
+        
+        # Centrer sur les rues de l'équipe
+        if team_streets and team_streets[0] in geo:
+            first_street = geo[team_streets[0]][0]
+            if first_street:
+                m.location = first_street[0]
+        
+        st_folium(m, height=650, width=None, returned_objects=[])
+    
+    with tab2:
+        st.markdown("### 📋 Checklist de collecte")
+        
+        # Liste interactive des rues
+        for _, row in df_team.iterrows():
+            street = row['name']
+            status = row['status']
+            notes_count = row.get('notes', 0)
+            
+            # Carte de rue stylisée
+            status_emoji = {'terminee': '✅', 'en_cours': '🚶', 'a_faire': '⭕'}
+            status_color = {'terminee': '#22c55e', 'en_cours': '#f59e0b', 'a_faire': '#ef4444'}
+            
+            with st.expander(f"{status_emoji.get(status, '⭕')} **{street}** ({notes_count} notes)"):
+                
+                # Changement rapide de statut
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if st.button("⭕ À faire", key=f"todo_{street}", use_container_width=True):
+                        db.set_status(conn, street, 'a_faire')
+                        st.rerun()
+                with col2:
+                    if st.button("🚶 En cours", key=f"progress_{street}", use_container_width=True):
+                        db.set_status(conn, street, 'en_cours')
+                        st.rerun()
+                with col3:
+                    if st.button("✅ Terminée", key=f"done_{street}", use_container_width=True):
+                        db.set_status(conn, street, 'terminee')
+                        st.rerun()
+                
+                st.markdown("---")
+                
+                # Ajout de note rapide
+                st.markdown("**Ajouter une note:**")
+                with st.form(f"note_{street}", clear_on_submit=True):
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        num = st.text_input("N°", placeholder="123")
+                    with col2:
+                        note = st.text_input("Note", placeholder="Personne absente")
+                    
+                    if st.form_submit_button("➕ Ajouter"):
+                        if num and note:
+                            db.add_note_for_address(conn, street, team_id, num, note)
+                            st.success("Note ajoutée!")
+                            st.rerun()
+                
+                # Notes existantes
+                notes = db.get_street_addresses_with_notes(conn, street)
+                if not notes.empty:
+                    st.markdown("**Notes existantes:**")
+                    for _, n in notes.iterrows():
+                        st.markdown(f"• **{n['address_number']}** : {n['comment']}")
+    
+    with tab3:
+        st.markdown("### 📊 Votre historique")
+        try:
+            notes = db.get_team_notes(conn, team_id)
+            if not notes.empty:
+                st.dataframe(notes, use_container_width=True)
+            else:
+                st.info("Aucune note encore")
+        except:
+            st.info("Historique non disponible")
+
+def page_benevole_v2(conn, geo):
+    """Interface bénévole moderne v2 - Alias pour compatibilité"""
+    return page_benevole(conn, geo)
+
+def page_gestionnaire_v2(conn, geo):
+    """Interface gestionnaire moderne (ancien superviseur)"""
+    st.header("👔 Tableau de Bord Gestionnaire")
+    
+    # Vérifier l'authentification
+    if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
+        render_login_card("gestionnaire", conn)
+        return
+    
+    # Dashboard moderne
+    render_dashboard_gestionnaire(conn, geo)
+    
+    # Tabs
+    tabs = st.tabs([
+        "📊 Vue d'ensemble",
+        "👥 Équipes",
+        "🗺️ Assignation",
+        "📥 Export",
+        "🛠 Tech"
+    ])
+    
+    with tabs[0]:
+        # Carte générale
+        st.markdown("### Carte générale")
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            m = create_map(df_all, geo)
+            st_folium(m, height=800, width=None, returned_objects=[])
+        
+        # Activité récente
+        st.markdown("### Activité récente")
+        try:
+            recent = db.recent_activity(conn, limit=10)
+            if not recent.empty:
+                st.dataframe(recent, use_container_width=True)
+            else:
+                st.info("Aucune activité récente")
+        except:
+            st.info("Historique d'activité non disponible")
+    
+    with tabs[1]:
+        # Gestion des équipes
+        st.markdown("### Gestion des équipes")
+        
+        with st.expander("Créer une équipe"):
+            with st.form("new_team", clear_on_submit=True):
+                new_id = st.text_input("Identifiant")
+                new_name = st.text_input("Équipe")
+                new_pass = st.text_input("Mot de passe", type="password")
+                
+                if st.form_submit_button("Créer"):
+                    if all([new_id, new_name, new_pass]):
+                        if db.create_team(conn, new_id, new_name, new_pass):
+                            st.success(f"Équipe {new_id} créée")
+                            st.rerun()
+        
+        # Liste des équipes
+        try:
+            teams_df = db.get_all_teams(conn)
+            if not teams_df.empty:
+                st.dataframe(teams_df, use_container_width=True)
+            else:
+                st.info("Aucune équipe créée")
+        except:
+            st.info("Liste des équipes non disponible")
+    
+    with tabs[2]:
+        # Assignation
+        st.markdown("### Assignation des rues")
+        
+        try:
+            unassigned = db.get_unassigned_streets(conn)
+            
+            if not unassigned.empty:
+                with st.form("assign"):
+                    team = st.selectbox("Équipe", db.teams(conn))
+                    streets = st.multiselect("Rues", unassigned['name'].tolist())
+                    
+                    if st.form_submit_button("Assigner"):
+                        if team and streets:
+                            db.assign_streets_to_team(conn, streets, team)
+                            st.success("Rues assignées!")
+                            st.rerun()
+            else:
+                st.success("Toutes les rues sont assignées!")
+        except:
+            st.warning("Fonction d'assignation non disponible")
+        
+        # Tableau des assignations
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            st.dataframe(
+                df_all[['name', 'sector', 'team', 'status']],
+                use_container_width=True
+            )
+    
+    with tabs[3]:
+        # Export amélioré
+        st.markdown("### Export des données")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.download_button(
+                "📥 Export CSV Standard",
+                db.export_to_csv(conn),
+                "rapport_rues.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        
+        with col2:
+            try:
+                excel_data = export_excel_professionnel(conn)
+                st.download_button(
+                    "📊 Export Excel Pro",
+                    excel_data,
+                    "guignolee_2025_rapport.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            except:
+                st.button("📊 Excel (Non disponible)", disabled=True, use_container_width=True)
+        
+        with col3:
+            try:
+                st.download_button(
+                    "📝 Export Notes",
+                    db.export_notes_csv(conn),
+                    "rapport_notes.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
+            except:
+                st.button("📝 Notes (Non disponible)", disabled=True, use_container_width=True)
+
+    with tabs[4]:
+        st.markdown("### 🛠 Opérations techniques (protégées)")
+
+        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
+        try:
+            TECH_PIN = st.secrets.get("TECH_PIN", "")
+        except:
+            TECH_PIN = ""  # Pas de fichier secrets.toml
+
+        if "tech_ok" not in st.session_state:
+            st.session_state.tech_ok = False
+
+        if not st.session_state.tech_ok:
+            pin = st.text_input("Entrer le PIN technique", type="password")
+            if st.button("Déverrouiller"):
+                if TECH_PIN and pin == TECH_PIN:
+                    st.session_state.tech_ok = True
+                    st.success("Accès technique déverrouillé.")
+                    st.rerun()
+                else:
+                    st.error("PIN invalide.")
+            st.stop()
+
+        st.info("⚠️ Ces actions sont lourdes et n'affectent pas les statuts/notes. Elles régénèrent les caches OSM.")
+
+        # --- Reconstruire le cache géométrique (lourd)
+        with st.expander("🔄 Reconstruire cache OSM (géométries)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirm = st.checkbox("Je comprends les implications")
+            with col2:
+                safety = st.text_input('Écrire "REBUILD" pour confirmer')
+
+            if st.button("Lancer la reconstruction"):
+                if confirm and safety.strip().upper() == "REBUILD":
+                    with st.spinner("Construction du cache…"):
+                        build_geometry_cache()       # reconstruit le fichier osm_cache.json
+                        st.cache_data.clear()        # purge cache Streamlit
+                    st.success("✅ Cache OSM mis à jour (géométries).")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+        # --- Reconstruire/Importer le cache des adresses
+        with st.expander("📍 Mettre à jour les adresses (OSM)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirmA = st.checkbox("Je confirme")
+            with col2:
+                safetyA = st.text_input('Écrire "IMPORT" pour confirmer')
+
+            if st.button("Lancer la mise à jour des adresses"):
+                if confirmA and safetyA.strip().upper() == "IMPORT":
+                    with st.spinner("Téléchargement des adresses OSM…"):
+                        build_addresses_cache()
+                        addr_cache = load_addresses_cache()
+                        count = db.import_addresses_from_cache(conn, addr_cache)
+                    st.success(f"✅ {count} adresses importées depuis OSM.")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+def page_superviseur(conn, geo):
+    """Interface superviseur"""
+    st.header("🎯 Tableau de Bord Superviseur")
+    
+    # Vérifier l'authentification
+    if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
+        render_login_card("superviseur", conn)
+        return
+    
+    # Dashboard moderne
+    render_dashboard_gestionnaire(conn, geo)
+    
+    # Tabs
+    tabs = st.tabs([
+        "📊 Vue d'ensemble",
+        "👥 Équipes",
+        "🗺️ Assignation",
+        "📥 Export",
+        "🛠 Tech"
+    ])
+    
+    with tabs[0]:
+        # Carte générale
+        st.markdown("### Carte générale")
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            m = create_map(df_all, geo)
+            st_folium(m, height=800, width=None, returned_objects=[])
+        
+        # Activité récente
+        st.markdown("### Activité récente")
+        recent = db.recent_activity(conn, limit=10)
+        if not recent.empty:
+            st.dataframe(recent, use_container_width=True)
+    
+    with tabs[1]:
+        # Gestion des équipes
+        st.markdown("### Gestion des équipes")
+        
+        with st.expander("Créer une équipe"):
+            with st.form("new_team", clear_on_submit=True):
+                new_id = st.text_input("Identifiant")
+                new_name = st.text_input("Équipe")
+                new_pass = st.text_input("Mot de passe", type="password")
+                
+                if st.form_submit_button("Créer"):
+                    if all([new_id, new_name, new_pass]):
+                        if db.create_team(conn, new_id, new_name, new_pass):
+                            st.success(f"Équipe {new_id} créée")
+                            st.rerun()
+        
+        # Liste des équipes
+        teams_df = db.get_all_teams(conn)
+        if not teams_df.empty:
+            st.dataframe(teams_df, use_container_width=True)
+    
+    with tabs[2]:
+        # Assignation
+        st.markdown("### Assignation des rues")
+        
+        unassigned = db.get_unassigned_streets(conn)
+        
+        if not unassigned.empty:
+            with st.form("assign"):
+                team = st.selectbox("Équipe", db.teams(conn))
+                streets = st.multiselect("Rues", unassigned['name'].tolist())
+                
+                if st.form_submit_button("Assigner"):
+                    if team and streets:
+                        db.assign_streets_to_team(conn, streets, team)
+                        st.success("Rues assignées!")
+                        st.rerun()
+        else:
+            st.success("Toutes les rues sont assignées!")
+        
+        # Tableau des assignations
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            st.dataframe(
+                df_all[['name', 'sector', 'team', 'status']],
+                use_container_width=True
+            )
+    
+    with tabs[3]:
+        # Export
+        st.markdown("### Export des données")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.download_button(
+                "📥 Export rues (CSV)",
+                db.export_to_csv(conn),
+                "rapport_rues.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        
+        with col2:
+            st.download_button(
+                "📥 Export notes (CSV)",
+                db.export_notes_csv(conn),
+                "rapport_notes.csv",
+                "text/csv",
+                use_container_width=True
+            )
+
+    with tabs[4]:
+        st.markdown("### 🛠 Opérations techniques (protégées)")
+
+        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")  
+        try:
+            TECH_PIN = st.secrets.get("TECH_PIN", "")
+        except:
+            TECH_PIN = ""  # Pas de fichier secrets.toml
+
+        if "tech_ok" not in st.session_state:
+            st.session_state.tech_ok = False
+
+        if not st.session_state.tech_ok:
+            pin = st.text_input("Entrer le PIN technique", type="password")
+            if st.button("Déverrouiller"):
+                if TECH_PIN and pin == TECH_PIN:
+                    st.session_state.tech_ok = True
+                    st.success("Accès technique déverrouillé.")
+                    st.rerun()
+                else:
+                    st.error("PIN invalide.")
+            st.stop()
+
+        st.info("⚠️ Ces actions sont lourdes et n'affectent pas les statuts/notes. Elles régénèrent les caches OSM.")
+
+        # --- Reconstruire le cache géométrique (lourd)
+        with st.expander("🔄 Reconstruire cache OSM (géométries)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirm = st.checkbox("Je comprends les implications")
+            with col2:
+                safety = st.text_input('Écrire "REBUILD" pour confirmer')
+
+            if st.button("Lancer la reconstruction"):
+                if confirm and safety.strip().upper() == "REBUILD":
+                    with st.spinner("Construction du cache…"):
+                        build_geometry_cache()       # reconstruit le fichier osm_cache.json
+                        st.cache_data.clear()        # purge cache Streamlit
+                    st.success("✅ Cache OSM mis à jour (géométries).")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+        # --- Reconstruire/Importer le cache des adresses
+        with st.expander("📍 Mettre à jour les adresses (OSM)", expanded=False):
+            col1, col2 = st.columns([1,2])
+            with col1:
+                confirmA = st.checkbox("Je confirme")
+            with col2:
+                safetyA = st.text_input('Écrire "IMPORT" pour confirmer')
+
+            if st.button("Lancer la mise à jour des adresses"):
+                if confirmA and safetyA.strip().upper() == "IMPORT":
+                    with st.spinner("Téléchargement des adresses OSM…"):
+                        build_addresses_cache()
+                        addr_cache = load_addresses_cache()
+                        count = db.import_addresses_from_cache(conn, addr_cache)
+                    st.success(f"✅ {count} adresses importées depuis OSM.")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+# ============================================
+# MAIN
+# ============================================
+
+def main():
+    """Point d'entrée principal - Version 2.0 Guignolée"""
+    
+    # CSS moderne
+    inject_css()
+    
+    # Connexion DB
+    conn = db.get_conn(DB_PATH)
+    db.init_db(conn)
+    st.session_state['conn'] = conn
+    
+    # Cache géométrique
+    @st.cache_data(ttl=None)
+    def get_geo(_sig):
+        data = load_geometry_cache()
+        return data if data else {}
+    
+    sig = int(CACHE_FILE.stat().st_mtime_ns) if CACHE_FILE.exists() else 0
+    geo = get_geo(sig)
+    
+    # Header festif
+    render_header()
+    
+    # Navigation modernisée dans la sidebar
+    with st.sidebar:
+        # CSS pour la sidebar sans position absolue
+        st.markdown("""
+        <style>
+        .css-1d391kg { padding-top: 1rem !important; }
+        .stSidebar > div:first-child { padding-top: 1rem !important; }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        # Logo en haut de la sidebar (position normale)
+        logo_path = ASSETS / "logo.png"
+        if logo_path.exists():
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.image(str(logo_path), width=150)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        else:
+            # Placeholder centré
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #c41e3a, #165b33);
+                border-radius: 15px;
+                padding: 2rem;
+                color: white;
+                text-align: center;
+                margin: 1rem 0;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            ">
+                <div style="font-size: 2.5rem;">🎁</div>
+                <div style="font-weight: bold; font-size: 1.2rem;">LOGO</div>
+                <small>Espace réservé</small>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
+        
+        # Navigation
+        st.markdown("### 🎄 Navigation")
+        
+        # Boutons de navigation stylisés
+        if st.button("🏠 Accueil", use_container_width=True):
+            st.session_state.page = "accueil"
+            st.rerun()
+        
+        if st.button("🎅 Bénévole", use_container_width=True):
+            st.session_state.page = "benevole"
+            st.rerun()
+            
+        if st.button("👔 Gestionnaire", use_container_width=True):
+            st.session_state.page = "gestionnaire"  
+            st.rerun()
+        
+        # Déconnexion si connecté
+        if st.session_state.auth:
+            st.markdown("---")
+            if st.button("🚪 Déconnexion", use_container_width=True):
+                st.session_state.auth = None
+                st.rerun()
+        
+        # Compteur temps réel
+        st.markdown("---")
+        stats = db.extended_stats(conn)
+        st.markdown(f"""
+        <div style="text-align: center;">
+            <h4>État de la collecte</h4>
+            <div style="font-size: 2rem; color: #FFD700;">
+                {stats['done']}/{stats['total']}
+            </div>
+            <small>Rues complétées</small>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Routing pages
+    page = st.session_state.get('page', 'accueil')
+    
+    if page == "accueil":
+        page_accueil_v2(conn, geo)
+    elif page == "benevole":
+        page_benevole_v2(conn, geo)
+    elif page == "gestionnaire":
+        page_gestionnaire_v2(conn, geo)
+    
+    # Footer festif
+    st.markdown("""
+    <div style="
+        text-align: center;
+        padding: 2rem;
+        margin-top: 3rem;
+        border-top: 2px solid rgba(255,215,0,0.3);
+        color: #8b92a4;
+    ">
+        <p>
+            🎄 Guignolée 2025 - Le Relais de Mascouche 🎄<br>
+            <small>Ensemble, redonnons espoir | 📞 450-474-4133</small>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Bannière en bas de page
+    if (ASSETS / "banner.png").exists():
+        st.image(str(ASSETS / "banner.png"), use_column_width=True)
+
+if __name__ == "__main__":
+    main()
+
+
+
+================================================================================
+FICHIER: guignomap/db.py
+================================================================================
+import sqlite3
+import pandas as pd
+import hashlib
+from datetime import datetime
+import json
+from pathlib import Path
+import os
+import secrets
+import string
+
+# Schéma amélioré de la base de données
+SCHEMA = """
+-- Table des rues
+CREATE TABLE IF NOT EXISTS streets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    sector TEXT,
+    team TEXT,
+    status TEXT NOT NULL DEFAULT 'a_faire' 
+        CHECK (status IN ('a_faire', 'en_cours', 'terminee'))
+);
+
+-- Table des équipes
+CREATE TABLE IF NOT EXISTS teams (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    active BOOLEAN DEFAULT 1
+);
+
+-- Table des notes/commentaires PAR ADRESSE
+CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    street_name TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    address_number TEXT,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (street_name) REFERENCES streets(name),
+    FOREIGN KEY (team_id) REFERENCES teams(id)
+);
+
+-- Table d'activité (log)
+CREATE TABLE IF NOT EXISTS activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id TEXT,
+    action TEXT NOT NULL,
+    details TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table des adresses OSM
+CREATE TABLE IF NOT EXISTS addresses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    street_name TEXT NOT NULL,
+    house_number TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    osm_type TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (street_name) REFERENCES streets(name)
+);
+
+-- Index pour améliorer les performances
+CREATE INDEX IF NOT EXISTS idx_streets_team ON streets(team);
+CREATE INDEX IF NOT EXISTS idx_streets_status ON streets(status);
+CREATE INDEX IF NOT EXISTS idx_notes_street ON notes(street_name);
+CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_addresses_street ON addresses(street_name);
+CREATE INDEX IF NOT EXISTS idx_addresses_number ON addresses(house_number);
+"""
+
+def get_conn(db_path):
+    """Crée une connexion à la base de données"""
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db(conn):
+    """Initialise la base de données avec le schéma et les données initiales"""
+    try:
+        # Créer les tables si elles n'existent pas
+        conn.executescript(SCHEMA)
+        conn.commit()
+        
+        # Créer un compte admin par défaut s'il n'existe pas
+        cursor = conn.execute("SELECT COUNT(*) FROM teams WHERE id = 'ADMIN'")
+        if cursor.fetchone()[0] == 0:
+            pwd = os.getenv("GM_ADMIN_PWD", "RELAIS2025")  # Par défaut RELAIS2025
+            create_team(conn, 'ADMIN', 'Superviseur', pwd)
+        
+        # AUTO-IMPORT : Si aucune rue n'existe, importer automatiquement depuis OSM
+        cursor = conn.execute("SELECT COUNT(*) FROM streets")
+        if cursor.fetchone()[0] == 0:
+            print("🔄 Aucune rue trouvée. Import automatique depuis OpenStreetMap...")
+            auto_import_streets(conn)
+            
+    except Exception as e:
+        print(f"Erreur lors de l'initialisation de la DB: {e}")
+        raise
+
+def auto_import_streets(conn):
+    """Import automatique des rues de Mascouche"""
+    try:
+        # Essayer d'abord avec OSM
+        from osm import generate_streets_csv
+        csv_data = generate_streets_csv("Mascouche")
+        
+        if csv_data:
+            import io
+            df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')))
+            
+            if not df.empty:
+                for _, row in df.iterrows():
+                    conn.execute(
+                        "INSERT OR IGNORE INTO streets(name, sector, team, status) VALUES (?, ?, ?, 'a_faire')",
+                        (row.get("name", ""), row.get("sector", ""), row.get("team", ""))
+                    )
+                conn.commit()
+                print(f"✅ {len(df)} rues importées automatiquement")
+                log_activity(conn, None, "AUTO_IMPORT", f"Import automatique de {len(df)} rues")
+                return
+    except Exception as e:
+        print(f"⚠️ Erreur lors de l'import OSM: {e}")
+    
+    # Fallback : Données de test si OSM échoue
+    print("📦 Import de données de test...")
+    test_streets = [
+        ("Montée Masson", "Centre", ""),
+        ("Chemin Sainte-Marie", "Centre", ""),
+        ("Boulevard de Mascouche", "Centre", ""),
+        ("Rue Dupras", "Centre", ""),
+        ("Rue Saint-Pierre", "Centre", ""),
+        ("Rue de l'Église", "Centre", ""),
+        ("Avenue des Érables", "Nord", ""),
+        ("Rue des Pins", "Nord", ""),
+        ("Rue Gravel", "Sud", ""),
+        ("Rue Forget", "Sud", ""),
+    ]
+    
+    for name, sector, team in test_streets:
+        conn.execute(
+            "INSERT OR IGNORE INTO streets(name, sector, team, status) VALUES (?, ?, ?, 'a_faire')",
+            (name, sector, team)
+        )
+    conn.commit()
+    print(f"✅ {len(test_streets)} rues de test importées")
+
+# ---------- Fonctions pour les équipes ----------
+def hash_password(password):
+    """Hash un mot de passe"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def create_team(conn, team_id, name, password):
+    """Crée une nouvelle équipe"""
+    try:
+        conn.execute(
+            "INSERT INTO teams (id, name, password_hash) VALUES (?, ?, ?)",
+            (team_id, name, hash_password(password))
+        )
+        conn.commit()
+        log_activity(conn, team_id, "TEAM_CREATED", f"Équipe {name} créée")
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+def verify_team(conn, team_id, password):
+    """Vérifie les identifiants d'une équipe"""
+    cursor = conn.execute(
+        "SELECT password_hash FROM teams WHERE id = ? AND active = 1",
+        (team_id,)
+    )
+    row = cursor.fetchone()
+    if row:
+        return row[0] == hash_password(password)
+    return False
+
+def get_all_teams(conn):
+    """Récupère toutes les équipes avec leurs statistiques"""
+    query = """
+    SELECT 
+        t.id,
+        t.name,
+        t.created_at,
+        COUNT(DISTINCT s.name) as streets_count,
+        SUM(CASE WHEN s.status = 'terminee' THEN 1 ELSE 0 END) as done_count,
+        CASE 
+            WHEN COUNT(s.name) > 0 
+            THEN (SUM(CASE WHEN s.status = 'terminee' THEN 1.0 ELSE 0 END) / COUNT(s.name)) * 100
+            ELSE 0 
+        END as progress
+    FROM teams t
+    LEFT JOIN streets s ON t.id = s.team
+    WHERE t.active = 1 AND t.id != 'ADMIN'
+    GROUP BY t.id, t.name, t.created_at
+    ORDER BY t.id
+    """
+    return pd.read_sql_query(query, conn)
+
+def delete_team(conn, team_id):
+    """Désactive une équipe"""
+    conn.execute("UPDATE teams SET active = 0 WHERE id = ?", (team_id,))
+    conn.execute("UPDATE streets SET team = NULL WHERE team = ?", (team_id,))
+    conn.commit()
+    log_activity(conn, None, "TEAM_DELETED", f"Équipe {team_id} supprimée")
+
+def teams(conn):
+    """Liste des IDs d'équipes actives"""
+    cursor = conn.execute(
+        "SELECT id FROM teams WHERE active = 1 AND id != 'ADMIN' ORDER BY id"
+    )
+    return [row[0] for row in cursor.fetchall()]
+
+# ---------- Fonctions pour les rues ----------
+def list_streets(conn, team=None):
+    """Liste les rues, optionnellement filtrées par équipe"""
+    try:
+        if team:
+            query = """
+                SELECT 
+                    s.name, 
+                    COALESCE(s.sector, '') as sector, 
+                    COALESCE(s.team, '') as team, 
+                    COALESCE(s.status, 'a_faire') as status,
+                    COUNT(n.id) as notes,
+                    COUNT(DISTINCT n.address_number) as addresses_with_notes
+                FROM streets s
+                LEFT JOIN notes n ON s.name = n.street_name
+                WHERE s.team = ?
+                GROUP BY s.name, s.sector, s.team, s.status
+                ORDER BY 
+                    CASE s.status 
+                        WHEN 'a_faire' THEN 1 
+                        WHEN 'en_cours' THEN 2 
+                        WHEN 'terminee' THEN 3 
+                    END, 
+                    s.name
+            """
+            df = pd.read_sql_query(query, conn, params=(team,))
+        else:
+            query = """
+                SELECT 
+                    s.name, 
+                    COALESCE(s.sector, '') as sector, 
+                    COALESCE(s.team, '') as team, 
+                    COALESCE(s.status, 'a_faire') as status,
+                    COUNT(n.id) as notes,
+                    COUNT(DISTINCT n.address_number) as addresses_with_notes
+                FROM streets s
+                LEFT JOIN notes n ON s.name = n.street_name
+                GROUP BY s.name, s.sector, s.team, s.status
+                ORDER BY 
+                    s.team, 
+                    CASE s.status 
+                        WHEN 'a_faire' THEN 1 
+                        WHEN 'en_cours' THEN 2 
+                        WHEN 'terminee' THEN 3 
+                    END, 
+                    s.name
+            """
+            df = pd.read_sql_query(query, conn)
+        
+        # S'assurer que toutes les colonnes existent
+        for col in ['name', 'sector', 'team', 'status', 'notes', 'addresses_with_notes']:
+            if col not in df.columns:
+                df[col] = '' if col in ['sector', 'team'] else ('a_faire' if col == 'status' else 0)
+        
+        return df
+        
+    except Exception as e:
+        print(f"Erreur list_streets: {e}")
+        # Retourner un DataFrame vide avec la structure attendue
+        return pd.DataFrame(columns=['name', 'sector', 'team', 'status', 'notes', 'addresses_with_notes'])
+
+def get_unassigned_streets(conn):
+    """Récupère les rues non assignées"""
+    query = """
+        SELECT name, sector 
+        FROM streets 
+        WHERE team IS NULL OR team = ''
+        ORDER BY sector, name
+    """
+    return pd.read_sql_query(query, conn)
+
+def assign_streets_to_team(conn, street_names, team_id):
+    """Assigne plusieurs rues à une équipe en une transaction"""
+    try:
+        for street_name in street_names:
+            conn.execute(
+                "UPDATE streets SET team = ? WHERE name = ?",
+                (team_id, street_name)
+            )
+        conn.commit()
+        log_activity(conn, team_id, "STREETS_ASSIGNED", f"{len(street_names)} rues assignées")
+        return True
+    except Exception as e:
+        conn.rollback()
+        print(f"Erreur lors de l'assignation: {e}")
+        return False
+
+def set_status(conn, name, status):
+    """Met à jour le statut d'une rue"""
+    conn.execute(
+        "UPDATE streets SET status = ? WHERE name = ?",
+        (status, name)
+    )
+    conn.commit()
+    
+    cursor = conn.execute("SELECT team FROM streets WHERE name = ?", (name,))
+    row = cursor.fetchone()
+    if row:
+        log_activity(conn, row[0], f"STATUS_{status.upper()}", f"Rue {name}")
+
+# ---------- Fonctions pour les notes PAR ADRESSE ----------
+def add_note_for_address(conn, street_name, team_id, address_number, comment):
+    """Ajoute une note pour une adresse spécifique"""
+    conn.execute(
+        """INSERT INTO notes (street_name, team_id, address_number, comment) 
+           VALUES (?, ?, ?, ?)""",
+        (street_name, team_id, address_number, comment)
+    )
+    
+    # Met automatiquement le statut à "en_cours" si c'était "a_faire"
+    conn.execute(
+        """UPDATE streets 
+           SET status = CASE 
+               WHEN status = 'a_faire' THEN 'en_cours' 
+               ELSE status 
+           END
+           WHERE name = ?""",
+        (street_name,)
+    )
+    
+    conn.commit()
+    log_activity(conn, team_id, "NOTE_ADDED", f"Note ajoutée pour {address_number} {street_name}")
+
+def get_street_addresses_with_notes(conn, street_name):
+    """Récupère toutes les adresses avec notes pour une rue"""
+    query = """
+        SELECT 
+            n.address_number,
+            n.comment,
+            n.created_at,
+            t.name as team_name
+        FROM notes n
+        JOIN teams t ON n.team_id = t.id
+        WHERE n.street_name = ?
+        ORDER BY 
+            CAST(n.address_number AS INTEGER),
+            n.created_at DESC
+    """
+    return pd.read_sql_query(query, conn, params=(street_name,))
+
+def get_team_notes(conn, team_id):
+    """Récupère toutes les notes d'une équipe"""
+    query = """
+        SELECT 
+            street_name, 
+            address_number, 
+            comment, 
+            created_at
+        FROM notes
+        WHERE team_id = ?
+        ORDER BY created_at DESC
+        LIMIT 50
+    """
+    return pd.read_sql_query(query, conn, params=(team_id,))
+
+# ---------- Fonctions de statistiques ----------
+def extended_stats(conn):
+    """Statistiques étendues avec détails par adresse"""
+    cursor = conn.execute("""
+        SELECT 
+            COUNT(DISTINCT s.name) as total,
+            SUM(CASE WHEN s.status = 'terminee' THEN 1 ELSE 0 END) as done,
+            SUM(CASE WHEN s.status = 'en_cours' THEN 1 ELSE 0 END) as partial,
+            SUM(CASE WHEN s.status = 'a_faire' THEN 1 ELSE 0 END) as todo,
+            COUNT(DISTINCT n.id) as total_notes,
+            COUNT(DISTINCT n.address_number || n.street_name) as addresses_with_notes
+        FROM streets s
+        LEFT JOIN notes n ON s.name = n.street_name
+    """)
+    row = cursor.fetchone()
+    return {
+        "total": row[0] or 0,
+        "done": row[1] or 0,
+        "partial": row[2] or 0,
+        "todo": row[3] or 0,
+        "total_notes": row[4] or 0,
+        "addresses_with_notes": row[5] or 0
+    }
+
+def stats_by_team(conn):
+    """Statistiques par équipe"""
+    query = """
+        SELECT 
+            s.team,
+            COUNT(DISTINCT s.name) as total,
+            SUM(CASE WHEN s.status = 'terminee' THEN 1 ELSE 0 END) as done,
+            SUM(CASE WHEN s.status = 'en_cours' THEN 1 ELSE 0 END) as partial,
+            COUNT(DISTINCT n.id) as notes,
+            ROUND(
+                (SUM(CASE WHEN s.status = 'terminee' THEN 1.0 ELSE 0 END) / COUNT(*)) * 100, 
+                1
+            ) as progress
+        FROM streets s
+        LEFT JOIN notes n ON s.name = n.street_name AND n.team_id = s.team
+        WHERE s.team IS NOT NULL AND s.team != ''
+        GROUP BY s.team
+        ORDER BY progress DESC
+    """
+    return pd.read_sql_query(query, conn)
+
+# ---------- Fonctions d'activité ----------
+def log_activity(conn, team_id, action, details=None):
+    """Enregistre une activité dans le log"""
+    try:
+        conn.execute(
+            "INSERT INTO activity_log (team_id, action, details) VALUES (?, ?, ?)",
+            (team_id, action, details)
+        )
+        conn.commit()
+    except:
+        pass
+
+def recent_activity(conn, limit=10):
+    """Récupère l'activité récente"""
+    query = """
+        SELECT 
+            datetime(created_at, 'localtime') as timestamp,
+            COALESCE(team_id, 'SYSTEM') as team,
+            action,
+            details
+        FROM activity_log
+        ORDER BY created_at DESC
+        LIMIT ?
+    """
+    return pd.read_sql_query(query, conn, params=(limit,))
+
+# ---------- Fonctions d'export ----------
+def export_to_csv(conn):
+    """Exporte toutes les données en CSV"""
+    query = """
+        SELECT 
+            s.name as rue,
+            s.sector as secteur,
+            s.team as equipe,
+            s.status as statut,
+            COUNT(DISTINCT n.id) as nombre_notes,
+            COUNT(DISTINCT n.address_number) as adresses_avec_notes
+        FROM streets s
+        LEFT JOIN notes n ON s.name = n.street_name
+        GROUP BY s.name, s.sector, s.team, s.status
+        ORDER BY s.team, s.name
+    """
+    df = pd.read_sql_query(query, conn)
+    return df.to_csv(index=False).encode('utf-8')
+
+def export_notes_csv(conn):
+    """Exporte toutes les notes en CSV avec adresses"""
+    query = """
+        SELECT 
+            n.street_name as rue,
+            n.address_number as numero,
+            n.team_id as equipe,
+            n.comment as commentaire,
+            n.created_at as date_creation
+        FROM notes n
+        ORDER BY n.street_name, CAST(n.address_number AS INTEGER), n.created_at DESC
+    """
+    df = pd.read_sql_query(query, conn)
+    return df.to_csv(index=False).encode('utf-8')
+
+# ========================================
+# NOUVELLES FONCTIONS POUR LES ADRESSES
+# ========================================
+
+def import_addresses_from_cache(conn, cache):
+    """
+    Importe les adresses depuis le cache OSM vers la base de données
+    """
+    try:
+        # Vider la table existante
+        conn.execute("DELETE FROM addresses")
+        
+        imported_count = 0
+        skipped_count = 0
+        
+        for street_name, addresses in cache.items():
+            # Vérifier que la rue existe dans la DB
+            cursor = conn.execute("SELECT COUNT(*) FROM streets WHERE name = ?", (street_name,))
+            if cursor.fetchone()[0] == 0:
+                # Si la rue n'existe pas, la créer
+                conn.execute(
+                    "INSERT OR IGNORE INTO streets(name, sector, team, status) VALUES (?, '', '', 'a_faire')",
+                    (street_name,)
+                )
+                print(f"➕ Rue ajoutée: {street_name}")
+            
+            for addr in addresses:
+                try:
+                    # Validation des données
+                    number = str(addr.get("number", "")).strip()
+                    lat = addr.get("lat")
+                    lon = addr.get("lon")
+                    osm_type = addr.get("type", "unknown")
+                    
+                    if not number or lat is None or lon is None:
+                        skipped_count += 1
+                        continue
+                    
+                    conn.execute(
+                        """INSERT INTO addresses (street_name, house_number, latitude, longitude, osm_type) 
+                           VALUES (?, ?, ?, ?, ?)""",
+                        (street_name, number, float(lat), float(lon), osm_type)
+                    )
+                    imported_count += 1
+                except Exception as e:
+                    print(f"⚠️ Erreur import adresse {addr}: {e}")
+                    skipped_count += 1
+        
+        conn.commit()
+        log_activity(conn, None, "ADDRESSES_IMPORTED", f"{imported_count} adresses importées, {skipped_count} ignorées")
+        print(f"✅ {imported_count} adresses importées en base de données ({skipped_count} ignorées)")
+        return imported_count
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"❌ Erreur import adresses: {e}")
+        return 0
+
+def get_addresses_for_street(conn, street_name):
+    """
+    Récupère toutes les adresses d'une rue depuis la base de données
+    """
+    query = """
+        SELECT 
+            house_number,
+            latitude,
+            longitude,
+            osm_type,
+            created_at
+        FROM addresses
+        WHERE street_name = ?
+        ORDER BY CAST(house_number AS INTEGER)
+    """
+    return pd.read_sql_query(query, conn, params=(street_name,))
+
+def get_addresses_stats(conn):
+    """
+    Récupère les statistiques des adresses
+    """
+    cursor = conn.execute("""
+        SELECT 
+            COUNT(DISTINCT street_name) as streets_with_addresses,
+            COUNT(*) as total_addresses,
+            COUNT(DISTINCT CASE WHEN osm_type = 'node' THEN id END) as node_addresses,
+            COUNT(DISTINCT CASE WHEN osm_type = 'way' THEN id END) as way_addresses
+        FROM addresses
+    """)
+    row = cursor.fetchone()
+    return {
+        "streets_with_addresses": row[0] or 0,
+        "total_addresses": row[1] or 0,
+        "node_addresses": row[2] or 0,
+        "way_addresses": row[3] or 0
+    }
+
+
+================================================================================
+FICHIER: guignomap/osm.py
+================================================================================
+"""
+Module OSM pour Guigno-Map
+Gère l'import et le cache des données OpenStreetMap pour Mascouche
+"""
+
+import io
+import json
+from pathlib import Path
+import pandas as pd
+import overpy
+
+# Configuration
+CACHE_FILE = Path(__file__).parent / "osm_cache.json"
+ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
+
+# Toutes les voies routières nommées de Mascouche
+QUERY_STREETS_ALL = """
+[out:json][timeout:300];
+area["name"="Mascouche"]["boundary"="administrative"]->.a;
+(
+  way["highway"~"^(primary|secondary|tertiary|residential|service|unclassified|living_street|pedestrian|track|road|busway|footway|path)$"](area.a);
+);
+(._;>;);
+out body;
+"""
+# Note: Récupère TOUS les types de voies incluant petites rues, allées, chemins piétonniers
+
+# Requête pour les adresses
+QUERY_ADDR_NODES = """
+[out:json][timeout:180];
+area["name"="Mascouche"]["boundary"="administrative"]->.a;
+(
+  node["addr:housenumber"]["addr:street"](area.a);
+  way["addr:housenumber"]["addr:street"](area.a);
+);
+out tags center;
+"""
+
+def generate_streets_csv(city="Mascouche"):
+    """
+    Génère un CSV avec les noms des rues principales de la ville
+    Filtre automatiquement les rues privées et les petites ruelles
+    """
+    try:
+        api = overpy.Overpass()
+        result = api.query(QUERY_STREETS_ALL)
+        
+        streets = []
+        for way in result.ways:
+            name = way.tags.get("name")
+            if not name:
+                continue
+            g = getattr(way, "geometry", None)
+            # garder si on a une vraie géométrie (>= 2 points)
+            if isinstance(g, list) and len(g) >= 2:
+                streets.append(name)
+
+        streets = sorted(set(streets))
+        
+        # Assigner automatiquement des secteurs basés sur les patterns de noms
+        sectors = []
+        for street in streets:
+            if any(word in street.lower() for word in ["montée", "chemin", "boulevard"]):
+                sectors.append("Principal")
+            elif any(word in street.lower() for word in ["avenue", "place", "croissant"]):
+                sectors.append("Résidentiel")
+            elif "rue" in street.lower():
+                sectors.append("Centre")
+            else:
+                sectors.append("")
+        
+        df = pd.DataFrame({
+            "name": streets,
+            "sector": sectors,
+            "team": [""] * len(streets)
+        })
+        
+        buf = io.StringIO()
+        df.to_csv(buf, index=False)
+        print(f"✅ CSV généré avec {len(streets)} rues principales")
+        return buf.getvalue().encode("utf-8")
+        
+    except Exception as e:
+        print(f"❌ Erreur OSM: {e}")
+        # Retourner des données de test en cas d'erreur
+        return create_fallback_csv()
+
+def build_geometry_cache():
+    """
+    Construit le cache des géométries pour TOUTES les voies de Mascouche
+    Force la résolution complète des nodes
+    """
+    try:
+        print("🔄 Récupération complète de toutes les voies de Mascouche...")
+        
+        # IMPORTANT: Configurer l'API pour résoudre automatiquement les nodes manquants
+        api = overpy.Overpass()
+        
+        # Requête améliorée qui force le retour des coordonnées
+        query = """
+        [out:json][timeout:300];
+        area["name"="Mascouche"]["boundary"="administrative"]->.a;
+        (
+          way["highway"]["name"](area.a);
+          way["highway"]["ref"](area.a);
+        );
+        (._;>;);
+        out body;
+        """
+        
+        print("📡 Connexion à OpenStreetMap (cela peut prendre 30-60 secondes)...")
+        result = api.query(query)
+        
+        geo = {}
+        stats = {"total": 0, "avec_geo": 0, "sans_geo": 0}
+        
+        # Construire un dictionnaire des nodes pour accès rapide
+        nodes_dict = {}
+        if hasattr(result, 'nodes'):
+            for node in result.nodes:
+                if hasattr(node, 'id') and hasattr(node, 'lat') and hasattr(node, 'lon'):
+                    nodes_dict[node.id] = (float(node.lat), float(node.lon))
+        
+        print(f"📍 {len(nodes_dict)} nodes récupérés")
+        
+        ways = result.ways if hasattr(result, 'ways') else []
+        print(f"📊 {len(ways)} voies trouvées dans OpenStreetMap")
+        
+        for way in ways:
+            try:
+                # Récupérer le nom ou ref
+                if not hasattr(way, 'tags'):
+                    continue
+                    
+                name = way.tags.get("name")
+                if not name:
+                    ref = way.tags.get("ref")
+                    if ref:
+                        name = f"Autoroute {ref}"
+                    else:
+                        continue
+                
+                stats["total"] += 1
+                coords = []
+                
+                # Récupérer les IDs des nodes
+                if hasattr(way, 'nd_ids'):
+                    # Si on a les IDs des nodes, les résoudre
+                    for node_id in way.nd_ids:
+                        if node_id in nodes_dict:
+                            lat, lon = nodes_dict[node_id]
+                            coords.append([lat, lon])
+                elif hasattr(way, 'nodes'):
+                    # Si on a directement les nodes
+                    for node in way.nodes:
+                        if hasattr(node, 'lat') and hasattr(node, 'lon'):
+                            coords.append([float(node.lat), float(node.lon)])
+                        elif hasattr(node, 'id') and node.id in nodes_dict:
+                            lat, lon = nodes_dict[node.id]
+                            coords.append([lat, lon])
+                
+                if len(coords) >= 2:
+                    if name not in geo:
+                        geo[name] = []
+                    geo[name].append(coords)
+                    stats["avec_geo"] += 1
+                else:
+                    stats["sans_geo"] += 1
+                    
+            except Exception as e:
+                continue
+        
+        print(f"✅ Résultat: {stats['avec_geo']} voies avec géométrie sur {stats['total']} trouvées")
+        
+        # Si on a récupéré des données, sauvegarder
+        if geo:
+            CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
+            print(f"💾 Cache créé: {len(geo)} voies sauvegardées dans osm_cache.json")
+            
+            # Importer aussi automatiquement dans la DB
+            try:
+                from pathlib import Path
+                import sys
+                sys.path.append(str(Path(__file__).parent))
+                import db
+                
+                db_path = Path(__file__).parent / "guigno_map.db"
+                conn = db.get_conn(db_path)
+                
+                # Ajouter les rues manquantes à la DB
+                for street_name in geo.keys():
+                    cursor = conn.execute("SELECT COUNT(*) FROM streets WHERE name = ?", (street_name,))
+                    if cursor.fetchone()[0] == 0:
+                        conn.execute(
+                            "INSERT INTO streets(name, sector, team, status) VALUES (?, '', '', 'a_faire')",
+                            (street_name,)
+                        )
+                conn.commit()
+                print(f"✅ Rues importées dans la base de données")
+            except Exception as e:
+                print(f"⚠️ Import DB: {e}")
+            
+            return geo
+        
+        # Si aucune donnée, utiliser un fallback étendu
+        print("⚠️ Aucune donnée OSM, utilisation du fallback local")
+        return get_extended_fallback()
+            
+    except Exception as e:
+        print(f"❌ Erreur: {e}")
+        return get_extended_fallback()
+
+def get_fallback_geometry():
+    """Fallback avec les principales voies de Mascouche"""
+    return {
+        "Autoroute 25": [[[45.70, -73.65], [45.78, -73.58]]],
+        "Autoroute 640": [[[45.76, -73.70], [45.76, -73.55]]],
+        "Montée Masson": [[[45.730, -73.620], [45.765, -73.580]]],
+        "Chemin Sainte-Marie": [[[45.735, -73.615], [45.755, -73.595]]],
+        "Boulevard de Mascouche": [[[45.740, -73.610], [45.752, -73.590]]],
+        "Chemin des Anglais": [[[45.74, -73.65], [45.75, -73.64]]],
+        "Chemin Gascon": [[[45.75, -73.62], [45.76, -73.60]]],
+        "Chemin Pincourt": [[[45.72, -73.64], [45.73, -73.63]]],
+        "Chemin Newton": [[[45.73, -73.58], [45.74, -73.57]]],
+        "Chemin Saint-Henri": [[[45.71, -73.61], [45.72, -73.60]]],
+        "Chemin Saint-Pierre": [[[45.74, -73.59], [45.75, -73.58]]],
+        "Avenue de la Gare": [[[45.745, -73.601], [45.748, -73.598]]],
+        "Rue Dupras": [[[45.745, -73.602], [45.748, -73.599]]],
+        "Rue Saint-Pierre": [[[45.746, -73.604], [45.749, -73.600]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.750, -73.599]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.758, -73.600]]],
+        "Rue des Pins": [[[45.756, -73.603], [45.759, -73.598]]],
+        "Rue Brien": [[[45.738, -73.605], [45.741, -73.600]]],
+        "Rue Bohémier": [[[45.742, -73.607], [45.745, -73.604]]]
+    }
+
+def get_extended_fallback():
+    """Fallback étendu avec les principales voies de Mascouche"""
+    fallback = {
+        # Autoroutes
+        "Autoroute 25": [[[45.70, -73.65], [45.72, -73.63], [45.74, -73.61], [45.76, -73.59], [45.78, -73.58]]],
+        "Autoroute 640": [[[45.76, -73.70], [45.76, -73.65], [45.76, -73.60], [45.76, -73.55]]],
+        
+        # Chemins principaux
+        "Montée Masson": [[[45.730, -73.620], [45.740, -73.610], [45.750, -73.600], [45.765, -73.580]]],
+        "Chemin Sainte-Marie": [[[45.735, -73.615], [45.745, -73.605], [45.755, -73.595]]],
+        "Boulevard de Mascouche": [[[45.740, -73.610], [45.747, -73.600], [45.752, -73.590]]],
+        "Chemin des Anglais": [[[45.74, -73.65], [45.745, -73.645], [45.75, -73.64]]],
+        "Chemin Gascon": [[[45.75, -73.62], [45.755, -73.615], [45.76, -73.60]]],
+        "Chemin Pincourt": [[[45.72, -73.64], [45.725, -73.635], [45.73, -73.63]]],
+        "Chemin Newton": [[[45.73, -73.58], [45.735, -73.575], [45.74, -73.57]]],
+        "Chemin Saint-Henri": [[[45.71, -73.61], [45.715, -73.605], [45.72, -73.60]]],
+        "Chemin Saint-Pierre": [[[45.74, -73.59], [45.745, -73.585], [45.75, -73.58]]],
+        
+        # Avenues
+        "Avenue de la Gare": [[[45.745, -73.601], [45.747, -73.599], [45.748, -73.598]]],
+        "Avenue Bourque": [[[45.742, -73.603], [45.744, -73.601], [45.746, -73.599]]],
+        "Avenue Crépeau": [[[45.743, -73.602], [45.745, -73.600], [45.747, -73.598]]],
+        "Avenue Garden": [[[45.751, -73.606], [45.753, -73.604], [45.755, -73.602]]],
+        "Avenue de l'Esplanade": [[[45.748, -73.605], [45.750, -73.603], [45.752, -73.601]]],
+        
+        # Rues du centre
+        "Rue Dupras": [[[45.745, -73.602], [45.747, -73.600], [45.748, -73.599]]],
+        "Rue Saint-Pierre": [[[45.746, -73.604], [45.748, -73.602], [45.749, -73.600]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.749, -73.599], [45.750, -73.598]]],
+        "Rue Brien": [[[45.738, -73.605], [45.740, -73.603], [45.741, -73.600]]],
+        "Rue Bohémier": [[[45.742, -73.607], [45.744, -73.605], [45.745, -73.604]]],
+        
+        # Rues résidentielles
+        "Rue des Pins": [[[45.756, -73.603], [45.758, -73.601], [45.759, -73.598]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.757, -73.603], [45.758, -73.600]]],
+        "Rue Gravel": [[[45.738, -73.605], [45.740, -73.603], [45.741, -73.600]]]
+    }
+    
+    # Sauvegarder le fallback
+    CACHE_FILE.write_text(json.dumps(fallback, indent=2), encoding="utf-8")
+    print(f"💾 Fallback sauvegardé avec {len(fallback)} voies principales")
+    
+    return fallback
+
+def load_geometry_cache():
+    """
+    Charge le cache de géométries depuis le fichier JSON
+    Crée un cache de base si le fichier n'existe pas
+    """
+    if not CACHE_FILE.exists():
+        print("⚠️ Cache non trouvé, construction en cours...")
+        return build_geometry_cache()  # build_geometry_cache() gère déjà le fallback en mémoire
+    
+    try:
+        with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+            cache = json.load(f)
+            print(f"✅ Cache chargé: {len(cache)} rues")
+            return cache
+    except Exception as e:
+        print(f"❌ Erreur chargement cache: {e}")
+        # Ne pas écrire de fallback sur disque ! Utiliser build_geometry_cache() qui gère le fallback en mémoire
+        return build_geometry_cache()
+
+def create_fallback_csv():
+    """
+    Crée un CSV de fallback avec quelques rues principales de Mascouche
+    Utilisé si l'API OSM est indisponible
+    """
+    fallback_streets = [
+        ("Montée Masson", "Principal"),
+        ("Chemin Sainte-Marie", "Principal"),
+        ("Boulevard de Mascouche", "Principal"),
+        ("Chemin des Anglais", "Principal"),
+        ("Rue Dupras", "Centre"),
+        ("Rue Saint-Pierre", "Centre"),
+        ("Rue de l'Église", "Centre"),
+        ("Avenue des Érables", "Résidentiel"),
+        ("Rue des Pins", "Résidentiel"),
+        ("Avenue Garden", "Résidentiel"),
+    ]
+    
+    df = pd.DataFrame(fallback_streets, columns=["name", "sector"])
+    df["team"] = ""
+    
+    buf = io.StringIO()
+    df.to_csv(buf, index=False)
+    print("⚠️ Mode fallback: 10 rues de test")
+    return buf.getvalue().encode("utf-8")
+
+def create_fallback_cache():
+    """
+    Crée un cache minimal pour tests
+    """
+    fallback_geo = {
+        "Montée Masson": [[[45.730, -73.620], [45.750, -73.600], [45.765, -73.580]]],
+        "Chemin Sainte-Marie": [[[45.735, -73.615], [45.748, -73.602], [45.755, -73.595]]],
+        "Boulevard de Mascouche": [[[45.740, -73.610], [45.747, -73.600], [45.752, -73.590]]],
+        "Rue Dupras": [[[45.745, -73.602], [45.748, -73.599]]],
+        "Rue Saint-Pierre": [[[45.746, -73.604], [45.749, -73.600]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.750, -73.599]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.758, -73.600]]],
+        "Rue des Pins": [[[45.756, -73.603], [45.759, -73.598]]],
+        "Avenue Garden": [[[45.753, -73.606], [45.756, -73.601]]],
+        "Rue Gravel": [[[45.738, -73.605], [45.741, -73.600]]]
+    }
+    
+    CACHE_FILE.write_text(json.dumps(fallback_geo, indent=2), encoding="utf-8")
+    print("⚠️ Cache fallback créé avec 10 rues")
+
+# Fonction utilitaire pour tests
+def test_osm_connection():
+    """
+    Teste la connexion à l'API Overpass
+    """
+    try:
+        api = overpy.Overpass()
+        # Requête minimale pour tester
+        result = api.query('[out:json];node(45.7475,-73.6005,45.7476,-73.6004);out;')
+        print("✅ Connexion OSM OK")
+        return True
+    except:
+        print("❌ Connexion OSM échouée")
+        return False
+
+# ========================================
+# NOUVELLES FONCTIONS POUR LES ADRESSES
+# ========================================
+
+def build_addresses_cache():
+    """
+    Construit le cache des adresses OSM pour Mascouche
+    Récupère addr:housenumber + addr:street depuis OSM
+    """
+    try:
+        api = overpy.Overpass()
+        result = api.query(QUERY_ADDR_NODES)
+        
+        addresses = {}
+        
+        # Traiter les nodes avec adresses
+        for node in result.nodes:
+            house_number = node.tags.get("addr:housenumber")
+            street_name = node.tags.get("addr:street")
+            
+            if house_number and street_name:
+                if street_name not in addresses:
+                    addresses[street_name] = []
+                addresses[street_name].append({
+                    "number": str(house_number),  # Forcer en string
+                    "lat": float(node.lat),
+                    "lon": float(node.lon),
+                    "type": "node"
+                })
+        
+        # Traiter les ways avec adresses
+        for way in result.ways:
+            num = way.tags.get("addr:housenumber")
+            street = way.tags.get("addr:street")
+            if not num or not street:
+                continue
+            
+            # Récupérer le centre du way
+            lat = getattr(way, "center_lat", None)
+            lon = getattr(way, "center_lon", None)
+            
+            # Fallback si center_lat/lon non disponibles
+            if lat is None or lon is None:
+                nodes = getattr(way, "nodes", []) or []
+                if nodes:
+                    try:
+                        valid_lats = []
+                        valid_lons = []
+                        for n in nodes:
+                            if hasattr(n, 'lat') and hasattr(n, 'lon'):
+                                if n.lat is not None and n.lon is not None:
+                                    valid_lats.append(float(n.lat))
+                                    valid_lons.append(float(n.lon))
+                        if valid_lats and valid_lons:
+                            lat = sum(valid_lats) / len(valid_lats)
+                            lon = sum(valid_lons) / len(valid_lons)
+                    except Exception as e:
+                        print(f"Erreur calcul centre pour way: {e}")
+                        continue
+            
+            if lat is not None and lon is not None:
+                addresses.setdefault(street, []).append({
+                    "number": str(num),
+                    "lat": float(lat),
+                    "lon": float(lon),
+                    "type": "way"
+                })
+        
+        # Trier les adresses par numéro pour chaque rue
+        for street_name in addresses:
+            try:
+                # Tri numérique intelligent
+                addresses[street_name].sort(
+                    key=lambda x: (
+                        int(''.join(filter(str.isdigit, x["number"]))) 
+                        if any(c.isdigit() for c in x["number"]) 
+                        else float('inf')
+                    )
+                )
+            except:
+                # Si le tri échoue, garder l'ordre original
+                pass
+        
+        # Sauvegarder le cache
+        ADDR_CACHE_FILE.write_text(json.dumps(addresses, indent=2), encoding="utf-8")
+        total_addresses = sum(len(addrs) for addrs in addresses.values())
+        print(f"✅ Cache adresses créé: {len(addresses)} rues, {total_addresses} adresses")
+        return addresses
+        
+    except Exception as e:
+        print(f"❌ Erreur construction cache adresses: {e}")
+        # Créer un cache vide en cas d'erreur
+        ADDR_CACHE_FILE.write_text(json.dumps({}), encoding="utf-8")
+        return {}
+
+def load_addresses_cache():
+    """
+    Charge le cache d'adresses depuis le fichier JSON
+    """
+    if not ADDR_CACHE_FILE.exists():
+        print("⚠️ Cache adresses non trouvé")
+        return {}
+    
+    try:
+        with open(ADDR_CACHE_FILE, 'r', encoding='utf-8') as f:
+            cache = json.load(f)
+            total_addresses = sum(len(addrs) for addrs in cache.values())
+            print(f"✅ Cache adresses chargé: {len(cache)} rues, {total_addresses} adresses")
+            return cache
+    except Exception as e:
+        print(f"❌ Erreur chargement cache adresses: {e}")
+        return {}
+
+
+================================================================================
+FICHIER: guignomap/assets/styles.css
+================================================================================
+/* ========================================
+   GUIGNO-MAP - STYLES PERSONNALISÉS
+   Le Relais de Mascouche
+   ======================================== */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap');
+
+/* ========================================
+   VARIABLES CSS & THÈME
+   ======================================== */
+:root {
+    /* Couleurs principales du Relais */
+    --relais-rouge: #8B0000;
+    --relais-rouge-light: #a52a2a;
+    --relais-or: #FFD700;
+    --relais-or-light: #FFE44D;
+    
+    /* Couleurs de statut */
+    --status-green: #22c55e;
+    --status-orange: #f59e0b;
+    --status-red: #ef4444;
+    --status-gray: #9ca3af;
+    
+    /* Couleurs de base */
+    --bg-dark: #0e1117;
+    --bg-secondary: #151b22;
+    --bg-card: #1a1f2e;
+    --border-color: #222a33;
+    --text-primary: #fafafa;
+    --text-secondary: #cbd5e1;
+    --text-muted: #8b92a4;
+    
+    /* Espacements */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Border radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+}
+
+/* ========================================
+   RESET & BASE STREAMLIT
+   ======================================== */
+
+/* Cache les éléments Streamlit non désirés */
+header[data-testid="stHeader"] { 
+    visibility: hidden; 
+    height: 0; 
+}
+
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+.block-container { 
+    padding-top: 1rem;
+    max-width: 100%;
+}
+
+/* Police globale */
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* ========================================
+   HEADER PRINCIPAL AMÉLIORÉ
+   ======================================== */
+.brand-header {
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 2rem;
+    margin: 0 0 2rem 0;
+    background: linear-gradient(135deg, 
+        var(--relais-rouge) 0%, 
+        var(--relais-rouge-light) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(139, 0, 0, 0.3);
+}
+
+.brand-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 215, 0, 0.1));
+    transform: rotate(35deg);
+    pointer-events: none;
+}
+
+.brand-header::after {
+    content: '🎁';
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 3rem;
+    opacity: 0.2;
+}
+
+.brand-title {
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem;
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.5px;
+}
+
+.brand-sub {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+/* ========================================
+   CARTES & CONTENEURS
+   ======================================== */
+.modern-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    border-color: var(--relais-rouge);
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-left: 4px solid var(--relais-rouge);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(139, 0, 0, 0.1));
+    transform: skewX(-20deg);
+}
+
+/* ========================================
+   MÉTRIQUES STREAMLIT
+   ======================================== */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: scale(1.02);
+    border-color: var(--relais-rouge);
+}
+
+[data-testid="metric-container"] > div:first-child {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+[data-testid="metric-container"] > div:nth-child(2) {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--relais-rouge);
+    margin-top: 0.25rem;
+}
+
+/* ========================================
+   BOUTONS
+   ======================================== */
+.stButton > button,
+.stDownloadButton > button {
+    background: linear-gradient(135deg, var(--relais-rouge) 0%, var(--relais-rouge-light) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 12px rgba(139, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+}
+
+.stButton > button:hover::before {
+    left: 100%;
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+}
+
+/* Bouton secondaire */
+.secondary-btn > button {
+    background: transparent !important;
+    color: var(--relais-rouge) !important;
+    border: 2px solid var(--relais-rouge) !important;
+}
+
+.secondary-btn > button:hover {
+    background: var(--relais-rouge) !important;
+    color: white !important;
+}
+
+/* ========================================
+   INPUTS & FORMULAIRES
+   ======================================== */
+.stTextInput > div > div > input,
+.stSelectbox > div > div > select,
+.stTextArea > div > div > textarea {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.stTextInput > div > div > input:focus,
+.stSelectbox > div > div > select:focus,
+.stTextArea > div > div > textarea:focus {
+    border-color: var(--relais-rouge);
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+    outline: none;
+}
+
+/* Labels */
+.stTextInput > label,
+.stSelectbox > label,
+.stTextArea > label {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+/* ========================================
+   TABLEAUX
+   ======================================== */
+.stDataFrame {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+}
+
+.dataframe {
+    background: var(--bg-card) !important;
+}
+
+.dataframe thead tr th {
+    background: linear-gradient(135deg, var(--relais-rouge) 0%, var(--relais-rouge-light) 100%) !important;
+    color: white !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    padding: 0.75rem !important;
+    border: none !important;
+}
+
+.dataframe tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
+}
+
+.dataframe tbody tr:hover {
+    background: rgba(139, 0, 0, 0.1) !important;
+}
+
+.dataframe tbody tr td {
+    color: var(--text-primary) !important;
+    padding: 0.75rem !important;
+    border: none !important;
+}
+
+/* ========================================
+   TABS
+   ======================================== */
+.stTabs [data-baseweb="tab-list"] {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    gap: 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.stTabs [data-baseweb="tab"] {
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-sm);
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    background: rgba(139, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, var(--relais-rouge) 0%, var(--relais-rouge-light) 100%) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+}
+
+/* ========================================
+   EXPANDEURS
+   ======================================== */
+.streamlit-expanderHeader {
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.streamlit-expanderHeader:hover {
+    background: var(--bg-secondary);
+    border-color: var(--relais-rouge);
+}
+
+/* ========================================
+   SIDEBAR
+   ======================================== */
+section[data-testid="stSidebar"] {
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+section[data-testid="stSidebar"] .block-container {
+    padding: var(--spacing-lg);
+}
+
+/* ========================================
+   BADGES DE STATUT
+   ======================================== */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-xl);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-terminee {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--status-green);
+    border: 1px solid var(--status-green);
+}
+
+.status-en-cours {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--status-orange);
+    border: 1px solid var(--status-orange);
+}
+
+.status-a-faire {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--status-red);
+    border: 1px solid var(--status-red);
+}
+
+/* ========================================
+   ALERTES & MESSAGES
+   ======================================== */
+.stAlert {
+    border-radius: var(--radius-md);
+    border-left-width: 4px;
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.stSuccess {
+    background: rgba(34, 197, 94, 0.1);
+    border-left-color: var(--status-green);
+    color: var(--status-green);
+}
+
+.stError {
+    background: rgba(239, 68, 68, 0.1);
+    border-left-color: var(--status-red);
+    color: var(--status-red);
+}
+
+.stWarning {
+    background: rgba(245, 158, 11, 0.1);
+    border-left-color: var(--status-orange);
+    color: var(--status-orange);
+}
+
+.stInfo {
+    background: rgba(139, 0, 0, 0.1);
+    border-left-color: var(--relais-rouge);
+    color: var(--text-primary);
+}
+
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+.custom-progress {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    margin: var(--spacing-md) 0;
+}
+
+.progress-bar {
+    background: var(--bg-secondary);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, 
+        var(--status-green) 0%, 
+        var(--status-orange) 50%, 
+        var(--status-red) 100%);
+    border-radius: 6px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* ========================================
+   CARTE FOLIUM
+   ======================================== */
+iframe {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   FOOTER
+   ======================================== */
+.footer {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-color);
+    margin-top: 3rem;
+    font-size: 0.875rem;
+}
+
+.footer a {
+    color: var(--relais-rouge);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: var(--relais-or);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+    .brand-title {
+        font-size: 1.5rem;
+    }
+    
+    .brand-sub {
+        font-size: 0.875rem;
+    }
+    
+    .modern-card {
+        padding: var(--spacing-md);
+    }
+    
+    .stButton > button {
+        width: 100%;
+    }
+    
+    [data-testid="metric-container"] > div:nth-child(2) {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-header {
+        padding: var(--spacing-md);
+    }
+    
+    .brand-title {
+        font-size: 1.25rem;
+    }
+    
+    .brand-header::after {
+        display: none;
+    }
+}
+
+/* ========================================
+   UTILITIES
+   ======================================== */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.mt-1 { margin-top: var(--spacing-sm); }
+.mt-2 { margin-top: var(--spacing-md); }
+.mt-3 { margin-top: var(--spacing-lg); }
+.mb-1 { margin-bottom: var(--spacing-sm); }
+.mb-2 { margin-bottom: var(--spacing-md); }
+.mb-3 { margin-bottom: var(--spacing-lg); }
+.p-1 { padding: var(--spacing-sm); }
+.p-2 { padding: var(--spacing-md); }
+.p-3 { padding: var(--spacing-lg); }
+
+/* ========================================
+   DARK MODE OPTIMIZATIONS
+   ======================================== */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-dark: #ffffff;
+        --bg-secondary: #f8f9fa;
+        --bg-card: #ffffff;
+        --border-color: #e5e7eb;
+        --text-primary: #111827;
+        --text-secondary: #6b7280;
+        --text-muted: #9ca3af;
+    }
+    
+    .modern-card,
+    [data-testid="stMetric"] {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+
+================================================================================
+FICHIER: .streamlit/config.toml
+================================================================================
+[theme]
+# Thème sombre avec les couleurs du Relais
+base = "dark"
+primaryColor = "#A9CF3B"              # Vert du Relais
+backgroundColor = "#0F1318"           # Fond très sombre
+secondaryBackgroundColor = "#1A1F26"  # Fond secondaire
+textColor = "#F2F3F5"                 # Texte clair
+font = "sans serif"
+
+[client]
+# Configuration minimale de la toolbar
+toolbarMode = "minimal"
+showErrorDetails = false
+
+[runner]
+# Optimisations de performance
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true
+
+[server]
+# Configuration serveur
+headless = true
+runOnSave = true
+maxUploadSize = 10
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+# Collecte des stats d'usage (désactivé pour confidentialité)
+gatherUsageStats = false
+
+[deprecation]
+# Désactiver les avertissements de dépréciation
+showImageFormat = false
+showPyplotGlobalUse = false
+
+
+================================================================================
+FICHIER: .streamlit/secrets.toml
+================================================================================
+# Secrets pour Guigno-Map
+# Ce fichier ne doit PAS être commité dans Git
+
+TECH_PIN = "RELAIS2025"
