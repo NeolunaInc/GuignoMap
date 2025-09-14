@@ -1587,19 +1587,8 @@ def page_assignations_v41(conn):
                 "status_label": "Statut"
             })[["Rue", "Secteur", "Équipe", "Statut"]]
             
-            # Style doux uniquement sur la colonne "Statut"
-            def statut_cell_style(val: str) -> str:
-                if val == "Terminée":
-                    return "background-color:#E6F5EA; color:#111; font-weight:600"
-                elif val == "En cours":
-                    return "background-color:#FFF3CC; color:#111; font-weight:600"
-                elif val == "À faire":
-                    return "background-color:#FFE6EC; color:#111; font-weight:600"
-                return ""
-            
-            # Appliquer style uniquement sur la colonne "Statut"
-            styled_df = style_map_compat(df_disp, statut_cell_style, subset=["Statut"])
-            st.dataframe(styled_df, width="stretch")
+            # Affichage standard sans style spécial
+            st.dataframe(df_disp, width="stretch")
         else:
             st.info("Aucune rue trouvée")
             

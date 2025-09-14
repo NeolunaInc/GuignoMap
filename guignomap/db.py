@@ -487,17 +487,6 @@ def stats_by_team(conn):
     return pd.read_sql_query(query, conn)
 
 # ---------- Fonctions d'activité ----------
-def log_activity(conn, team_id, action, details=None):
-    """Enregistre une activité dans le log"""
-    try:
-        conn.execute(
-            "INSERT INTO activity_log (team_id, action, details) VALUES (?, ?, ?)",
-            (team_id, action, details)
-        )
-        conn.commit()
-    except:
-        pass
-
 def recent_activity(conn, limit=10):
     """Récupère l'activité récente"""
     query = """

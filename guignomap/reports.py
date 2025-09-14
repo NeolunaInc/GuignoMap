@@ -72,7 +72,7 @@ class ReportGenerator:
         
         # Feuille 1 : Résumé
         summary_sheet = workbook.add_worksheet('Résumé Guignolée 2025')
-        summary_sheet.set_column('A:E', 20)
+        summary_sheet.set_column(0, 4, 20)  # A:E
         
         # Titre
         title_format = workbook.add_format({
@@ -81,8 +81,8 @@ class ReportGenerator:
             'font_color': '#8B0000',
             'align': 'center'
         })
-        summary_sheet.merge_range('A1:E1', 'GUIGNOLÉE 2025 - RELAIS DE MASCOUCHE', title_format)
-        summary_sheet.merge_range('A2:E2', f'Rapport généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', cell_format)
+        summary_sheet.merge_range(0, 0, 0, 4, 'GUIGNOLÉE 2025 - RELAIS DE MASCOUCHE', title_format)  # A1:E1
+        summary_sheet.merge_range(1, 0, 1, 4, f'Rapport généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', cell_format)  # A2:E2
         
         # Stats globales
         from db import extended_stats
@@ -90,7 +90,7 @@ class ReportGenerator:
         
         row = 4
         summary_sheet.write(row, 0, 'STATISTIQUES GLOBALES', header_format)
-        summary_sheet.merge_range(f'B{row+1}:E{row+1}', '', header_format)
+        summary_sheet.merge_range(row, 1, row, 4, '', header_format)  # B{row+1}:E{row+1}
         
         row += 2
         summary_data = [
@@ -110,8 +110,8 @@ class ReportGenerator:
         
         # Feuille 2 : Détail des rues
         streets_sheet = workbook.add_worksheet('Détail des rues')
-        streets_sheet.set_column('A:A', 30)
-        streets_sheet.set_column('B:E', 15)
+        streets_sheet.set_column(0, 0, 30)
+        streets_sheet.set_column(1, 4, 15)
         
         # Headers
         headers = ['Rue', 'Secteur', 'Équipe', 'Statut', 'Notes']
@@ -137,7 +137,7 @@ class ReportGenerator:
         
         # Feuille 3 : Performance des équipes
         teams_sheet = workbook.add_worksheet('Performance équipes')
-        teams_sheet.set_column('A:F', 15)
+        teams_sheet.set_column(0, 5, 15)
         
         from db import stats_by_team
         teams_df = stats_by_team(self.conn)

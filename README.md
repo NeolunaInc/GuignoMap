@@ -105,7 +105,10 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 ### 🔧 Interface assignations
 - **Sélecteur secteur** : Label clair "SECTEUR À ASSIGNER", aucun chevauchement
 - **Tableau état** : Colonnes Rue / Secteur / Équipe / Statut avec libellés français
-- **Style lisible** : Contraste amélioré, texte noir sur fond pastel
+- **Style uniforme** : Rendu standard avec thème sombre (fond neutre, texte blanc)
+- **Corrections UI** :
+  - Suppression de l'overlay texte au-dessus du sélecteur secteur
+  - Colonne 'Statut' : rendu uniforme (fond neutre / texte thème)
 
 ### 👥 Gestion moderne
 - **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"
