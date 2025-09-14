@@ -93,6 +93,20 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - **Gestion des erreurs robuste** : l'application ne crash jamais
 - **Code moderne** : Nettoyage des anciens hacks et workarounds
 
+### 🎨 Affichage des statuts
+- **Codes internes** : `a_faire`, `en_cours`, `terminee` (base de données)
+- **Affichage UI/exports** : "À faire", "En cours", "Terminée" (interface utilisateur)
+- **Style visual** : Fond pastel + texte contrasté, uniquement sur la colonne "Statut"
+- **Couleurs harmonisées** : 
+  - 🟢 **Terminée** : Fond vert pâle (#E6F5EA)
+  - 🟡 **En cours** : Fond jaune pâle (#FFF3CC)  
+  - 🔴 **À faire** : Fond rose pâle (#FFE6EC)
+
+### 🔧 Interface assignations
+- **Sélecteur secteur** : Label clair "SECTEUR À ASSIGNER", aucun chevauchement
+- **Tableau état** : Colonnes Rue / Secteur / Équipe / Statut avec libellés français
+- **Style lisible** : Contraste amélioré, texte noir sur fond pastel
+
 ### 👥 Gestion moderne
 - **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"
 - **Navigation sidebar** moderne et intuitive

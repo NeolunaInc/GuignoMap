@@ -14,6 +14,9 @@ from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import xlsxwriter
 from io import BytesIO
 
+# Mapping des statuts pour l'affichage (évite imports circulaires)
+STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
+
 class ReportGenerator:
     def __init__(self, conn):
         self.conn = conn
@@ -127,7 +130,8 @@ class ReportGenerator:
             
             status = row.get('status', 'a_faire')
             format_to_use = status_formats.get(status, cell_format)
-            streets_sheet.write(idx, 3, status.replace('_', ' ').title(), format_to_use)
+            status_label = STATUS_TO_LABEL.get(status, "À faire")
+            streets_sheet.write(idx, 3, status_label, format_to_use)
             
             streets_sheet.write(idx, 4, row.get('notes', 0), cell_format)
         

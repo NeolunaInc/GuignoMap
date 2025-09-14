@@ -37,6 +37,11 @@ def style_map_compat(df: pd.DataFrame, fn: Callable[[Any], str], subset: Any = N
         return styler.map(fn, subset=subset)
     # Pandas < 2.4 : fallback vers applymap (sans référence statique)
     return getattr(styler, "applymap")(fn, subset=subset)
+
+# --- Mapping des statuts pour l'affichage ---
+STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
+LABEL_TO_STATUS = {v: k for k, v in STATUS_TO_LABEL.items()}
+
 ASSETS = Path(__file__).parent / "assets"
 
 # Configuration Streamlit
@@ -1519,9 +1524,12 @@ def page_assignations_v41(conn):
                 sectors = db.get_sectors_list(conn)
                 if sectors:
                     selected_sector = st.selectbox(
-                        "Secteur à assigner",
+                        "SECTEUR À ASSIGNER",
                         [""] + sectors,
-                        help="Choisir un secteur pour l'assignation en bloc"
+                        index=0,
+                        key="assign_sector",
+                        help="Choisissez le secteur à assigner en bloc à une équipe",
+                        label_visibility="visible"
                     )
                 else:
                     st.info("Aucun secteur disponible")
@@ -1569,22 +1577,28 @@ def page_assignations_v41(conn):
         st.markdown("### 📋 État des assignations")
         df_all = db.list_streets(conn)
         if not df_all.empty:
-            # Ajouter des couleurs selon le statut
-            def color_status(val):
-                if val == 'terminee':
-                    return 'background-color: #d4edda'
-                elif val == 'en_cours':
-                    return 'background-color: #fff3cd'
-                elif val == 'a_faire':
-                    return 'background-color: #f8d7da'
-                return ''
+            # Créer DataFrame d'affichage avec libellés FR
+            df_disp = df_all.assign(
+                status_label=df_all["status"].map(STATUS_TO_LABEL).fillna("À faire")
+            ).rename(columns={
+                "name": "Rue",
+                "sector": "Secteur", 
+                "team": "Équipe",
+                "status_label": "Statut"
+            })[["Rue", "Secteur", "Équipe", "Statut"]]
             
-            # Afficher le tableau avec style
-            styled_df = style_map_compat(
-                df_all[['name', 'sector', 'team', 'status']], 
-                color_status, 
-                subset=['status']
-            )
+            # Style doux uniquement sur la colonne "Statut"
+            def statut_cell_style(val: str) -> str:
+                if val == "Terminée":
+                    return "background-color:#E6F5EA; color:#111; font-weight:600"
+                elif val == "En cours":
+                    return "background-color:#FFF3CC; color:#111; font-weight:600"
+                elif val == "À faire":
+                    return "background-color:#FFE6EC; color:#111; font-weight:600"
+                return ""
+            
+            # Appliquer style uniquement sur la colonne "Statut"
+            styled_df = style_map_compat(df_disp, statut_cell_style, subset=["Statut"])
             st.dataframe(styled_df, width="stretch")
         else:
             st.info("Aucune rue trouvée")
