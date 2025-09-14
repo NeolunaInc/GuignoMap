@@ -23,6 +23,13 @@
       "command": "if (-not (Test-Path \"..\\exports\")) { New-Item -ItemType Directory \"..\\exports\" | Out-Null }; $f = Get-ChildItem \"..\\exports\" -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1; if ($f) { ii $f.FullName } else { ii \"..\\exports\" }",
       "options": { "cwd": "${workspaceFolder}\\guignomap" },
       "problemMatcher": []
+    },
+    {
+      "label": "GuignoMap: Sanity (CSV)",
+      "type": "shell",
+      "command": ".\\.venv\\Scripts\\python.exe tools\\quick_sanity.py",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
     }
   ]
 }
