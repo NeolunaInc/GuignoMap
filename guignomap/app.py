@@ -18,6 +18,25 @@ from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache
 
 # Configuration des chemins
 DB_PATH = Path(__file__).parent / "guigno_map.db"
+
+# --- Utilitaire de compatibilité pandas Styler ---
+from typing import Callable, Any
+
+def style_map_compat(df: pd.DataFrame, fn: Callable[[Any], str], subset: Any = None):
+    """Applique un style cellule-à-cellule en utilisant Styler.map si disponible,
+    sinon fallback dynamique vers applymap sans exposer l'attribut (OK pour Pylance).
+    
+    Args:
+        df: DataFrame à styliser
+        fn: Fonction qui prend une valeur cellule et retourne une string CSS
+        subset: Colonnes à cibler (ex: ['status'] ou None pour toutes)
+    """
+    styler = df.style
+    if hasattr(styler, "map"):
+        # Pandas 2.4+ : utilise la nouvelle API map()
+        return styler.map(fn, subset=subset)
+    # Pandas < 2.4 : fallback vers applymap (sans référence statique)
+    return getattr(styler, "applymap")(fn, subset=subset)
 ASSETS = Path(__file__).parent / "assets"
 
 # Configuration Streamlit
@@ -1561,8 +1580,10 @@ def page_assignations_v41(conn):
                 return ''
             
             # Afficher le tableau avec style
-            styled_df = df_all[['name', 'sector', 'team', 'status']].style.applymap(
-                color_status, subset=['status']
+            styled_df = style_map_compat(
+                df_all[['name', 'sector', 'team', 'status']], 
+                color_status, 
+                subset=['status']
             )
             st.dataframe(styled_df, width="stretch")
         else:

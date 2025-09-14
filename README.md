@@ -87,6 +87,7 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 ### ⚙️ Compatibilité et modernisation
 - **Python 3.13.6** et versions récentes de Streamlit
 - **Suppression de use_container_width** (déprécié) ➜ `width="stretch"`
+- **Migration pandas Styler** : `applymap()` ➜ `map()` avec helper de compatibilité
 - **Légende persistante** via Folium Elements (remplace l'ancien HTML/CSS)
 - **Chemins multi-plateformes** avec pathlib
 - **Gestion des erreurs robuste** : l'application ne crash jamais
@@ -151,6 +152,24 @@ if ($f) { ii $f.FullName } else { ii "..\exports" }
 - **Backup automatique** : ZIP créé avant toute écriture critique
 - **Validation inputs** : Protection SQL injection et XSS via module validators
 - **Logging complet** : Journal d'activité en base de données et fichier
+
+## 🔧 Notes techniques
+
+### Compatibilité pandas 2.4+
+L'application utilise un helper `style_map_compat()` pour gérer la transition de `Styler.applymap()` vers `Styler.map()` :
+```python
+def style_map_compat(df: pd.DataFrame, fn: Callable[[Any], str], subset: Any = None):
+    """Helper de compatibilité pandas - applymap() vs map()"""
+    styler = df.style
+    if hasattr(styler, "map"):
+        return styler.map(fn, subset=subset)  # Pandas 2.4+
+    return getattr(styler, "applymap")(fn, subset=subset)  # Pandas < 2.4
+```
+
+### Environment virtuel (.venv)
+- **Développement** : Utiliser exclusivement `.\.venv\Scripts\python.exe`
+- **Isolation** : Toutes les dépendances dans `.venv/` pour éviter les conflits
+- **Activation** : `.\.venv\Scripts\Activate.ps1` avant utilisation
 
 ## 🎯 Guide d'utilisation v4.1
 
@@ -490,6 +509,11 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - **Erreur use_container_width** : Version récente de Streamlit - l'application s'adapte automatiquement
 - **Affichage dégradé** : Mise à jour recommandée vers Streamlit 1.28+
 - **Contrôles manquants** : Vérifiez la version folium et streamlit-folium
+
+### Problèmes de compatibilité pandas
+- **Erreur "Cannot access attribute 'applymap'"** : Pandas 2.4+ retire applymap - l'application utilise un helper de compatibilité
+- **Tables sans style** : Vérifiez la version pandas, le helper `style_map_compat()` gère automatiquement les versions
+- **Couleurs manquantes** : Problème temporaire lors du changement de version pandas - redémarrez l'application
 
 ### Performance
 - **Carte lente** : Réduisez le zoom ou changez de fond de carte
