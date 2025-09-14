@@ -158,7 +158,7 @@ def render_login_card(role="benevole", conn=None):
             with col2:
                 submit = st.form_submit_button(
                     "🚀 Connexion",
-                    use_container_width=True
+                    width="stretch"
                 )
             
             if submit:
@@ -200,7 +200,7 @@ def render_login_card(role="benevole", conn=None):
             with col2:
                 submit = st.form_submit_button(
                     "🎄 Connexion",
-                    use_container_width=True
+                    width="stretch"
                 )
             
             if submit:
@@ -357,7 +357,7 @@ def render_dashboard_gestionnaire(conn, geo):
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='white'
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.info("Aucune statistique d'équipe disponible")
     except Exception as e:
@@ -366,9 +366,43 @@ def render_dashboard_gestionnaire(conn, geo):
         try:
             teams_stats = db.stats_by_team(conn)
             if not teams_stats.empty:
-                st.dataframe(teams_stats, use_container_width=True)
+                st.dataframe(teams_stats, width="stretch")
         except:
             st.info("Aucune statistique d'équipe disponible")
+
+def add_persistent_legend(m):
+    """Ajoute une légende persistante pour les 4 états des rues via contrôle HTML"""
+    legend_html = """
+    <div id='gm-legend' class='leaflet-control-layers leaflet-control' 
+         style='position: absolute; bottom: 10px; right: 10px; z-index: 1000;
+                background: white; border: 2px solid rgba(0,0,0,0.2); 
+                border-radius: 5px; padding: 10px; box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+                font-family: "Helvetica Neue", Arial, Helvetica, sans-serif; 
+                font-size: 12px; line-height: 18px; color: #333;'>
+        <strong style='margin-bottom: 8px; display: block;'>Légende</strong>
+        <div style='margin: 4px 0; display: flex; align-items: center;'>
+            <span style='width: 20px; height: 0; border-top: 3px solid #28a745; 
+                         display: inline-block; margin-right: 8px;'></span>
+            <span>Terminée</span>
+        </div>
+        <div style='margin: 4px 0; display: flex; align-items: center;'>
+            <span style='width: 20px; height: 0; border-top: 3px solid #f1c40f; 
+                         display: inline-block; margin-right: 8px;'></span>
+            <span>En cours</span>
+        </div>
+        <div style='margin: 4px 0; display: flex; align-items: center;'>
+            <span style='width: 20px; height: 0; border-top: 3px solid #ff4d4f; 
+                         display: inline-block; margin-right: 8px;'></span>
+            <span>Assignée (à faire)</span>
+        </div>
+        <div style='margin: 4px 0; display: flex; align-items: center;'>
+            <span style='width: 20px; height: 0; border-top: 3px dashed #ff4d4f; 
+                         display: inline-block; margin-right: 8px;'></span>
+            <span>Non assignée</span>
+        </div>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(legend_html))
 
 def create_map(df, geo):
     """Crée la carte Folium centrée sur Mascouche avec toutes les rues"""
@@ -515,28 +549,8 @@ def create_map(df, geo):
         icon=folium.Icon(color='red', icon='info-sign')
     ).add_to(m)
     
-    # Légende améliorée
-    legend_html = f'''
-    <div style="position: fixed; bottom: 50px; right: 50px; width: 220px;
-                background: white; z-index:9999; font-size:14px;
-                border: 2px solid #8B0000; border-radius: 10px; padding: 15px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.2)">
-        <h4 style="margin: 0 0 10px 0; color: #8B0000;">Légende</h4>
-        <div><span style="background:#22c55e; width:30px; height:3px; display:inline-block;"></span> Terminée</div>
-        <div><span style="background:#f59e0b; width:30px; height:3px; display:inline-block;"></span> En cours</div>
-        <div><span style="background:#ef4444; width:30px; height:3px; display:inline-block;"></span> À faire</div>
-        <hr style="margin: 8px 0;">
-        <div><span style="border-bottom: 3px dashed #666; width:30px; display:inline-block;"></span> Non assignée</div>
-        <div><span style="border-bottom: 3px solid #666; width:30px; display:inline-block;"></span> Assignée</div>
-        <hr style="margin: 8px 0;">
-        <small>
-            <strong>Total:</strong> {stats["total"]} voies<br>
-            <strong>Assignées:</strong> {stats["assigned"]}<br>
-            <strong>Non assignées:</strong> {stats["unassigned"]}
-        </small>
-    </div>
-    '''
-    m.get_root().html.add_child(folium.Element(legend_html))
+    # Ajouter la légende persistante
+    add_persistent_legend(m)
     
     return m
 
@@ -657,93 +671,6 @@ def generate_sms_list(conn):
     except:
         return "Liste non disponible"
 
-def create_festive_map(df, geo):
-    """Carte avec thème festif de Noël"""
-    center = [45.7475, -73.6005]
-    
-    m = folium.Map(
-        location=center,
-        zoom_start=13,
-        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-        attr='© Esri',
-        control_scale=True
-    )
-    
-    # Marqueur spécial pour le Relais
-    folium.Marker(
-        [45.7475, -73.6005],
-        popup="🎁 Le Relais de Mascouche",
-        tooltip="Point de départ de la Guignolée",
-        icon=folium.Icon(color='red', icon='gift', prefix='fa')
-    ).add_to(m)
-    
-    # Construction du lookup
-    street_info = {}
-    if not df.empty:
-        for _, row in df.iterrows():
-            name = str(row['name']) if 'name' in df.columns else ''
-            street_info[name] = {
-                'status': row.get('status', 'a_faire'),
-                'team': row.get('team', ''),
-                'notes': str(row.get('notes', 0))
-            }
-    
-    # Couleurs festives
-    status_colors = {
-        'terminee': '#165b33',  # Vert sapin
-        'en_cours': '#FFD700',   # Or
-        'a_faire': '#c41e3a'     # Rouge Noël
-    }
-    
-    for name, paths in geo.items():
-        info = street_info.get(name, {'status': 'a_faire', 'team': '', 'notes': '0'})
-        
-        color = status_colors.get(info['status'], '#c41e3a')
-        team = info['team']
-        opacity = 0.9 if team else 0.5
-        dash = None if team else '10,10'
-        weight = 8 if team else 5
-        
-        tooltip_html = f"""
-        <div style='font-family: sans-serif; font-size: 14px;'>
-            <strong>{name}</strong><br>
-            <span style='color: {color};'>● {info['status'].replace('_', ' ').title()}</span><br>
-            👥 {team if team else 'Non assignée'}<br>
-            📝 {info['notes']} notes
-        </div>
-        """
-        
-        for path in paths:
-            if path and len(path) >= 2:
-                folium.PolyLine(
-                    path,
-                    color=color,
-                    weight=weight,
-                    opacity=opacity,
-                    dash_array=dash,
-                    tooltip=folium.Tooltip(tooltip_html, sticky=True)
-                ).add_to(m)
-    
-    # Légende festive
-    legend_html = '''
-    <div style="position: fixed; bottom: 50px; right: 50px; width: 220px;
-                background: linear-gradient(135deg, white, #f0f0f0);
-                border: 3px solid #c41e3a; border-radius: 15px; padding: 15px;
-                box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
-        <h4 style="margin: 0 0 10px 0; color: #c41e3a; text-align: center;">
-            🎄 Légende 🎄
-        </h4>
-        <div><span style="background:#165b33; width:30px; height:4px; display:inline-block;"></span> Collecte terminée</div>
-        <div><span style="background:#FFD700; width:30px; height:4px; display:inline-block;"></span> En cours</div>
-        <div><span style="background:#c41e3a; width:30px; height:4px; display:inline-block;"></span> À faire</div>
-        <hr style="margin: 8px 0; border-color: #c41e3a;">
-        <div><span style="border-bottom: 4px dashed #999; width:30px; display:inline-block;"></span> Non assignée</div>
-    </div>
-    '''
-    m.get_root().html.add_child(folium.Element(legend_html))
-    
-    return m
-
 def page_export_gestionnaire(conn):
     """Section export avec formats multiples"""
     
@@ -768,10 +695,10 @@ def page_export_gestionnaire(conn):
                 pdf_data,
                 "rapport_guignolee_2025.pdf",
                 "application/pdf",
-                use_container_width=True
+                width="stretch"
             )
         except ImportError:
-            st.button("PDF (Installer reportlab)", disabled=True, use_container_width=True)
+            st.button("PDF (Installer reportlab)", disabled=True, width="stretch")
     
     with col2:
         st.markdown("""
@@ -788,10 +715,10 @@ def page_export_gestionnaire(conn):
                 excel_data,
                 "guignolee_2025.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                width="stretch"
             )
         except:
-            st.button("Excel (Non disponible)", disabled=True, use_container_width=True)
+            st.button("Excel (Non disponible)", disabled=True, width="stretch")
     
     with col3:
         st.markdown("""
@@ -807,7 +734,7 @@ def page_export_gestionnaire(conn):
             sms_list,
             "telephones_benevoles.txt",
             "text/plain",
-            use_container_width=True
+            width="stretch"
         )
 
 
@@ -973,7 +900,7 @@ def page_accueil_v2(conn, geo):
     st.markdown("### 🗺️ Vue d'ensemble de Mascouche")
     df_all = db.list_streets(conn)
     if not df_all.empty:
-        m = create_festive_map(df_all, geo)
+        m = create_map(df_all, geo)
         st_folium(m, height=750, width=None, returned_objects=[])
     
     # CSS pour réduire l'espace après la carte
@@ -1119,15 +1046,15 @@ def page_benevole(conn, geo):
                 # Changement rapide de statut
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    if st.button("⭕ À faire", key=f"todo_{street}", use_container_width=True):
+                    if st.button("⭕ À faire", key=f"todo_{street}", width="stretch"):
                         db.set_status(conn, street, 'a_faire')
                         st.rerun()
                 with col2:
-                    if st.button("🚶 En cours", key=f"progress_{street}", use_container_width=True):
+                    if st.button("🚶 En cours", key=f"progress_{street}", width="stretch"):
                         db.set_status(conn, street, 'en_cours')
                         st.rerun()
                 with col3:
-                    if st.button("✅ Terminée", key=f"done_{street}", use_container_width=True):
+                    if st.button("✅ Terminée", key=f"done_{street}", width="stretch"):
                         db.set_status(conn, street, 'terminee')
                         st.rerun()
                 
@@ -1160,7 +1087,7 @@ def page_benevole(conn, geo):
         try:
             notes = db.get_team_notes(conn, team_id)
             if not notes.empty:
-                st.dataframe(notes, use_container_width=True)
+                st.dataframe(notes, width="stretch")
             else:
                 st.info("Aucune note encore")
         except:
@@ -1253,7 +1180,7 @@ def page_gestionnaire_v2(conn, geo):
         try:
             recent = db.recent_activity(conn, limit=10)
             if not recent.empty:
-                st.dataframe(recent, use_container_width=True)
+                st.dataframe(recent, width="stretch")
             else:
                 st.info("Aucune activité récente")
         except:
@@ -1279,7 +1206,7 @@ def page_gestionnaire_v2(conn, geo):
         try:
             teams_df = db.get_all_teams(conn)
             if not teams_df.empty:
-                st.dataframe(teams_df, use_container_width=True)
+                st.dataframe(teams_df, width="stretch")
             else:
                 st.info("Aucune équipe créée")
         except:
@@ -1361,13 +1288,13 @@ def page_gestionnaire_v2(conn, geo):
             
             col1, col2 = st.columns([2, 1])
             with col1:
-                if st.button("🔄 Créer un backup manuel", use_container_width=True):
+                if st.button("🔄 Créer un backup manuel", width="stretch"):
                     backup_file = backup_mgr.create_backup("manual")
                     if backup_file:
                         st.success(f"Backup créé : {Path(backup_file).name}")
             
             with col2:
-                if st.button("📋 Voir les backups", use_container_width=True):
+                if st.button("📋 Voir les backups", width="stretch"):
                     backups = backup_mgr.list_backups()
                     if backups:
                         for backup in backups[:5]:  # Montrer les 5 derniers
@@ -1408,7 +1335,7 @@ def page_superviseur(conn, geo):
         st.markdown("### Activité récente")
         recent = db.recent_activity(conn, limit=10)
         if not recent.empty:
-            st.dataframe(recent, use_container_width=True)
+            st.dataframe(recent, width="stretch")
     
     with tabs[1]:
         # Gestion des équipes
@@ -1429,7 +1356,7 @@ def page_superviseur(conn, geo):
         # Liste des équipes
         teams_df = db.get_all_teams(conn)
         if not teams_df.empty:
-            st.dataframe(teams_df, use_container_width=True)
+            st.dataframe(teams_df, width="stretch")
     
     with tabs[2]:
         # Assignation
@@ -1455,7 +1382,7 @@ def page_superviseur(conn, geo):
         if not df_all.empty:
             st.dataframe(
                 df_all[['name', 'sector', 'team', 'status']],
-                use_container_width=True
+                width="stretch"
             )
     
     with tabs[3]:
@@ -1470,7 +1397,7 @@ def page_superviseur(conn, geo):
                 db.export_to_csv(conn),
                 "rapport_rues.csv",
                 "text/csv",
-                use_container_width=True
+                width="stretch"
             )
         
         with col2:
@@ -1479,7 +1406,7 @@ def page_superviseur(conn, geo):
                 db.export_notes_csv(conn),
                 "rapport_notes.csv",
                 "text/csv",
-                use_container_width=True
+                width="stretch"
             )
 
     with tabs[4]:
@@ -1605,7 +1532,7 @@ def page_assignations_v41(conn):
                 if st.button(
                     "🎯 Assigner tout le secteur",
                     disabled=not (selected_sector and selected_team),
-                    use_container_width=True,
+                    width="stretch",
                     help="Assigne toutes les rues non assignées du secteur à l'équipe choisie"
                 ):
                     if selected_sector and selected_team:
@@ -1637,7 +1564,7 @@ def page_assignations_v41(conn):
             styled_df = df_all[['name', 'sector', 'team', 'status']].style.applymap(
                 color_status, subset=['status']
             )
-            st.dataframe(styled_df, use_container_width=True)
+            st.dataframe(styled_df, width="stretch")
         else:
             st.info("Aucune rue trouvée")
             
@@ -1659,10 +1586,10 @@ def page_export_gestionnaire_v41(conn):
                 db.export_to_csv(conn),
                 "rapport_rues.csv",
                 "text/csv",
-                use_container_width=True
+                width="stretch"
             )
         except Exception as e:
-            st.button("📥 CSV (Erreur)", disabled=True, use_container_width=True)
+            st.button("📥 CSV (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     with col2:
@@ -1676,12 +1603,12 @@ def page_export_gestionnaire_v41(conn):
                 excel_data,
                 "guignolee_2025_rapport.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                width="stretch"
             )
         except ImportError:
-            st.button("📊 Excel (Installer xlsxwriter)", disabled=True, use_container_width=True)
+            st.button("📊 Excel (Installer xlsxwriter)", disabled=True, width="stretch")
         except Exception as e:
-            st.button("📊 Excel (Erreur)", disabled=True, use_container_width=True)
+            st.button("📊 Excel (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     with col3:
@@ -1695,12 +1622,12 @@ def page_export_gestionnaire_v41(conn):
                 pdf_data,
                 "guignolee_2025_rapport.pdf",
                 "application/pdf",
-                use_container_width=True
+                width="stretch"
             )
         except ImportError:
-            st.button("📄 PDF (Installer reportlab)", disabled=True, use_container_width=True)
+            st.button("📄 PDF (Installer reportlab)", disabled=True, width="stretch")
         except Exception as e:
-            st.button("📄 PDF (Erreur)", disabled=True, use_container_width=True)
+            st.button("📄 PDF (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     # Export CSV assignations (nouveau v4.1)
@@ -1720,13 +1647,13 @@ def page_export_gestionnaire_v41(conn):
                     csv_data,
                     "assignations_secteurs.csv",
                     "text/csv",
-                    use_container_width=True,
+                    width="stretch",
                     help="Colonnes: secteur, rue, équipe, statut"
                 )
             else:
-                st.button("📋 Assignations (Aucune donnée)", disabled=True, use_container_width=True)
+                st.button("📋 Assignations (Aucune donnée)", disabled=True, width="stretch")
         except Exception as e:
-            st.button("📋 Assignations (Erreur)", disabled=True, use_container_width=True)
+            st.button("📋 Assignations (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     with col2:
@@ -1737,10 +1664,10 @@ def page_export_gestionnaire_v41(conn):
                 db.export_notes_csv(conn),
                 "rapport_notes.csv",
                 "text/csv",
-                use_container_width=True
+                width="stretch"
             )
         except Exception as e:
-            st.button("📝 Notes (Erreur)", disabled=True, use_container_width=True)
+            st.button("📝 Notes (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
 
 def page_benevole_mes_rues(conn):
@@ -1807,7 +1734,7 @@ def page_benevole_mes_rues(conn):
                         "🚀 En cours", 
                         key=f"progress_{street_name}",
                         disabled=current_status == 'en_cours',
-                        use_container_width=True
+                        width="stretch"
                     ):
                         if db.update_street_status(conn, street_name, 'en_cours', team_id):
                             st.toast(f"✅ {street_name} marquée en cours", icon="🚀")
@@ -1821,7 +1748,7 @@ def page_benevole_mes_rues(conn):
                         "✅ Terminée", 
                         key=f"done_{street_name}",
                         disabled=current_status == 'terminee',
-                        use_container_width=True
+                        width="stretch"
                     ):
                         if db.update_street_status(conn, street_name, 'terminee', team_id):
                             st.toast(f"🎉 {street_name} terminée!", icon="🎉")
@@ -1934,22 +1861,22 @@ def main():
         st.markdown("### 🎄 Navigation")
         
         # Boutons de navigation stylisés
-        if st.button("🏠 Accueil", use_container_width=True):
+        if st.button("🏠 Accueil", width="stretch"):
             st.session_state.page = "accueil"
             st.rerun()
         
-        if st.button("🎅 Bénévole", use_container_width=True):
+        if st.button("🎅 Bénévole", width="stretch"):
             st.session_state.page = "benevole"
             st.rerun()
             
-        if st.button("👔 Gestionnaire", use_container_width=True):
+        if st.button("👔 Gestionnaire", width="stretch"):
             st.session_state.page = "gestionnaire"  
             st.rerun()
         
         # Déconnexion si connecté
         if st.session_state.auth:
             st.markdown("---")
-            if st.button("🚪 Déconnexion", use_container_width=True):
+            if st.button("🚪 Déconnexion", width="stretch"):
                 st.session_state.auth = None
                 st.rerun()
         
@@ -1994,7 +1921,7 @@ def main():
     
     # Bannière en bas de page
     if (ASSETS / "banner.png").exists():
-        st.image(str(ASSETS / "banner.png"), use_container_width=True)
+        st.image(str(ASSETS / "banner.png"), width="stretch")
 
 if __name__ == "__main__":
     main()

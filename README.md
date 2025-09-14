@@ -74,6 +74,24 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - **Visibilité améliorée** des rues avec lignes plus épaisses
 - **Récupération complète** de toutes les rues via OSM
 
+### 🗺️ Légende de la carte (persistante)
+- **4 états visuels** :
+  - 🟢 **Vert** : Rues terminées (collecte finie)
+  - 🟡 **Jaune** : Rues en cours (équipe active)
+  - 🔴 **Rouge plein** : Rues assignées à faire (équipe désignée)
+  - 🔴 **Rouge pointillé** : Rues non assignées (aucune équipe)
+- **Position fixe** : Bas-droite de la carte
+- **Persistance garantie** : Reste visible au zoom/dézoom/déplacement
+- **Style moderne** : Fond blanc, bordure, ombre portée
+
+### ⚙️ Compatibilité et modernisation
+- **Python 3.13.6** et versions récentes de Streamlit
+- **Suppression de use_container_width** (déprécié) ➜ `width="stretch"`
+- **Légende persistante** via Folium Elements (remplace l'ancien HTML/CSS)
+- **Chemins multi-plateformes** avec pathlib
+- **Gestion des erreurs robuste** : l'application ne crash jamais
+- **Code moderne** : Nettoyage des anciens hacks et workarounds
+
 ### 👥 Gestion moderne
 - **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"
 - **Navigation sidebar** moderne et intuitive
@@ -460,6 +478,28 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - **Marqueur centre-ville** : Point de référence visuel
 - **Fallback étendu** : 19 voies principales + autoroutes
 - **Gestion d'erreurs** : Messages informatifs + récupération automatique
+
+## 🔧 Dépannage
+
+### Problèmes de légende
+- **Légende invisible** : Appuyez sur F5 pour recharger complètement la page
+- **Légende qui clignote** : Normal lors du changement de fond de carte
+- **Position incorrecte** : La légende se repositionne automatiquement
+
+### Problèmes de compatibilité Streamlit
+- **Erreur use_container_width** : Version récente de Streamlit - l'application s'adapte automatiquement
+- **Affichage dégradé** : Mise à jour recommandée vers Streamlit 1.28+
+- **Contrôles manquants** : Vérifiez la version folium et streamlit-folium
+
+### Performance
+- **Carte lente** : Réduisez le zoom ou changez de fond de carte
+- **Mémoire élevée** : Rechargez l'application avec F5
+- **Erreurs OSM** : Vérifiez la connexion internet
+
+### Données
+- **Rues manquantes** : Utilisez "Recharger depuis OSM" dans l'onglet Admin
+- **Backup corrupt** : Les backups sont vérifiés à la création
+- **Données perdues** : Consultez le dossier backups/ pour récupération
 
 ## 📝 Support
 
