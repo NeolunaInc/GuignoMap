@@ -1,6 +1,8 @@
 import sqlite3
 import pandas as pd
 import hashlib
+import bcrypt
+from backup import auto_backup_before_critical, BackupManager
 from datetime import datetime
 import json
 from pathlib import Path
@@ -100,6 +102,7 @@ def init_db(conn):
         print(f"Erreur lors de l'initialisation de la DB: {e}")
         raise
 
+@auto_backup_before_critical
 def auto_import_streets(conn):
     """Import automatique des rues de Mascouche"""
     try:
@@ -149,8 +152,10 @@ def auto_import_streets(conn):
 
 # ---------- Fonctions pour les équipes ----------
 def hash_password(password):
-    """Hash un mot de passe"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash un mot de passe avec bcrypt et salt automatique"""
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
 
 def create_team(conn, team_id, name, password):
     """Crée une nouvelle équipe"""
@@ -166,15 +171,50 @@ def create_team(conn, team_id, name, password):
         return False
 
 def verify_team(conn, team_id, password):
-    """Vérifie les identifiants d'une équipe"""
+    """Vérifie les identifiants d'une équipe avec bcrypt"""
     cursor = conn.execute(
         "SELECT password_hash FROM teams WHERE id = ? AND active = 1",
         (team_id,)
     )
     row = cursor.fetchone()
     if row:
-        return row[0] == hash_password(password)
+        try:
+            # Support ancien SHA256 pour migration
+            stored_hash = row[0]
+            if stored_hash.startswith('$2b$') or stored_hash.startswith('$2a$'):
+                # Hash bcrypt
+                return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+            else:
+                # Ancien SHA256, vérifier et migrer
+                if stored_hash == hashlib.sha256(password.encode()).hexdigest():
+                    # Migrer vers bcrypt
+                    new_hash = hash_password(password)
+                    conn.execute("UPDATE teams SET password_hash = ? WHERE id = ?", (new_hash, team_id))
+                    conn.commit()
+                    return True
+                return False
+        except Exception as e:
+            print(f"Erreur vérification mot de passe: {e}")
+            return False
     return False
+
+def migrate_all_passwords_to_bcrypt(conn):
+    """Migration manuelle des mots de passe SHA256 vers bcrypt"""
+    print("⚠️ Migration des mots de passe requise")
+    print("Entrez les mots de passe actuels pour migration:")
+    
+    cursor = conn.execute("SELECT id, name FROM teams WHERE active = 1")
+    teams = cursor.fetchall()
+    
+    for team_id, team_name in teams:
+        if team_id == 'ADMIN':
+            pwd = input(f"Mot de passe actuel pour {team_name} (ADMIN): ")
+            if pwd:
+                new_hash = hash_password(pwd)
+                conn.execute("UPDATE teams SET password_hash = ? WHERE id = ?", (new_hash, team_id))
+        
+    conn.commit()
+    print("✅ Migration terminée")
 
 def get_all_teams(conn):
     """Récupère toutes les équipes avec leurs statistiques"""
@@ -198,6 +238,7 @@ def get_all_teams(conn):
     """
     return pd.read_sql_query(query, conn)
 
+@auto_backup_before_critical
 def delete_team(conn, team_id):
     """Désactive une équipe"""
     conn.execute("UPDATE teams SET active = 0 WHERE id = ?", (team_id,))
@@ -476,6 +517,7 @@ def export_notes_csv(conn):
 # NOUVELLES FONCTIONS POUR LES ADRESSES
 # ========================================
 
+@auto_backup_before_critical
 def import_addresses_from_cache(conn, cache):
     """
     Importe les adresses depuis le cache OSM vers la base de données
@@ -566,3 +608,7 @@ def get_addresses_stats(conn):
         "node_addresses": row[2] or 0,
         "way_addresses": row[3] or 0
     }
+
+def get_backup_manager(db_path):
+    """Retourne une instance du gestionnaire de backup"""
+    return BackupManager(db_path)

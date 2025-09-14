@@ -1428,6 +1428,26 @@ def page_gestionnaire_v2(conn, geo):
                 else:
                     st.warning("Confirmation incomplète.")
 
+        # --- Gestion des backups
+        with st.expander("💾 Gestion des backups", expanded=False):
+            backup_mgr = db.get_backup_manager(DB_PATH)
+            
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                if st.button("🔄 Créer un backup manuel", use_container_width=True):
+                    backup_file = backup_mgr.create_backup("manual")
+                    if backup_file:
+                        st.success(f"Backup créé : {Path(backup_file).name}")
+            
+            with col2:
+                if st.button("📋 Voir les backups", use_container_width=True):
+                    backups = backup_mgr.list_backups()
+                    if backups:
+                        for backup in backups[:5]:  # Montrer les 5 derniers
+                            st.text(f"• {backup['name']} ({backup['size']})")
+                    else:
+                        st.info("Aucun backup disponible")
+
 def page_superviseur(conn, geo):
     """Interface superviseur"""
     st.header("🎯 Tableau de Bord Superviseur")
