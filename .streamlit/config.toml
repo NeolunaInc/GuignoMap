@@ -26,10 +26,6 @@ maxUploadSize = 10
 enableCORS = false
 enableXsrfProtection = true
 
-[browser]
-# Collecte des stats d'usage (désactivé pour confidentialité)
-gatherUsageStats = false
-
 [deprecation]
 # Désactiver les avertissements de dépréciation
 showImageFormat = false

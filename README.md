@@ -2,7 +2,48 @@
 
 Une application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
 
-## ✨ Nouvelles fonctionnalités v3.0
+## ✨ Nouvelles fonctionnalités v4.1
+
+### 👔 Interface Superviseur/Gestionnaire
+- **Assignations par secteur** : Sélection secteur + équipe et assignation en bloc
+- **Compteur rues non assignées** : Vue en temps réel des rues sans équipe
+- **Export CSV assignations** : Colonnes secteur, rue, équipe, statut
+- **Gestion d'erreur gracieuse** : Masquage des fonctionnalités indisponibles
+- **Notifications toast** : Confirmations visuelles des actions
+
+### 🎅 Interface Bénévole "Mes rues"
+- **Vue filtrée par équipe** : Seulement les rues assignées à l'équipe connectée
+- **Boutons de statut** : "En cours" et "Terminée" avec mise à jour immédiate
+- **Gestion des notes** : Ajout/affichage des notes par adresse spécifique
+- **Statistiques d'équipe** : Métriques de progression en temps réel
+- **Journal d'activité** : Historique des actions de l'équipe
+
+### 🛡️ Sécurité et robustesse v4.1
+- **Validation stricte** : Réutilisation des validators pour toutes les entrées
+- **Backup automatique** : Décorateur auto_backup_before_critical sur toutes les écritures
+- **Logging complet** : Journal d'activité en base de données ET fichier texte
+- **Gestion d'erreur** : Dégradation gracieuse sans plantage de l'application
+
+### 📊 Exports professionnels
+- **Maintien des exports PDF/Excel** : Aucune modification des fonctionnalités existantes
+- **Nouveau CSV assignations** : Export spécialisé pour la gestion des secteurs
+- **Interface unifiée** : Tous les exports accessibles depuis l'onglet Export
+
+## ✨ Fonctionnalités v4.0 (acquises)
+
+### 🔒 Sécurité renforcée
+- **Migration bcrypt** : Remplacement SHA256 par bcrypt avec salage automatique
+- **Migration automatique** des anciens mots de passe
+- **Validation d'entrées** : Protection contre injection SQL et XSS
+- **Sanitisation complète** de toutes les données utilisateur
+
+### 💾 Système de backup automatique
+- **Backup automatique** avant toutes opérations critiques
+- **Format ZIP** avec horodatage
+- **Rotation automatique** : conservation 7 jours
+- **Interface de gestion** des backups avec téléchargement
+
+## ✨ Fonctionnalités v3.0 (acquises)
 
 ### 🎄 Interface festive
 - **Page d'accueil moderne** avec compte à rebours vers Noël
@@ -66,6 +107,38 @@ streamlit run app.py
 - **overpy** : API OpenStreetMap
 - **plotly** : Graphiques interactifs
 - **xlsxwriter** : Export Excel professionnel
+
+## 🎯 Guide d'utilisation v4.1
+
+### 👔 Pour les Superviseurs/Gestionnaires
+
+#### Assignation par secteur (nouveau v4.1)
+1. **Connexion gestionnaire** : Utilisez vos identifiants superviseur
+2. **Onglet "🗺️ Assignation"** : Accédez au nouveau panneau d'assignation
+3. **Sélection secteur et équipe** : Choisissez le secteur à assigner et l'équipe destinataire
+4. **Assignation en bloc** : Cliquez "🎯 Assigner tout le secteur"
+5. **Vérification** : Le tableau des assignations s'actualise automatiquement
+
+#### Export CSV assignations (nouveau v4.1)
+1. **Onglet "📥 Export"** : Accédez aux exports spécialisés v4.1
+2. **Export CSV Assignations** : Téléchargez le fichier avec colonnes secteur, rue, équipe, statut
+3. **Utilisation** : Parfait pour suivi externe ou import dans d'autres outils
+
+### 🎅 Pour les Bénévoles
+
+#### Interface "Mes rues" (nouveau v4.1)
+1. **Connexion bénévole** : Connectez-vous avec votre nom d'équipe
+2. **Onglet "🏘️ Mes rues"** : Vue filtrée de vos rues assignées uniquement
+3. **Mise à jour statuts** : Cliquez "🚀 En cours" ou "✅ Terminée" pour chaque rue
+4. **Ajout de notes** : Remplissez numéro civique + commentaire et cliquez "💾 Enregistrer note"
+5. **Suivi progression** : Consultez vos métriques en temps réel
+
+#### Gestion des notes par adresse (nouveau v4.1)
+1. **Sélection rue** : Développez l'accordéon de la rue souhaitée
+2. **Notes existantes** : Consultez les notes déjà saisies
+3. **Nouvelle note** : Entrez le numéro civique (ex: 123A) et votre commentaire
+4. **Types de notes** : Absent, refus, don reçu, situation particulière...
+5. **Validation** : La note est automatiquement horodatée et associée à votre équipe
 
 ## 🎯 Fonctionnalités principales
 

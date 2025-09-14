@@ -548,64 +548,11 @@ def create_map(df, geo):
 def export_excel_professionnel(conn):
     """Export Excel avec mise en forme professionnelle"""
     try:
-        import xlsxwriter
-        from io import BytesIO
-        
-        output = BytesIO()
-        workbook = xlsxwriter.Workbook(output)
-        
-        # Feuille 1 : Résumé
-        summary = workbook.add_worksheet('Résumé Guignolée 2025')
-        
-        # Styles
-        header_format = workbook.add_format({
-            'bold': True,
-            'bg_color': '#c41e3a',
-            'font_color': 'white',
-            'align': 'center',
-            'border': 1
-        })
-        
-        data_format = workbook.add_format({
-            'align': 'center',
-            'border': 1
-        })
-        
-        # En-têtes
-        summary.merge_range(0, 0, 0, 4, 'GUIGNOLÉE 2025 - LE RELAIS DE MASCOUCHE', header_format)
-        
-        # Stats
-        stats = db.extended_stats(conn)
-        summary.write(2, 0, 'Total Rues:', header_format)
-        summary.write(2, 1, stats['total'], data_format)
-        summary.write(3, 0, 'Terminées:', header_format)
-        summary.write(3, 1, stats['done'], data_format)
-        summary.write(4, 0, 'Progression:', header_format)
-        summary.write(4, 1, f"{(stats['done']/stats['total']*100) if stats['total'] > 0 else 0:.1f}%", data_format)
-        
-        # Feuille 2 : Détails par rue
-        details = workbook.add_worksheet('Détails par rue')
-        df = db.list_streets(conn)
-        
-        # Headers
-        headers = ['Rue', 'Secteur', 'Équipe', 'Statut', 'Notes']
-        for col, header in enumerate(headers):
-            details.write(0, col, header, header_format)
-        
-        # Data
-        for row, (_, data) in enumerate(df.iterrows(), 1):
-            details.write(row, 0, data.get('name', ''), data_format)
-            details.write(row, 1, data.get('sector', ''), data_format)
-            details.write(row, 2, data.get('team', ''), data_format)
-            details.write(row, 3, data.get('status', ''), data_format)
-            details.write(row, 4, str(data.get('notes', 0)), data_format)
-        
-        workbook.close()
-        output.seek(0)
-        return output.getvalue()
-        
+        from reports import ReportGenerator
+        generator = ReportGenerator(conn)
+        return generator.generate_excel()
     except ImportError:
-        # Fallback si xlsxwriter n'est pas disponible
+        # Fallback si les dépendances ne sont pas installées
         return db.export_to_csv(conn)
 
 
@@ -807,31 +754,24 @@ def page_export_gestionnaire(conn):
     with col1:
         st.markdown("""
         <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
-            <h4>📑 Rapport PDF</h4>
+            <h4>� Rapport PDF</h4>
             <p><small>Format professionnel pour présentation</small></p>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("Générer PDF", use_container_width=True):
-            # Pour l'instant, génère un fichier texte
-            report = f"""
-RAPPORT GUIGNOLÉE 2025 - LE RELAIS DE MASCOUCHE
-===============================================
-
-Date: {datetime.now().strftime('%d/%m/%Y %H:%M')}
-
-STATISTIQUES GLOBALES:
-{db.extended_stats(conn)}
-
-Généré par Guigno-Map v4.0
-"""
+        try:
+            from reports import ReportGenerator
+            generator = ReportGenerator(conn)
+            pdf_data = generator.generate_pdf()
             st.download_button(
-                "📥 Télécharger rapport",
-                report,
-                "rapport_guignolee_2025.txt",
-                "text/plain",
+                "📥 Télécharger PDF",
+                pdf_data,
+                "rapport_guignolee_2025.pdf",
+                "application/pdf",
                 use_container_width=True
             )
+        except ImportError:
+            st.button("PDF (Installer reportlab)", disabled=True, use_container_width=True)
     
     with col2:
         st.markdown("""
@@ -1227,8 +1167,57 @@ def page_benevole(conn, geo):
             st.info("Historique non disponible")
 
 def page_benevole_v2(conn, geo):
-    """Interface bénévole moderne v2 - Alias pour compatibilité"""
-    return page_benevole(conn, geo)
+    """Interface bénévole moderne v4.1 avec vue 'Mes rues'"""
+    
+    # Vérifier l'authentification
+    if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
+        # Afficher la page de connexion bénévole
+        return page_benevole(conn, geo)
+    
+    # Interface bénévole connecté avec tabs
+    st.header("🎅 Espace Bénévole")
+    team_id = st.session_state.auth.get("team", "Équipe inconnue")
+    st.markdown(f"**Équipe:** {team_id}")
+    
+    # Tabs pour bénévoles
+    tabs = st.tabs([
+        "🏘️ Mes rues",
+        "🗺️ Carte de terrain", 
+        "📝 Journal d'activité"
+    ])
+    
+    with tabs[0]:
+        # Nouvelle vue "Mes rues" v4.1
+        page_benevole_mes_rues(conn)
+    
+    with tabs[1]:
+        # Carte traditionnelle (réutilise l'ancienne interface)
+        page_benevole(conn, geo)
+    
+    with tabs[2]:
+        # Journal d'activité de l'équipe
+        st.markdown("### 📝 Journal d'activité de votre équipe")
+        try:
+            # Afficher les activités récentes de l'équipe
+            cursor = conn.execute("""
+                SELECT action, details, created_at
+                FROM activity_log
+                WHERE team_id = ?
+                ORDER BY created_at DESC
+                LIMIT 20
+            """, (team_id,))
+            
+            activities = cursor.fetchall()
+            if activities:
+                for activity in activities:
+                    action, details, created_at = activity
+                    st.markdown(f"**{created_at}** - {action}: {details}")
+            else:
+                st.info("Aucune activité enregistrée pour votre équipe")
+                
+        except Exception as e:
+            st.info("Journal d'activité temporairement indisponible")
+            st.caption(f"Erreur: {e}")
 
 def page_gestionnaire_v2(conn, geo):
     """Interface gestionnaire moderne (ancien superviseur)"""
@@ -1297,74 +1286,12 @@ def page_gestionnaire_v2(conn, geo):
             st.info("Liste des équipes non disponible")
     
     with tabs[2]:
-        # Assignation
-        st.markdown("### Assignation des rues")
-        
-        try:
-            unassigned = db.get_unassigned_streets(conn)
-            
-            if not unassigned.empty:
-                with st.form("assign"):
-                    team = st.selectbox("Équipe", db.teams(conn))
-                    streets = st.multiselect("Rues", unassigned['name'].tolist())
-                    
-                    if st.form_submit_button("Assigner"):
-                        if team and streets:
-                            db.assign_streets_to_team(conn, streets, team)
-                            st.success("Rues assignées!")
-                            st.rerun()
-            else:
-                st.success("Toutes les rues sont assignées!")
-        except:
-            st.warning("Fonction d'assignation non disponible")
-        
-        # Tableau des assignations
-        df_all = db.list_streets(conn)
-        if not df_all.empty:
-            st.dataframe(
-                df_all[['name', 'sector', 'team', 'status']],
-                use_container_width=True
-            )
+        # Assignation v4.1
+        page_assignations_v41(conn)
     
     with tabs[3]:
-        # Export amélioré
-        st.markdown("### Export des données")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.download_button(
-                "📥 Export CSV Standard",
-                db.export_to_csv(conn),
-                "rapport_rues.csv",
-                "text/csv",
-                use_container_width=True
-            )
-        
-        with col2:
-            try:
-                excel_data = export_excel_professionnel(conn)
-                st.download_button(
-                    "📊 Export Excel Pro",
-                    excel_data,
-                    "guignolee_2025_rapport.xlsx",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
-                )
-            except:
-                st.button("📊 Excel (Non disponible)", disabled=True, use_container_width=True)
-        
-        with col3:
-            try:
-                st.download_button(
-                    "📝 Export Notes",
-                    db.export_notes_csv(conn),
-                    "rapport_notes.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
-            except:
-                st.button("📝 Notes (Non disponible)", disabled=True, use_container_width=True)
+        # Export amélioré v4.1
+        page_export_gestionnaire_v41(conn)
 
     with tabs[4]:
         st.markdown("### 🛠 Opérations techniques (protégées)")
@@ -1620,6 +1547,329 @@ def page_superviseur(conn, geo):
 # ============================================
 # MAIN
 # ============================================
+
+# ================================================================================
+# NOUVELLES FONCTIONS v4.1 - SUPERVISEUR ET BÉNÉVOLE
+# ================================================================================
+
+def page_assignations_v41(conn):
+    """Panneau d'assignations v4.1 pour superviseurs"""
+    st.markdown("### 🗺️ Assignations par secteur")
+    
+    try:
+        # Compteur de rues non assignées
+        unassigned_count = db.get_unassigned_streets_count(conn)
+        if unassigned_count > 0:
+            st.warning(f"⚠️ {unassigned_count} rue(s) non assignée(s)")
+        else:
+            st.success("✅ Toutes les rues sont assignées")
+        
+        # Panneau d'assignation en bloc par secteur
+        with st.expander("🎯 Assignation par secteur", expanded=True):
+            col1, col2, col3 = st.columns([2, 2, 1])
+            
+            with col1:
+                # Selectbox secteur
+                sectors = db.get_sectors_list(conn)
+                if sectors:
+                    selected_sector = st.selectbox(
+                        "Secteur à assigner",
+                        [""] + sectors,
+                        help="Choisir un secteur pour l'assignation en bloc"
+                    )
+                else:
+                    st.info("Aucun secteur disponible")
+                    selected_sector = ""
+            
+            with col2:
+                # Selectbox équipe
+                teams = db.get_teams_list(conn)
+                if teams:
+                    team_options = [""] + [f"{team[1]} ({team[0]})" for team in teams]
+                    selected_team_display = st.selectbox(
+                        "Équipe destinataire",
+                        team_options,
+                        help="Équipe qui recevra toutes les rues du secteur"
+                    )
+                    
+                    # Extraire l'ID de l'équipe
+                    selected_team = ""
+                    if selected_team_display and selected_team_display != "":
+                        selected_team = selected_team_display.split("(")[-1].rstrip(")")
+                else:
+                    st.info("Aucune équipe disponible")
+                    selected_team = ""
+            
+            with col3:
+                st.markdown("&nbsp;")  # Espacement
+                if st.button(
+                    "🎯 Assigner tout le secteur",
+                    disabled=not (selected_sector and selected_team),
+                    use_container_width=True,
+                    help="Assigne toutes les rues non assignées du secteur à l'équipe choisie"
+                ):
+                    if selected_sector and selected_team:
+                        try:
+                            affected_rows = db.bulk_assign_sector(conn, selected_sector, selected_team)
+                            if affected_rows > 0:
+                                st.toast(f"✅ Assignation effectuée: {affected_rows} rue(s)", icon="🎉")
+                                st.rerun()
+                            else:
+                                st.toast("ℹ️ Aucune rue non assignée dans ce secteur", icon="ℹ️")
+                        except Exception as e:
+                            st.error(f"Erreur lors de l'assignation: {e}")
+        
+        # Tableau des assignations actuelles
+        st.markdown("### 📋 État des assignations")
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            # Ajouter des couleurs selon le statut
+            def color_status(val):
+                if val == 'terminee':
+                    return 'background-color: #d4edda'
+                elif val == 'en_cours':
+                    return 'background-color: #fff3cd'
+                elif val == 'a_faire':
+                    return 'background-color: #f8d7da'
+                return ''
+            
+            # Afficher le tableau avec style
+            styled_df = df_all[['name', 'sector', 'team', 'status']].style.applymap(
+                color_status, subset=['status']
+            )
+            st.dataframe(styled_df, use_container_width=True)
+        else:
+            st.info("Aucune rue trouvée")
+            
+    except Exception as e:
+        st.error(f"Erreur dans le panneau d'assignations: {e}")
+        st.info("Fonctionnalité temporairement indisponible")
+
+def page_export_gestionnaire_v41(conn):
+    """Page d'export v4.1 avec nouvelles fonctionnalités"""
+    st.markdown("### 📥 Export des données")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Export CSV standard
+        try:
+            st.download_button(
+                "📥 Export CSV Standard",
+                db.export_to_csv(conn),
+                "rapport_rues.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        except Exception as e:
+            st.button("📥 CSV (Erreur)", disabled=True, use_container_width=True)
+            st.caption(f"Erreur: {e}")
+    
+    with col2:
+        # Export Excel professionnel
+        try:
+            from reports import ReportGenerator
+            generator = ReportGenerator(conn)
+            excel_data = generator.generate_excel()
+            st.download_button(
+                "📊 Export Excel Pro",
+                excel_data,
+                "guignolee_2025_rapport.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+        except ImportError:
+            st.button("📊 Excel (Installer xlsxwriter)", disabled=True, use_container_width=True)
+        except Exception as e:
+            st.button("📊 Excel (Erreur)", disabled=True, use_container_width=True)
+            st.caption(f"Erreur: {e}")
+    
+    with col3:
+        # Export PDF professionnel
+        try:
+            from reports import ReportGenerator
+            generator = ReportGenerator(conn)
+            pdf_data = generator.generate_pdf()
+            st.download_button(
+                "📄 Export PDF Pro",
+                pdf_data,
+                "guignolee_2025_rapport.pdf",
+                "application/pdf",
+                use_container_width=True
+            )
+        except ImportError:
+            st.button("📄 PDF (Installer reportlab)", disabled=True, use_container_width=True)
+        except Exception as e:
+            st.button("📄 PDF (Erreur)", disabled=True, use_container_width=True)
+            st.caption(f"Erreur: {e}")
+    
+    # Export CSV assignations (nouveau v4.1)
+    st.markdown("---")
+    st.markdown("### 📋 Export spécialisés v4.1")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Export CSV assignations
+        try:
+            assignations_data = db.get_assignations_export_data(conn)
+            if not assignations_data.empty:
+                csv_data = assignations_data.to_csv(index=False, encoding='utf-8')
+                st.download_button(
+                    "📋 Export CSV Assignations",
+                    csv_data,
+                    "assignations_secteurs.csv",
+                    "text/csv",
+                    use_container_width=True,
+                    help="Colonnes: secteur, rue, équipe, statut"
+                )
+            else:
+                st.button("📋 Assignations (Aucune donnée)", disabled=True, use_container_width=True)
+        except Exception as e:
+            st.button("📋 Assignations (Erreur)", disabled=True, use_container_width=True)
+            st.caption(f"Erreur: {e}")
+    
+    with col2:
+        # Export notes
+        try:
+            st.download_button(
+                "📝 Export Notes",
+                db.export_notes_csv(conn),
+                "rapport_notes.csv",
+                "text/csv",
+                use_container_width=True
+            )
+        except Exception as e:
+            st.button("📝 Notes (Erreur)", disabled=True, use_container_width=True)
+            st.caption(f"Erreur: {e}")
+
+def page_benevole_mes_rues(conn):
+    """Vue 'Mes rues' pour bénévoles v4.1"""
+    
+    # Récupérer l'équipe du bénévole connecté
+    if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
+        st.warning("Accès réservé aux bénévoles connectés")
+        return
+    
+    team_id = st.session_state.auth.get("team")
+    if not team_id:
+        st.error("Équipe non identifiée")
+        return
+    
+    st.markdown(f"### 🏘️ Mes rues assignées - Équipe {team_id}")
+    
+    try:
+        # Récupérer les rues de l'équipe
+        team_streets = db.get_team_streets(conn, team_id)
+        
+        if team_streets.empty:
+            st.info("Aucune rue assignée à votre équipe pour le moment.")
+            return
+        
+        # Afficher les statistiques de l'équipe
+        total_streets = len(team_streets)
+        done_streets = len(team_streets[team_streets['status'] == 'terminee'])
+        in_progress = len(team_streets[team_streets['status'] == 'en_cours'])
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total rues", total_streets)
+        with col2:
+            st.metric("Terminées", done_streets)
+        with col3:
+            st.metric("En cours", in_progress)
+        with col4:
+            progress = (done_streets / total_streets * 100) if total_streets > 0 else 0
+            st.metric("Progression", f"{progress:.1f}%")
+        
+        st.markdown("---")
+        
+        # Affichage par rue avec actions
+        for _, street in team_streets.iterrows():
+            street_name = street['street_name']
+            current_status = street['status']
+            notes_count = street['notes_count']
+            
+            with st.expander(f"🏘️ {street_name} ({street['sector']}) - {current_status.replace('_', ' ').title()}", 
+                           expanded=current_status == 'en_cours'):
+                
+                col1, col2, col3 = st.columns([2, 1, 1])
+                
+                with col1:
+                    st.markdown(f"**Secteur:** {street['sector']}")
+                    st.markdown(f"**Statut actuel:** {current_status.replace('_', ' ').title()}")
+                    if notes_count > 0:
+                        st.markdown(f"**Notes existantes:** {notes_count}")
+                
+                with col2:
+                    # Bouton "En cours"
+                    if st.button(
+                        "🚀 En cours", 
+                        key=f"progress_{street_name}",
+                        disabled=current_status == 'en_cours',
+                        use_container_width=True
+                    ):
+                        if db.update_street_status(conn, street_name, 'en_cours', team_id):
+                            st.toast(f"✅ {street_name} marquée en cours", icon="🚀")
+                            st.rerun()
+                        else:
+                            st.error("Erreur lors de la mise à jour")
+                
+                with col3:
+                    # Bouton "Terminée"
+                    if st.button(
+                        "✅ Terminée", 
+                        key=f"done_{street_name}",
+                        disabled=current_status == 'terminee',
+                        use_container_width=True
+                    ):
+                        if db.update_street_status(conn, street_name, 'terminee', team_id):
+                            st.toast(f"🎉 {street_name} terminée!", icon="🎉")
+                            st.rerun()
+                        else:
+                            st.error("Erreur lors de la mise à jour")
+                
+                # Section notes
+                st.markdown("**Gestion des notes:**")
+                
+                # Afficher les notes existantes
+                existing_notes = db.get_street_notes_for_team(conn, street_name, team_id)
+                if existing_notes:
+                    st.markdown("*Notes existantes:*")
+                    for note in existing_notes:
+                        st.markdown(f"• **#{note[0]}** : {note[1]} _{note[2]}_")
+                
+                # Ajouter une nouvelle note
+                with st.form(f"note_form_{street_name}"):
+                    col_addr, col_note = st.columns([1, 3])
+                    with col_addr:
+                        address_number = st.text_input(
+                            "N° civique", 
+                            key=f"addr_{street_name}",
+                            placeholder="123A"
+                        )
+                    with col_note:
+                        comment = st.text_area(
+                            "Commentaire", 
+                            key=f"comment_{street_name}",
+                            placeholder="Ex: Absent, refus, don reçu...",
+                            max_chars=500,
+                            height=80
+                        )
+                    
+                    if st.form_submit_button("💾 Enregistrer note"):
+                        if address_number and comment:
+                            if db.add_street_note(conn, street_name, team_id, address_number, comment):
+                                st.toast(f"📝 Note ajoutée pour {street_name} #{address_number}", icon="📝")
+                                st.rerun()
+                            else:
+                                st.error("Erreur lors de l'enregistrement de la note")
+                        else:
+                            st.warning("Veuillez remplir le numéro et le commentaire")
+                            
+    except Exception as e:
+        st.error(f"Erreur lors du chargement de vos rues: {e}")
+        st.info("Fonctionnalité temporairement indisponible")
 
 def main():
     """Point d'entrée principal - Version 2.0 Guignolée"""

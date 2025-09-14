@@ -3,6 +3,7 @@ import pandas as pd
 import hashlib
 import bcrypt
 from backup import auto_backup_before_critical, BackupManager
+from validators import validate_and_clean_input, InputValidator
 from datetime import datetime
 import json
 from pathlib import Path
@@ -158,14 +159,27 @@ def hash_password(password):
     return hashed.decode('utf-8')
 
 def create_team(conn, team_id, name, password):
-    """Crée une nouvelle équipe"""
+    """Crée une nouvelle équipe avec validation"""
     try:
+        # Valider les entrées
+        valid_id, clean_id = validate_and_clean_input("team_id", team_id)
+        valid_name, clean_name = validate_and_clean_input("text", name)
+        valid_pwd, _ = validate_and_clean_input("password", password)
+        
+        if not valid_id or not valid_name:
+            print("❌ ID ou nom d'équipe invalide")
+            return False
+        
+        if not valid_pwd:
+            print("❌ Mot de passe trop faible (min 8 car, maj+min+chiffre)")
+            return False
+        
         conn.execute(
             "INSERT INTO teams (id, name, password_hash) VALUES (?, ?, ?)",
-            (team_id, name, hash_password(password))
+            (clean_id, clean_name, hash_password(password))
         )
         conn.commit()
-        log_activity(conn, team_id, "TEAM_CREATED", f"Équipe {name} créée")
+        log_activity(conn, clean_id, "TEAM_CREATED", f"Équipe {clean_name} créée")
         return True
     except sqlite3.IntegrityError:
         return False
@@ -341,25 +355,43 @@ def assign_streets_to_team(conn, street_names, team_id):
         return False
 
 def set_status(conn, name, status):
-    """Met à jour le statut d'une rue"""
+    """Met à jour le statut d'une rue avec validation"""
+    valid_name, clean_name = validate_and_clean_input("street_name", name)
+    clean_status = InputValidator.validate_status(status)
+    
+    if not valid_name:
+        print("❌ Nom de rue invalide")
+        return False
+    
     conn.execute(
         "UPDATE streets SET status = ? WHERE name = ?",
-        (status, name)
+        (clean_status, clean_name)
     )
     conn.commit()
     
-    cursor = conn.execute("SELECT team FROM streets WHERE name = ?", (name,))
+    cursor = conn.execute("SELECT team FROM streets WHERE name = ?", (clean_name,))
     row = cursor.fetchone()
     if row:
-        log_activity(conn, row[0], f"STATUS_{status.upper()}", f"Rue {name}")
+        log_activity(conn, row[0], f"STATUS_{clean_status.upper()}", f"Rue {clean_name}")
+    return True
 
 # ---------- Fonctions pour les notes PAR ADRESSE ----------
 def add_note_for_address(conn, street_name, team_id, address_number, comment):
-    """Ajoute une note pour une adresse spécifique"""
+    """Ajoute une note pour une adresse spécifique avec validation"""
+    # Valider toutes les entrées
+    valid_street, clean_street = validate_and_clean_input("street_name", street_name)
+    valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+    valid_addr, clean_addr = validate_and_clean_input("address", address_number)
+    valid_note, clean_note = validate_and_clean_input("note", comment)
+    
+    if not all([valid_street, valid_team, valid_addr, valid_note]):
+        print("❌ Données invalides pour la note")
+        return False
+    
     conn.execute(
         """INSERT INTO notes (street_name, team_id, address_number, comment) 
            VALUES (?, ?, ?, ?)""",
-        (street_name, team_id, address_number, comment)
+        (clean_street, clean_team, clean_addr, clean_note)
     )
     
     # Met automatiquement le statut à "en_cours" si c'était "a_faire"
@@ -370,11 +402,12 @@ def add_note_for_address(conn, street_name, team_id, address_number, comment):
                ELSE status 
            END
            WHERE name = ?""",
-        (street_name,)
+        (clean_street,)
     )
     
     conn.commit()
-    log_activity(conn, team_id, "NOTE_ADDED", f"Note ajoutée pour {address_number} {street_name}")
+    log_activity(conn, clean_team, "NOTE_ADDED", f"Note ajoutée pour {clean_addr} {clean_street}")
+    return True
 
 def get_street_addresses_with_notes(conn, street_name):
     """Récupère toutes les adresses avec notes pour une rue"""
@@ -612,3 +645,261 @@ def get_addresses_stats(conn):
 def get_backup_manager(db_path):
     """Retourne une instance du gestionnaire de backup"""
     return BackupManager(db_path)
+
+# ================================================================================
+# NOUVELLES FONCTIONS v4.1 - SUPERVISEUR ET BÉNÉVOLE
+# ================================================================================
+
+def get_unassigned_streets_count(conn):
+    """Compte les rues non assignées à une équipe"""
+    try:
+        cursor = conn.execute("""
+            SELECT COUNT(*) FROM streets 
+            WHERE team IS NULL OR team = ''
+        """)
+        return cursor.fetchone()[0] or 0
+    except Exception as e:
+        print(f"Erreur get_unassigned_streets_count: {e}")
+        return 0
+
+def get_sectors_list(conn):
+    """Récupère la liste des secteurs disponibles"""
+    try:
+        cursor = conn.execute("""
+            SELECT DISTINCT sector FROM streets 
+            WHERE sector IS NOT NULL AND sector != ''
+            ORDER BY sector
+        """)
+        return [row[0] for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"Erreur get_sectors_list: {e}")
+        return []
+
+def get_teams_list(conn):
+    """Récupère la liste des équipes actives"""
+    try:
+        cursor = conn.execute("""
+            SELECT id, name FROM teams 
+            WHERE active = 1 AND id != 'ADMIN'
+            ORDER BY name
+        """)
+        return [(row[0], row[1]) for row in cursor.fetchall()]
+    except Exception as e:
+        print(f"Erreur get_teams_list: {e}")
+        return []
+
+@auto_backup_before_critical
+def bulk_assign_sector(conn, sector, team_id):
+    """Assigne toutes les rues d'un secteur à une équipe"""
+    try:
+        # Valider les entrées
+        valid_sector, clean_sector = validate_and_clean_input("sector", sector)
+        valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+        
+        if not valid_sector or not valid_team:
+            raise ValueError("Secteur ou équipe invalide")
+        
+        # Vérifier que l'équipe existe
+        cursor = conn.execute("SELECT COUNT(*) FROM teams WHERE id = ?", (clean_team,))
+        if cursor.fetchone()[0] == 0:
+            raise ValueError(f"Équipe {clean_team} inexistante")
+        
+        # Effectuer l'assignation
+        cursor = conn.execute("""
+            UPDATE streets 
+            SET team = ? 
+            WHERE sector = ? AND (team IS NULL OR team = '')
+        """, (clean_team, clean_sector))
+        
+        affected_rows = cursor.rowcount
+        conn.commit()
+        
+        # Log de l'activité
+        log_activity(conn, clean_team, "bulk_assign", 
+                    f"Assignation secteur {clean_sector}: {affected_rows} rues")
+        
+        return affected_rows
+        
+    except Exception as e:
+        print(f"Erreur bulk_assign_sector: {e}")
+        return 0
+
+def get_team_streets(conn, team_id):
+    """Récupère les rues assignées à une équipe"""
+    try:
+        valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+        if not valid_team:
+            return pd.DataFrame()
+        
+        query = """
+            SELECT 
+                s.name as street_name,
+                s.sector,
+                s.status,
+                COUNT(n.id) as notes_count
+            FROM streets s
+            LEFT JOIN notes n ON s.name = n.street_name AND n.team_id = ?
+            WHERE s.team = ?
+            GROUP BY s.name, s.sector, s.status
+            ORDER BY s.sector, s.name
+        """
+        return pd.read_sql_query(query, conn, params=(clean_team, clean_team))
+        
+    except Exception as e:
+        print(f"Erreur get_team_streets: {e}")
+        return pd.DataFrame()
+
+@auto_backup_before_critical
+def update_street_status(conn, street_name, new_status, team_id):
+    """Met à jour le statut d'une rue"""
+    try:
+        # Valider les entrées
+        valid_street, clean_street = validate_and_clean_input("street_name", street_name)
+        valid_status, clean_status = validate_and_clean_input("status", new_status)
+        valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+        
+        if not all([valid_street, valid_status, valid_team]):
+            raise ValueError("Paramètres invalides")
+        
+        # Vérifier que la rue est assignée à cette équipe
+        cursor = conn.execute("""
+            SELECT COUNT(*) FROM streets 
+            WHERE name = ? AND team = ?
+        """, (clean_street, clean_team))
+        
+        if cursor.fetchone()[0] == 0:
+            raise ValueError(f"Rue {clean_street} non assignée à l'équipe {clean_team}")
+        
+        # Mettre à jour le statut
+        conn.execute("""
+            UPDATE streets 
+            SET status = ? 
+            WHERE name = ? AND team = ?
+        """, (clean_status, clean_street, clean_team))
+        
+        conn.commit()
+        
+        # Log de l'activité
+        log_activity(conn, clean_team, "status_update", 
+                    f"Rue {clean_street}: {clean_status}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"Erreur update_street_status: {e}")
+        return False
+
+def get_assignations_export_data(conn):
+    """Récupère les données d'assignation pour export CSV"""
+    try:
+        query = """
+            SELECT 
+                COALESCE(sector, 'Non défini') as secteur,
+                name as rue,
+                COALESCE(team, 'Non assignée') as equipe,
+                CASE status 
+                    WHEN 'a_faire' THEN 'À faire'
+                    WHEN 'en_cours' THEN 'En cours'
+                    WHEN 'terminee' THEN 'Terminée'
+                    ELSE status 
+                END as statut
+            FROM streets
+            ORDER BY secteur, rue
+        """
+        return pd.read_sql_query(query, conn)
+        
+    except Exception as e:
+        print(f"Erreur get_assignations_export_data: {e}")
+        return pd.DataFrame()
+
+def log_activity(conn, team_id, action, details):
+    """Enregistre une activité dans le log"""
+    try:
+        valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+        valid_action, clean_action = validate_and_clean_input("text", action)
+        valid_details, clean_details = validate_and_clean_input("note", details)
+        
+        if not all([valid_team, valid_action, valid_details]):
+            print("Paramètres de log invalides")
+            return
+        
+        conn.execute("""
+            INSERT INTO activity_log (team_id, action, details)
+            VALUES (?, ?, ?)
+        """, (clean_team, clean_action, clean_details))
+        
+        conn.commit()
+        
+        # Log aussi dans un fichier texte pour backup
+        log_dir = Path(__file__).parent / "logs"
+        log_dir.mkdir(exist_ok=True)
+        
+        log_file = log_dir / "activity.log"
+        with open(log_file, "a", encoding="utf-8") as f:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"{timestamp} | {clean_team} | {clean_action} | {clean_details}\n")
+            
+    except Exception as e:
+        print(f"Erreur log_activity: {e}")
+
+def get_street_notes_for_team(conn, street_name, team_id):
+    """Récupère les notes d'une rue pour une équipe"""
+    try:
+        valid_street, clean_street = validate_and_clean_input("street_name", street_name)
+        valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+        
+        if not all([valid_street, valid_team]):
+            return []
+        
+        cursor = conn.execute("""
+            SELECT address_number, comment, created_at
+            FROM notes
+            WHERE street_name = ? AND team_id = ?
+            ORDER BY created_at DESC
+        """, (clean_street, clean_team))
+        
+        return cursor.fetchall()
+        
+    except Exception as e:
+        print(f"Erreur get_street_notes_for_team: {e}")
+        return []
+
+@auto_backup_before_critical
+def add_street_note(conn, street_name, team_id, address_number, comment):
+    """Ajoute une note pour une adresse spécifique"""
+    try:
+        # Valider les entrées
+        valid_street, clean_street = validate_and_clean_input("street_name", street_name)
+        valid_team, clean_team = validate_and_clean_input("team_id", team_id)
+        valid_address, clean_address = validate_and_clean_input("address", address_number)
+        valid_comment, clean_comment = validate_and_clean_input("note", comment)
+        
+        if not all([valid_street, valid_team, valid_address, valid_comment]):
+            raise ValueError("Paramètres invalides")
+        
+        # Vérifier que la rue est assignée à cette équipe
+        cursor = conn.execute("""
+            SELECT COUNT(*) FROM streets 
+            WHERE name = ? AND team = ?
+        """, (clean_street, clean_team))
+        
+        if cursor.fetchone()[0] == 0:
+            raise ValueError(f"Rue {clean_street} non assignée à l'équipe {clean_team}")
+        
+        # Ajouter la note
+        conn.execute("""
+            INSERT INTO notes (street_name, team_id, address_number, comment)
+            VALUES (?, ?, ?, ?)
+        """, (clean_street, clean_team, clean_address, clean_comment))
+        
+        conn.commit()
+        
+        # Log de l'activité
+        log_activity(conn, clean_team, "note_added", 
+                    f"Note ajoutée - {clean_street} #{clean_address}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"Erreur add_street_note: {e}")
+        return False
