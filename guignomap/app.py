@@ -14,6 +14,7 @@ from streamlit_folium import st_folium
 
 # Import des modules locaux
 import db
+from validators import validate_and_clean_input
 from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
 
 # Configuration des chemins
@@ -1212,28 +1213,65 @@ def page_gestionnaire_v2(conn, geo):
     
     with tabs[1]:
         # Gestion des équipes
-        st.markdown("### Gestion des équipes")
+        st.subheader("👥 Gestion des équipes", anchor=False)
         
-        with st.expander("Créer une équipe"):
-            with st.form("new_team", clear_on_submit=True):
-                new_id = st.text_input("Identifiant")
-                new_name = st.text_input("Équipe")
-                new_pass = st.text_input("Mot de passe", type="password")
+        # === Formulaire de création d'équipe (robuste) ===
+        with st.expander("➕ Créer une nouvelle équipe", expanded=False):
+            with st.form("create_team_form", clear_on_submit=True):
+                team_id_in = st.text_input(
+                    "Identifiant d'équipe", 
+                    key="new_team_id", 
+                    placeholder="Ex: EQUIPE1",
+                    help="Lettres et chiffres uniquement, max 20 caractères"
+                )
+                team_name_in = st.text_input(
+                    "Nom d'équipe", 
+                    key="new_team_name", 
+                    placeholder="Ex: Équipe Centre",
+                    help="Nom descriptif de l'équipe"
+                )
+                pwd_in = st.text_input(
+                    "Mot de passe", 
+                    type="password", 
+                    key="new_team_pwd", 
+                    placeholder="Minimum 8 caractères",
+                    help="Doit contenir: majuscule, minuscule, chiffre"
+                )
+                submitted = st.form_submit_button("✅ Créer l'équipe", width="stretch")
+
+            if submitted:
+                # Validation avec validators.py
+                ok_id, team_id = validate_and_clean_input("team_id", team_id_in)
+                ok_name, team_name = validate_and_clean_input("text", team_name_in)
+                ok_pw, password = validate_and_clean_input("password", pwd_in)
                 
-                if st.form_submit_button("Créer"):
-                    if all([new_id, new_name, new_pass]):
-                        if db.create_team(conn, new_id, new_name, new_pass):
-                            st.success(f"Équipe {new_id} créée")
+                if not ok_id:
+                    st.error("❌ Identifiant d'équipe invalide (lettres/chiffres, max 20)")
+                elif not ok_name:
+                    st.error("❌ Nom d'équipe invalide ou vide")
+                elif not ok_pw:
+                    st.error("❌ Mot de passe invalide (min 8 car, maj+min+chiffre)")
+                else:
+                    # Tentative de création avec db.create_team
+                    try:
+                        created = db.create_team(conn, team_id, team_name, password)
+                        if created:
+                            st.toast(f"✅ Équipe {team_id} créée avec succès", icon="✅")
                             st.rerun()
+                        else:
+                            st.error("❌ Échec de création (ID déjà existant ?)")
+                    except Exception as e:
+                        st.error(f"❌ Erreur lors de la création: {e}")
         
-        # Liste des équipes
+        # === Liste des équipes (sans style spécial) ===
+        st.markdown("### 📋 Équipes existantes")
         try:
             teams_df = db.get_all_teams(conn)
             if not teams_df.empty:
                 st.dataframe(teams_df, width="stretch")
             else:
                 st.info("Aucune équipe créée")
-        except:
+        except Exception as e:
             st.info("Liste des équipes non disponible")
     
     with tabs[2]:

@@ -234,6 +234,8 @@ def style_map_compat(df: pd.DataFrame, fn: Callable[[Any], str], subset: Any = N
 - 📈 **Graphiques de progression** par Plotly
 - � **Centre d'export** avec formats multiples
 - 👥 **Gestion des équipes** et assignation
+  - Création encapsulée dans un formulaire (Enter ou bouton)
+  - Correction d'un chevauchement de texte au-dessus du formulaire
 - � **Notifications** d'activité
 
 ### Données et exports

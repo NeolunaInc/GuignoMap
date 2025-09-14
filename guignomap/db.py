@@ -166,12 +166,7 @@ def create_team(conn, team_id, name, password):
         valid_name, clean_name = validate_and_clean_input("text", name)
         valid_pwd, _ = validate_and_clean_input("password", password)
         
-        if not valid_id or not valid_name:
-            print("❌ ID ou nom d'équipe invalide")
-            return False
-        
-        if not valid_pwd:
-            print("❌ Mot de passe trop faible (min 8 car, maj+min+chiffre)")
+        if not valid_id or not valid_name or not valid_pwd:
             return False
         
         conn.execute(
