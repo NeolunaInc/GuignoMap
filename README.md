@@ -109,6 +109,8 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - **Corrections UI** :
   - Fix superposition texte au-dessus du sélecteur 'SECTEUR À ASSIGNER' (suppression des sorties de debug/injections HTML), tableau des assignations sans stylisation spéciale (rendu uniforme)
   - Layout propre avec container/colonnes, sans overlay ni stylisation
+  - Équipes : suppression du doublon de titre causant une superposition dans l'expander
+  - Mot de passe équipes : minimum 4 caractères, aucune autre contrainte
 
 ### 👥 Gestion moderne
 - **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"

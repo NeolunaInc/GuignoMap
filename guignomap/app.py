@@ -1234,8 +1234,8 @@ def page_gestionnaire_v2(conn, geo):
                     "Mot de passe", 
                     type="password", 
                     key="new_team_pwd", 
-                    placeholder="Minimum 8 caractères",
-                    help="Doit contenir: majuscule, minuscule, chiffre"
+                    placeholder="Minimum 4 caractères",
+                    help="Tout caractère accepté"
                 )
                 submitted = st.form_submit_button("✅ Créer l'équipe", width="stretch")
 
@@ -1250,7 +1250,7 @@ def page_gestionnaire_v2(conn, geo):
                 elif not ok_name:
                     st.error("❌ Nom d'équipe invalide ou vide")
                 elif not ok_pw:
-                    st.error("❌ Mot de passe invalide (min 8 car, maj+min+chiffre)")
+                    st.error("❌ Mot de passe invalide (minimum 4 caractères)")
                 else:
                     # Tentative de création avec db.create_team
                     try:
@@ -1263,8 +1263,7 @@ def page_gestionnaire_v2(conn, geo):
                     except Exception as e:
                         st.error(f"❌ Erreur lors de la création: {e}")
         
-        # === Liste des équipes (sans style spécial) ===
-        st.markdown("### 📋 Équipes existantes")
+        # === Liste des équipes (sans doublon de titre) ===
         try:
             teams_df = db.get_all_teams(conn)
             if not teams_df.empty:

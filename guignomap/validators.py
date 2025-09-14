@@ -51,19 +51,13 @@ class InputValidator:
     
     @staticmethod
     def validate_password(password: str) -> Tuple[bool, str]:
-        """Valide la force d'un mot de passe"""
-        if not password:
+        """Valide la force d'un mot de passe - minimum 4 caractères"""
+        if password is None:
             return False, "Mot de passe requis"
-        if len(password) < 8:
-            return False, "Minimum 8 caractères"
+        if len(password) < 4:
+            return False, "Minimum 4 caractères"
         if len(password) > 128:
             return False, "Maximum 128 caractères"
-        if not re.search(r'[A-Z]', password):
-            return False, "Au moins une majuscule requise"
-        if not re.search(r'[a-z]', password):
-            return False, "Au moins une minuscule requise"
-        if not re.search(r'[0-9]', password):
-            return False, "Au moins un chiffre requis"
         return True, "OK"
     
     @staticmethod
