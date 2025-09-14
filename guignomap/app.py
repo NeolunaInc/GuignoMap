@@ -1230,13 +1230,26 @@ def page_gestionnaire_v2(conn, geo):
                     placeholder="Ex: Équipe Centre",
                     help="Nom descriptif de l'équipe"
                 )
+                
+                # Toggle pour afficher/masquer les mots de passe
+                show_pw = st.checkbox("Afficher les mots de passe", value=False)
+                pw_type = "default" if show_pw else "password"
+                
                 pwd_in = st.text_input(
                     "Mot de passe", 
-                    type="password", 
+                    type=pw_type, 
                     key="new_team_pwd", 
                     placeholder="Minimum 4 caractères",
-                    help="Tout caractère accepté"
+                    help="Tout caractère accepté, min 4 / max 128"
                 )
+                pwd_conf = st.text_input(
+                    "Confirmer le mot de passe", 
+                    type=pw_type, 
+                    key="new_team_pwd_conf", 
+                    placeholder="Retapez le mot de passe",
+                    help="Doit correspondre au mot de passe ci-dessus"
+                )
+                
                 submitted = st.form_submit_button("✅ Créer l'équipe", width="stretch")
 
             if submitted:
@@ -1251,6 +1264,8 @@ def page_gestionnaire_v2(conn, geo):
                     st.error("❌ Nom d'équipe invalide ou vide")
                 elif not ok_pw:
                     st.error("❌ Mot de passe invalide (minimum 4 caractères)")
+                elif pwd_in != pwd_conf:
+                    st.error("❌ Les mots de passe ne correspondent pas")
                 else:
                     # Tentative de création avec db.create_team
                     try:

@@ -117,6 +117,10 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - **Navigation sidebar** moderne et intuitive
 - **Interface bénévole restreinte** aux rues assignées seulement
 - **Authentification simplifiée** avec cartes de connexion
+- **Gestion des équipes améliorée** :
+  - Ajout d'un champ Confirmer le mot de passe (création d'équipe)
+  - Politique : minimum 4 caractères, aucune autre contrainte
+  - Option : case Afficher les mots de passe
 
 ## 🚀 Installation et utilisation
 
