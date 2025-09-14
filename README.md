@@ -107,8 +107,8 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - **Tableau état** : Colonnes Rue / Secteur / Équipe / Statut avec libellés français
 - **Style uniforme** : Rendu standard avec thème sombre (fond neutre, texte blanc)
 - **Corrections UI** :
-  - Suppression de l'overlay texte au-dessus du sélecteur secteur
-  - Colonne 'Statut' : rendu uniforme (fond neutre / texte thème)
+  - Fix superposition texte au-dessus du sélecteur 'SECTEUR À ASSIGNER' (suppression des sorties de debug/injections HTML), tableau des assignations sans stylisation spéciale (rendu uniforme)
+  - Layout propre avec container/colonnes, sans overlay ni stylisation
 
 ### 👥 Gestion moderne
 - **Terminologie unifiée** : "gestionnaire" au lieu de "superviseur"

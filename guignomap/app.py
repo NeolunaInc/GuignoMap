@@ -1505,90 +1505,80 @@ def page_superviseur(conn, geo):
 
 def page_assignations_v41(conn):
     """Panneau d'assignations v4.1 pour superviseurs"""
-    st.markdown("### 🗺️ Assignations par secteur")
     
     try:
-        # Compteur de rues non assignées
+        # ===== Bloc Assignations (refactor propre) =====
+        st.subheader("🗺️ Assignations par secteur", anchor=False)
+        
+        # Compteur de rues non assignées (bannière info)
         unassigned_count = db.get_unassigned_streets_count(conn)
         if unassigned_count > 0:
-            st.warning(f"⚠️ {unassigned_count} rue(s) non assignée(s)")
-        else:
-            st.success("✅ Toutes les rues sont assignées")
+            st.info(f"⚠️ {unassigned_count} rue(s) non assignée(s)")
         
-        # Panneau d'assignation en bloc par secteur
-        with st.expander("🎯 Assignation par secteur", expanded=True):
-            col1, col2, col3 = st.columns([2, 2, 1])
+        with st.container():
+            c1, c2, c3 = st.columns([1, 1.2, 0.7], vertical_alignment="bottom")
             
-            with col1:
-                # Selectbox secteur
-                sectors = db.get_sectors_list(conn)
-                if sectors:
-                    selected_sector = st.selectbox(
-                        "SECTEUR À ASSIGNER",
-                        [""] + sectors,
-                        index=0,
-                        key="assign_sector",
-                        help="Choisissez le secteur à assigner en bloc à une équipe",
-                        label_visibility="visible"
-                    )
-                else:
-                    st.info("Aucun secteur disponible")
-                    selected_sector = ""
+            with c1:
+                # Récupérer la liste des secteurs
+                liste_secteurs = db.get_sectors_list(conn)
+                secteur = st.selectbox(
+                    "SECTEUR À ASSIGNER",
+                    options=[""] + (liste_secteurs if liste_secteurs else []),
+                    index=0,
+                    key="assign_sector",
+                    help="Choisissez le secteur à assigner",
+                    label_visibility="visible",
+                )
             
-            with col2:
-                # Selectbox équipe
+            with c2:
+                # Récupérer la liste des équipes
                 teams = db.get_teams_list(conn)
-                if teams:
-                    team_options = [""] + [f"{team[1]} ({team[0]})" for team in teams]
-                    selected_team_display = st.selectbox(
-                        "Équipe destinataire",
-                        team_options,
-                        help="Équipe qui recevra toutes les rues du secteur"
+                liste_equipes = [f"{team[1]} ({team[0]})" for team in teams] if teams else []
+                
+                if liste_equipes:
+                    team_display = st.selectbox(
+                        "ÉQUIPE", 
+                        options=[""] + liste_equipes, 
+                        index=0, 
+                        key="assign_team"
                     )
-                    
                     # Extraire l'ID de l'équipe
-                    selected_team = ""
-                    if selected_team_display and selected_team_display != "":
-                        selected_team = selected_team_display.split("(")[-1].rstrip(")")
+                    team = ""
+                    if team_display and team_display != "":
+                        team = team_display.split("(")[-1].rstrip(")")
                 else:
                     st.info("Aucune équipe disponible")
-                    selected_team = ""
+                    team = None
             
-            with col3:
-                st.markdown("&nbsp;")  # Espacement
-                if st.button(
-                    "🎯 Assigner tout le secteur",
-                    disabled=not (selected_sector and selected_team),
-                    width="stretch",
-                    help="Assigne toutes les rues non assignées du secteur à l'équipe choisie"
-                ):
-                    if selected_sector and selected_team:
+            with c3:
+                disabled = not (secteur and team)
+                if st.button("🎯 Assigner tout le secteur", width="stretch", disabled=disabled):
+                    # Appel métier : assigner toutes les rues non assignées du secteur à l'équipe
+                    if secteur and team:
                         try:
-                            affected_rows = db.bulk_assign_sector(conn, selected_sector, selected_team)
-                            if affected_rows > 0:
-                                st.toast(f"✅ Assignation effectuée: {affected_rows} rue(s)", icon="🎉")
+                            nb = db.bulk_assign_sector(conn, secteur, team)
+                            if nb > 0:
+                                st.toast(f"✅ {nb} rue(s) assignée(s) à l'équipe {team}", icon="✅")
                                 st.rerun()
                             else:
                                 st.toast("ℹ️ Aucune rue non assignée dans ce secteur", icon="ℹ️")
                         except Exception as e:
                             st.error(f"Erreur lors de l'assignation: {e}")
         
-        # Tableau des assignations actuelles
+        # ===== Tableau d'état (uniforme, sans style spécial) =====
         st.markdown("### 📋 État des assignations")
-        df_all = db.list_streets(conn)
-        if not df_all.empty:
-            # Créer DataFrame d'affichage avec libellés FR
-            df_disp = df_all.assign(
-                status_label=df_all["status"].map(STATUS_TO_LABEL).fillna("À faire")
+        
+        df = db.list_streets(conn)
+        if not df.empty:
+            df_disp = df.assign(
+                Statut=df["status"].map(STATUS_TO_LABEL).fillna("À faire")
             ).rename(columns={
-                "name": "Rue",
+                "name": "Rue", 
                 "sector": "Secteur", 
-                "team": "Équipe",
-                "status_label": "Statut"
+                "team": "Équipe"
             })[["Rue", "Secteur", "Équipe", "Statut"]]
             
-            # Affichage standard sans style spécial
-            st.dataframe(df_disp, width="stretch")
+            st.dataframe(df_disp, width="stretch")  # aucun Styler, aucun CSS cellule
         else:
             st.info("Aucune rue trouvée")
             
