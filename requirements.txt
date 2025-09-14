@@ -5,5 +5,5 @@ streamlit-folium>=0.21.0
 overpy==0.7
 bcrypt>=4.0.0
 plotly>=5.18.0
-xlsxwriter>=3.1.0
-reportlab>=4.0.0
+xlsxwriter==3.2.8
+reportlab==4.4.3
