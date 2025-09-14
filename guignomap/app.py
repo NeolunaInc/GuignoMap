@@ -1994,7 +1994,7 @@ def main():
     
     # Bannière en bas de page
     if (ASSETS / "banner.png").exists():
-        st.image(str(ASSETS / "banner.png"), use_column_width=True)
+        st.image(str(ASSETS / "banner.png"), use_container_width=True)
 
 if __name__ == "__main__":
     main()

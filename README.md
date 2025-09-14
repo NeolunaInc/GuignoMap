@@ -93,10 +93,28 @@ cd GuignoMap
 pip install -r requirements.txt
 ```
 
-### Lancement
-```bash
-cd guignomap
+### Lancement (Windows)
+```powershell
+# Activer l'environnement virtuel
+.\.venv\Scripts\Activate.ps1
+
+# Lancer l'application
+cd .\guignomap
 streamlit run app.py
+```
+
+### Exports PDF/Excel
+- **Boutons de téléchargement** : Disponibles dans l'onglet "📥 Export"
+- **Emplacement recommandé** : `.\guignomap\exports` pour sauvegarde locale
+- **Formats disponibles** : Excel (.xlsx), PDF (.pdf), CSV assignations
+
+### Ouvrir le dernier export (PowerShell)
+```powershell
+$d = Join-Path $PSScriptRoot 'guignomap'
+Set-Location $d
+if (-not (Test-Path "..\exports")) { New-Item -ItemType Directory "..\exports" | Out-Null }
+$f = Get-ChildItem "..\exports" -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1
+if ($f) { ii $f.FullName } else { ii "..\exports" }
 ```
 
 ## 📦 Dépendances principales
@@ -107,6 +125,14 @@ streamlit run app.py
 - **overpy** : API OpenStreetMap
 - **plotly** : Graphiques interactifs
 - **xlsxwriter** : Export Excel professionnel
+- **reportlab** : Génération PDF professionnelle
+- **bcrypt** : Hachage sécurisé des mots de passe
+
+### Sécurité/Robustesse
+- **bcrypt** : Migration automatique des anciens hash SHA256 vers bcrypt avec salage
+- **Backup automatique** : ZIP créé avant toute écriture critique
+- **Validation inputs** : Protection SQL injection et XSS via module validators
+- **Logging complet** : Journal d'activité en base de données et fichier
 
 ## 🎯 Guide d'utilisation v4.1
 
@@ -160,7 +186,7 @@ streamlit run app.py
 - 📝 **Base de données SQLite** intégrée
 - 📊 **Export Excel** avec formatage professionnel
 - 📱 **Listes SMS** pour communication
-- 📄 **Rapports PDF** (en développement)
+- 📄 **Rapports PDF** avec mise en page professionnelle
 source .venv/bin/activate
 
 ## 🗃️ Structure du projet
