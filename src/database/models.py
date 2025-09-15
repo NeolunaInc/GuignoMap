@@ -2,7 +2,7 @@
 Modèles SQLAlchemy pour GuignoMap v5.0
 Basés sur le schéma SQLite existant pour compatibilité
 """
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Real
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -64,8 +64,8 @@ class Address(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     street_name = Column(Text, ForeignKey('streets.name'), nullable=False)
     house_number = Column(Text, nullable=False)
-    latitude = Column(Real)
-    longitude = Column(Real)
+    latitude = Column(Float)
+    longitude = Column(Float)
     osm_type = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     
