@@ -90,3 +90,6 @@ config.ini
 !guignomap/assets/
 !requirements.txt
 !README.md
+# exports snapshots
+/exports/
+export.txt
