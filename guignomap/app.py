@@ -14,8 +14,8 @@ from streamlit_folium import st_folium
 
 # Import des modules locaux
 from src.database import db_v5 as db
-from validators import validate_and_clean_input
-from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
+from guignomap.validators import validate_and_clean_input
+from guignomap.osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
 from src.utils.adapters import to_dataframe
 
 # --- Utilitaire de compatibilité pandas Styler ---
