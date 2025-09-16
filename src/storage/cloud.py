@@ -45,7 +45,7 @@ class S3StorageClient:
             json_content = json.dumps(data, ensure_ascii=False, indent=2)
             json_bytes = json_content.encode('utf-8')
             
-            extra_args = {
+            extra_args: Dict[str, Any] = {
                 'ContentType': 'application/json',
                 'ContentEncoding': 'utf-8'
             }
