@@ -16,12 +16,11 @@ for candidate in ("guignomap.app", "src.app"):
         continue
 
 # Fallback: import direct par chemin
-if mod is None:
-    app_path = ROOT / "guignomap" / "app.py"
-    if app_path.exists():
-        spec = spec_from_file_location("app_fallback", app_path)
+app_path = ROOT / "guignomap" / "app.py"
+if mod is None and app_path.exists():
+    spec = spec_from_file_location("app_fallback", str(app_path))
+    if spec is not None and spec.loader is not None:
         m = module_from_spec(spec)
-        assert spec.loader is not None
         spec.loader.exec_module(m)
         mod = m
 
