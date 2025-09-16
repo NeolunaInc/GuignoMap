@@ -9,6 +9,15 @@ import time
 from datetime import datetime
 import pandas as pd
 import streamlit as st
+
+# Configuration Streamlit (doit être la première commande Streamlit)
+st.set_page_config(
+    page_title="Guigno-Map | Relais de Mascouche",
+    page_icon="🎁",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import folium
 from streamlit_folium import st_folium
 
@@ -42,14 +51,6 @@ STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "T
 LABEL_TO_STATUS = {v: k for k, v in STATUS_TO_LABEL.items()}
 
 ASSETS = Path(__file__).parent / "assets"
-
-# Configuration Streamlit
-st.set_page_config(
-    page_title="Guigno-Map | Relais de Mascouche",
-    page_icon="🎁",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Initialisation session
 if "auth" not in st.session_state:
