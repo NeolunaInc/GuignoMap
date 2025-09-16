@@ -793,7 +793,7 @@ def page_accueil(conn, geo):
     render_metrics(stats)
     
     df_all = db.list_streets()
-    if df_all:  # Liste non vide
+    if not df_all.empty:  # Liste non vide
         m = create_map(df_all, geo)
         st_folium(m, height=800, width=None, returned_objects=[])
 
@@ -938,7 +938,7 @@ def page_accueil_v2(geo):
     # Carte festive
     st.markdown("### 🗺️ Vue d'ensemble de Mascouche")
     df_all = db.list_streets()
-    if df_all:  # Liste non vide
+    if not df_all.empty:  # Liste non vide
         m = create_map(df_all, geo)
         st_folium(m, height=750, width=None, returned_objects=[])
     
@@ -995,7 +995,7 @@ def page_benevole(geo):
     
     # Stats de l'équipe
     df_team = db.list_streets(team=team_id)
-    if not df_team:  # Liste vide
+    if df_team.empty:  # Liste vide
         st.warning("Aucune rue assignée. Contactez votre superviseur.")
         return
     
@@ -1071,37 +1071,38 @@ def page_benevole(geo):
         st.markdown("### 📋 Checklist de collecte")
         
         # Liste interactive des rues
-        for row in df_team:
-            street = row['name']
-            status = row['status']
-            notes_count = row.get('notes', 0)
+        for _, row in df_team.iterrows():
+            name = str(row.get('name', '')) if pd.notna(row.get('name', '')) else ''
+            status = row.get('status', 'a_faire')
+            status = status if pd.notna(status) else 'a_faire'
+            notes = str(row.get('notes', '0')) if pd.notna(row.get('notes', '0')) else '0'
             
             # Carte de rue stylisée
             status_emoji = {'terminee': '✅', 'en_cours': '🚶', 'a_faire': '⭕'}
             status_color = {'terminee': '#22c55e', 'en_cours': '#f59e0b', 'a_faire': '#ef4444'}
             
-            with st.expander(f"{status_emoji.get(status, '⭕')} **{street}** ({notes_count} notes)"):
+            with st.expander(f"{status_emoji.get(status, '⭕')} **{name}** ({notes} notes)"):
                 
                 # Changement rapide de statut
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    if st.button("⭕ À faire", key=f"todo_{street}", width="stretch"):
-                        db.set_status(street, 'a_faire')
+                    if st.button("⭕ À faire", key=f"todo_{name}", width="stretch"):
+                        db.set_status(name, 'a_faire')
                         st.rerun()
                 with col2:
-                    if st.button("🚶 En cours", key=f"progress_{street}", width="stretch"):
-                        db.set_status(street, 'en_cours')
+                    if st.button("🚶 En cours", key=f"progress_{name}", width="stretch"):
+                        db.set_status(name, 'en_cours')
                         st.rerun()
                 with col3:
-                    if st.button("✅ Terminée", key=f"done_{street}", width="stretch"):
-                        db.set_status(street, 'terminee')
+                    if st.button("✅ Terminée", key=f"done_{name}", width="stretch"):
+                        db.set_status(name, 'terminee')
                         st.rerun()
                 
                 st.markdown("---")
                 
                 # Ajout de note rapide
                 st.markdown("**Ajouter une note:**")
-                with st.form(f"note_{street}", clear_on_submit=True):
+                with st.form(f"note_{name}", clear_on_submit=True):
                     col1, col2 = st.columns([1, 3])
                     with col1:
                         num = st.text_input("N°", placeholder="123")
@@ -1110,15 +1111,15 @@ def page_benevole(geo):
                     
                     if st.form_submit_button("➕ Ajouter"):
                         if num and note:
-                            db.add_note_for_address(street, team_id, num, note)
+                            db.add_note_for_address(name, team_id, num, note)
                             st.success("Note ajoutée!")
                             st.rerun()
                 
                 # Notes existantes
-                notes = db.get_street_addresses_with_notes(street)
-                if notes:  # Liste non vide
+                notes_list = db.get_street_addresses_with_notes(name)
+                if notes_list:  # Liste non vide
                     st.markdown("**Notes existantes:**")
-                    for n in notes:
+                    for n in notes_list:
                         st.markdown(f"• **{n['address_number']}** : {n['comment']}")
     
     with tab3:
@@ -1207,7 +1208,7 @@ def page_gestionnaire_v2(geo):
         # Carte générale
         st.markdown("### Carte générale")
         df_all = db.list_streets()
-        if df_all:  # Liste non vide
+        if not df_all.empty:  # Liste non vide
             m = create_map(df_all, geo)
             st_folium(m, height=800, width=None, returned_objects=[])
         
@@ -1414,7 +1415,7 @@ def page_superviseur(conn, geo):
         # Carte générale
         st.markdown("### Carte générale")
         df_all = db.list_streets()
-        if df_all:  # Liste non vide
+        if not df_all.empty:  # Liste non vide
             m = create_map(df_all, geo)
             st_folium(m, height=800, width=None, returned_objects=[])
         
@@ -1466,7 +1467,7 @@ def page_superviseur(conn, geo):
         
         # Tableau des assignations
         df_all = db.list_streets()
-        if df_all:  # Liste non vide
+        if not df_all.empty:  # Liste non vide
             st.dataframe(
                 df_all[['name', 'sector', 'team', 'status']],
                 width="stretch"
@@ -1632,7 +1633,7 @@ def page_assignations_v41():
         st.markdown("### 📋 État des assignations")
         
         df = db.list_streets()
-        if df:  # Liste non vide
+        if not df.empty:  # Liste non vide
             df_disp = df.assign(
                 Statut=df["status"].map(STATUS_TO_LABEL).fillna("À faire")
             ).rename(columns={
@@ -1772,8 +1773,8 @@ def page_benevole_mes_rues():
         
         # Afficher les statistiques de l'équipe
         total_streets = len(team_streets)
-        done_streets = len([s for s in team_streets if hasattr(s, 'status') and s.status == 'terminee'])
-        in_progress = len([s for s in team_streets if hasattr(s, 'status') and s.status == 'en_cours'])
+        done_streets = len([s for s in team_streets if s.get('status') == 'terminee'])
+        in_progress = len([s for s in team_streets if s.get('status') == 'en_cours'])
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
