@@ -15,18 +15,10 @@ showErrorDetails = false
 [runner]
 # Optimisations de performance
 magicEnabled = true
-installTracer = false
-fixMatplotlib = true
 
 [server]
 # Configuration serveur
 headless = true
 runOnSave = true
 maxUploadSize = 10
-enableCORS = false
 enableXsrfProtection = true
-
-[deprecation]
-# Désactiver les avertissements de dépréciation
-showImageFormat = false
-showPyplotGlobalUse = false
