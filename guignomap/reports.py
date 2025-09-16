@@ -18,8 +18,7 @@ from io import BytesIO
 STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
 
 class ReportGenerator:
-    def __init__(self, conn):
-        self.conn = conn
+    def __init__(self):
         self.styles = getSampleStyleSheet()
         self._setup_custom_styles()
     
@@ -85,8 +84,8 @@ class ReportGenerator:
         summary_sheet.merge_range(1, 0, 1, 4, f'Rapport généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', cell_format)  # A2:E2
         
         # Stats globales
-        from db import extended_stats
-        stats = extended_stats(self.conn)
+        from db_v5 import extended_stats
+        stats = extended_stats()
         
         row = 4
         summary_sheet.write(row, 0, 'STATISTIQUES GLOBALES', header_format)
@@ -119,8 +118,8 @@ class ReportGenerator:
             streets_sheet.write(0, col, header, header_format)
         
         # Données
-        from db import list_streets
-        df = list_streets(self.conn)
+        from db_v5 import list_streets
+        df = list_streets()
         
         for idx, row_data in enumerate(df.iterrows(), 1):
             _, row = row_data
@@ -139,22 +138,26 @@ class ReportGenerator:
         teams_sheet = workbook.add_worksheet('Performance équipes')
         teams_sheet.set_column(0, 5, 15)
         
-        from db import stats_by_team
-        teams_df = stats_by_team(self.conn)
+        from db_v5 import stats_by_team
+        teams_data = stats_by_team()
         
-        if not teams_df.empty:
+        if teams_data:
             headers = ['Équipe', 'Total rues', 'Terminées', 'En cours', 'Notes', 'Progression %']
             for col, header in enumerate(headers):
                 teams_sheet.write(0, col, header, header_format)
             
-            for idx, row_data in enumerate(teams_df.iterrows(), 1):
-                _, row = row_data
-                teams_sheet.write(idx, 0, row.get('team', ''), cell_format)
-                teams_sheet.write(idx, 1, row.get('total', 0), cell_format)
-                teams_sheet.write(idx, 2, row.get('done', 0), cell_format)
-                teams_sheet.write(idx, 3, row.get('partial', 0), cell_format)
-                teams_sheet.write(idx, 4, row.get('notes', 0), cell_format)
-                teams_sheet.write(idx, 5, f"{row.get('progress', 0):.1f}%", cell_format)
+            for idx, row in enumerate(teams_data, 1):
+                total = row.get('total_streets', 0)
+                completed = row.get('completed', 0)
+                in_progress = row.get('in_progress', 0)
+                todo = row.get('todo', 0)
+                progress = (completed / total * 100) if total > 0 else 0
+                teams_sheet.write(idx, 0, row.get('name', ''), cell_format)
+                teams_sheet.write(idx, 1, total, cell_format)
+                teams_sheet.write(idx, 2, completed, cell_format)
+                teams_sheet.write(idx, 3, in_progress, cell_format)
+                teams_sheet.write(idx, 4, todo, cell_format)
+                teams_sheet.write(idx, 5, f"{progress:.1f}%", cell_format)
         
         workbook.close()
         output.seek(0)
@@ -176,8 +179,8 @@ class ReportGenerator:
         # Résumé
         story.append(Paragraph("Résumé de la collecte", self.styles['SectionTitle']))
         
-        from db import extended_stats
-        stats = extended_stats(self.conn)
+        from db_v5 import extended_stats
+        stats = extended_stats()
         
         summary_data = [
             ['Statistique', 'Valeur'],
@@ -206,18 +209,22 @@ class ReportGenerator:
         # Performance des équipes
         story.append(Paragraph("Performance des équipes", self.styles['SectionTitle']))
         
-        from db import stats_by_team
-        teams_df = stats_by_team(self.conn)
+        from db_v5 import stats_by_team
+        teams_data_list = stats_by_team()
         
-        if not teams_df.empty:
+        if teams_data_list:
             teams_data = [['Équipe', 'Total', 'Terminées', 'En cours', 'Progression']]
-            for _, row in teams_df.iterrows():
+            for row in teams_data_list:
+                total = row.get('total_streets', 0)
+                completed = row.get('completed', 0)
+                in_progress = row.get('in_progress', 0)
+                progress = (completed / total * 100) if total > 0 else 0
                 teams_data.append([
-                    row.get('team', ''),
-                    str(row.get('total', 0)),
-                    str(row.get('done', 0)),
-                    str(row.get('partial', 0)),
-                    f"{row.get('progress', 0):.1f}%"
+                    row.get('name', ''),
+                    str(total),
+                    str(completed),
+                    str(in_progress),
+                    f"{progress:.1f}%"
                 ])
             
             teams_table = Table(teams_data, colWidths=[2*inch, 1*inch, 1*inch, 1*inch, 1.5*inch])

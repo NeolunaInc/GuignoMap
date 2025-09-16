@@ -13,13 +13,10 @@ import folium
 from streamlit_folium import st_folium
 
 # Import des modules locaux
-import db_v5 as db
+from src.database import db_v5 as db
 from validators import validate_and_clean_input
 from osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
 from src.utils.adapters import to_dataframe
-
-# Configuration des chemins - Legacy pour backup seulement
-DB_PATH = Path(__file__).parent / "guigno_map.db"
 
 # --- Utilitaire de compatibilité pandas Styler ---
 from typing import Callable, Any
@@ -146,7 +143,7 @@ def render_header():
     
     st.markdown("</div>", unsafe_allow_html=True)
 
-def render_login_card(role="benevole", conn=None):
+def render_login_card(role="benevole"):
     """Carte de connexion moderne avec design festif"""
     
     # Container de connexion stylisé
@@ -269,7 +266,7 @@ def render_metrics(stats):
     with col4:
         st.metric("Progression", f"{progress:.1f}%")
 
-def render_dashboard_gestionnaire(conn, geo):
+def render_dashboard_gestionnaire(geo):
     """Dashboard moderne pour gestionnaires avec KPIs visuels"""
     
     # KPIs principaux en cartes colorées
@@ -605,7 +602,7 @@ def export_excel_professionnel(conn):
     """Export Excel avec mise en forme professionnelle"""
     try:
         from reports import ReportGenerator
-        generator = ReportGenerator(conn)
+        generator = ReportGenerator()
         return generator.generate_excel()
     except ImportError:
         # Fallback si les dépendances ne sont pas installées
@@ -667,7 +664,7 @@ def show_notification(message, type="success"):
     </style>
     """, unsafe_allow_html=True)
 
-def show_team_badges(conn, team_id):
+def show_team_badges(team_id):
     """Affiche les badges de réussite de l'équipe"""
     try:
         df = db.list_streets(team=team_id)
@@ -730,7 +727,7 @@ def page_export_gestionnaire(conn):
         
         try:
             from reports import ReportGenerator
-            generator = ReportGenerator(conn)
+            generator = ReportGenerator()
             pdf_data = generator.generate_pdf()
             st.download_button(
                 "📥 Télécharger PDF",
@@ -800,7 +797,7 @@ def page_accueil(conn, geo):
         m = create_map(df_all, geo)
         st_folium(m, height=800, width=None, returned_objects=[])
 
-def page_accueil_v2(conn, geo):
+def page_accueil_v2(geo):
     """Page d'accueil festive avec compte à rebours"""
     
     # Compte à rebours jusqu'au 1er décembre
@@ -973,11 +970,11 @@ def page_accueil_v2(conn, geo):
     </div>
     """, unsafe_allow_html=True)
 
-def page_benevole(conn, geo):
+def page_benevole(geo):
     """Interface bénévole moderne avec vue limitée"""
     
     if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
-        render_login_card("benevole", conn)
+        render_login_card("benevole")
         return
     
     team_id = st.session_state.auth["team_id"]
@@ -1016,7 +1013,7 @@ def page_benevole(conn, geo):
         st.metric("🎯 Progression", f"{progress:.0f}%")
     
     # Système de badges
-    show_team_badges(conn, team_id)
+    show_team_badges(team_id)
     
     # Barre de progression
     st.progress(progress / 100)
@@ -1135,13 +1132,13 @@ def page_benevole(conn, geo):
         except:
             st.info("Historique non disponible")
 
-def page_benevole_v2(conn, geo):
+def page_benevole_v2(geo):
     """Interface bénévole moderne v4.1 avec vue 'Mes rues'"""
     
     # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
         # Afficher la page de connexion bénévole
-        return page_benevole(conn, geo)
+        return page_benevole(geo)
     
     # Interface bénévole connecté avec tabs
     st.header("🎅 Espace Bénévole")
@@ -1157,29 +1154,26 @@ def page_benevole_v2(conn, geo):
     
     with tabs[0]:
         # Nouvelle vue "Mes rues" v4.1
-        page_benevole_mes_rues(conn)
+        page_benevole_mes_rues()
     
     with tabs[1]:
         # Carte traditionnelle (réutilise l'ancienne interface)
-        page_benevole(conn, geo)
+        page_benevole(geo)
     
     with tabs[2]:
         # Journal d'activité de l'équipe
         st.markdown("### 📝 Journal d'activité de votre équipe")
         try:
             # Afficher les activités récentes de l'équipe
-            cursor = conn.execute("""
-                SELECT action, details, created_at
-                FROM activity_log
-                WHERE team_id = ?
-                ORDER BY created_at DESC
-                LIMIT 20
-            """, (team_id,))
+            from db_v5 import recent_activity
+            activities = recent_activity(20)
             
-            activities = cursor.fetchall()
             if activities:
-                for activity in activities:
-                    action, details, created_at = activity
+                team_activities = [a for a in activities if a.get('team_id') == team_id]
+                for activity in team_activities:
+                    action = activity.get('action', '')
+                    details = activity.get('details', '')
+                    created_at = activity.get('created_at', '')
                     st.markdown(f"**{created_at}** - {action}: {details}")
             else:
                 st.info("Aucune activité enregistrée pour votre équipe")
@@ -1188,17 +1182,17 @@ def page_benevole_v2(conn, geo):
             st.info("Journal d'activité temporairement indisponible")
             st.caption(f"Erreur: {e}")
 
-def page_gestionnaire_v2(conn, geo):
+def page_gestionnaire_v2(geo):
     """Interface gestionnaire moderne (ancien superviseur)"""
     st.header("👔 Tableau de Bord Gestionnaire")
     
     # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
-        render_login_card("gestionnaire", conn)
+        render_login_card("gestionnaire")
         return
     
     # Dashboard moderne
-    render_dashboard_gestionnaire(conn, geo)
+    render_dashboard_gestionnaire(geo)
     
     # Tabs
     tabs = st.tabs([
@@ -1307,11 +1301,11 @@ def page_gestionnaire_v2(conn, geo):
     
     with tabs[2]:
         # Assignation v4.1
-        page_assignations_v41(conn)
+        page_assignations_v41()
     
     with tabs[3]:
         # Export amélioré v4.1
-        page_export_gestionnaire_v41(conn)
+        page_export_gestionnaire_v41()
 
     with tabs[4]:
         st.markdown("### 🛠 Opérations techniques (protégées)")
@@ -1377,7 +1371,7 @@ def page_gestionnaire_v2(conn, geo):
 
         # --- Gestion des backups
         with st.expander("💾 Gestion des backups", expanded=False):
-            backup_mgr = db.get_backup_manager(DB_PATH)
+            backup_mgr = db.get_backup_manager()  # Sans DB_PATH, utilise config SQLAlchemy
             
             col1, col2 = st.columns([2, 1])
             with col1:
@@ -1401,11 +1395,11 @@ def page_superviseur(conn, geo):
     
     # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
-        render_login_card("superviseur", conn)
+        render_login_card("superviseur")
         return
     
     # Dashboard moderne
-    render_dashboard_gestionnaire(conn, geo)
+    render_dashboard_gestionnaire(geo)
     
     # Tabs
     tabs = st.tabs([
@@ -1572,7 +1566,7 @@ def page_superviseur(conn, geo):
 # NOUVELLES FONCTIONS v4.1 - SUPERVISEUR ET BÉNÉVOLE
 # ================================================================================
 
-def page_assignations_v41(conn):
+def page_assignations_v41():
     """Panneau d'assignations v4.1 pour superviseurs"""
     
     try:
@@ -1655,7 +1649,7 @@ def page_assignations_v41(conn):
         st.error(f"Erreur dans le panneau d'assignations: {e}")
         st.info("Fonctionnalité temporairement indisponible")
 
-def page_export_gestionnaire_v41(conn):
+def page_export_gestionnaire_v41():
     """Page d'export v4.1 avec nouvelles fonctionnalités"""
     st.markdown("### 📥 Export des données")
     
@@ -1679,7 +1673,7 @@ def page_export_gestionnaire_v41(conn):
         # Export Excel professionnel
         try:
             from reports import ReportGenerator
-            generator = ReportGenerator(conn)
+            generator = ReportGenerator()
             excel_data = generator.generate_excel()
             st.download_button(
                 "📊 Export Excel Pro",
@@ -1698,7 +1692,7 @@ def page_export_gestionnaire_v41(conn):
         # Export PDF professionnel
         try:
             from reports import ReportGenerator
-            generator = ReportGenerator(conn)
+            generator = ReportGenerator()
             pdf_data = generator.generate_pdf()
             st.download_button(
                 "📄 Export PDF Pro",
@@ -1753,7 +1747,7 @@ def page_export_gestionnaire_v41(conn):
             st.button("📝 Notes (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
 
-def page_benevole_mes_rues(conn):
+def page_benevole_mes_rues():
     """Vue 'Mes rues' pour bénévoles v4.1"""
     
     # Récupérer l'équipe du bénévole connecté
@@ -1895,13 +1889,8 @@ def main():
     # Initialisation de la base de données
     db.init_db()
     
-    # Compatibilité legacy pour les backups
-    if 'conn' not in st.session_state:
-        import sqlite3
-        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        st.session_state['conn'] = conn
-    st.session_state['conn'] = conn
+    # Compatibilité legacy supprimée - utilise SQLAlchemy via src.database
+    # Connexion centralisée via get_session() au lieu de sqlite3 direct
     
     # Cache géométrique
     @st.cache_data(ttl=None)
@@ -1991,11 +1980,11 @@ def main():
     page = st.session_state.get('page', 'accueil')
     
     if page == "accueil":
-        page_accueil_v2(conn, geo)
+        page_accueil_v2(geo)
     elif page == "benevole":
-        page_benevole_v2(conn, geo)
+        page_benevole_v2(geo)
     elif page == "gestionnaire":
-        page_gestionnaire_v2(conn, geo)
+        page_gestionnaire_v2(geo)
     
     # Footer festif
     st.markdown("""

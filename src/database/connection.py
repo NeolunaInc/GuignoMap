@@ -110,3 +110,19 @@ def execute_transaction(queries_and_params):
                 result = conn.execute(text(query))
             results.append(result)
         return results
+
+
+# Wrapper facultatif pour compatibilité avec l'ancien code/patrons
+def get_session_factory():
+    """Retourne un callable qui ouvre une session (usage: with Session() as s: ...)."""
+    def _open():
+        return get_session().__enter__()  # pour compat avec 'with Session() as s'
+    # pour permettre 'with Session() as s', on expose un objet qui supporte __call__ et __enter__/__exit__
+    class _Factory:
+        def __call__(self):
+            return get_session().__enter__()
+        def __enter__(self):
+            return get_session().__enter__()
+        def __exit__(self, exc_type, exc, tb):
+            return get_session().__exit__(exc_type, exc, tb)
+    return _Factory()
