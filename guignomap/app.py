@@ -387,7 +387,7 @@ def render_dashboard_gestionnaire(geo):
                 paper_bgcolor='rgba(0,0,0,0)',
                 font_color='white'
             )
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Aucune statistique d'équipe disponible")
     except Exception as e:
@@ -396,7 +396,7 @@ def render_dashboard_gestionnaire(geo):
         try:
             teams_stats = db.stats_by_team()
             if teams_stats:  # Liste non vide
-                st.dataframe(to_dataframe(teams_stats), width="stretch")
+                st.dataframe(to_dataframe(teams_stats), use_container_width=True)
         except:
             st.info("Aucune statistique d'équipe disponible")
 
@@ -1127,7 +1127,7 @@ def page_benevole(geo):
         try:
             notes = db.get_team_notes(team_id)
             if notes:  # Liste non vide
-                st.dataframe(to_dataframe(notes), width="stretch")
+                st.dataframe(to_dataframe(notes), use_container_width=True)
             else:
                 st.info("Aucune note encore")
         except:
@@ -1217,7 +1217,7 @@ def page_gestionnaire_v2(geo):
         try:
             recent = db.recent_activity(limit=10)
             if recent:  # Liste non vide
-                st.dataframe(to_dataframe(recent), width="stretch")
+                st.dataframe(to_dataframe(recent), use_container_width=True)
             else:
                 st.info("Aucune activité récente")
         except:
@@ -1294,7 +1294,7 @@ def page_gestionnaire_v2(geo):
         try:
             teams_df = db.get_all_teams()
             if teams_df:  # Liste non vide
-                st.dataframe(to_dataframe(teams_df), width="stretch")
+                st.dataframe(to_dataframe(teams_df), use_container_width=True)
             else:
                 st.info("Aucune équipe créée")
         except Exception as e:
@@ -1423,7 +1423,7 @@ def page_superviseur(conn, geo):
         st.markdown("### Activité récente")
         recent = db.recent_activity(limit=10)
         if recent:  # Liste non vide
-            st.dataframe(to_dataframe(recent), width="stretch")
+            st.dataframe(to_dataframe(recent), use_container_width=True)
     
     with tabs[1]:
         # Gestion des équipes
@@ -1444,7 +1444,7 @@ def page_superviseur(conn, geo):
         # Liste des équipes
         teams_df = db.get_all_teams()
         if teams_df:  # Liste non vide
-            st.dataframe(to_dataframe(teams_df), width="stretch")
+            st.dataframe(to_dataframe(teams_df), use_container_width=True)
     
     with tabs[2]:
         # Assignation
@@ -1470,7 +1470,7 @@ def page_superviseur(conn, geo):
         if not df_all.empty:  # Liste non vide
             st.dataframe(
                 df_all[['name', 'sector', 'team', 'status']],
-                width="stretch"
+                use_container_width=True
             )
     
     with tabs[3]:
@@ -1642,7 +1642,7 @@ def page_assignations_v41():
                 "team": "Équipe"
             })[["Rue", "Secteur", "Équipe", "Statut"]]
             
-            st.dataframe(df_disp, width="stretch")  # aucun Styler, aucun CSS cellule
+            st.dataframe(df_disp, use_container_width=True)  # aucun Styler, aucun CSS cellule
         else:
             st.info("Aucune rue trouvée")
             
@@ -2005,7 +2005,7 @@ def main():
     
     # Bannière en bas de page
     if (ASSETS / "banner.png").exists():
-        st.image(str(ASSETS / "banner.png"), width="stretch")
+        st.image(str(ASSETS / "banner.png"))
 
 if __name__ == "__main__":
     main()
