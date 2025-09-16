@@ -20,8 +20,8 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy import text, and_, or_
 from src.database.connection import get_session, db_retry
 from src.database.models import Street, Team, Note, ActivityLog, Address
-from backup import auto_backup_before_critical, BackupManager
-from validators import validate_and_clean_input, InputValidator
+from guignomap.backup import auto_backup_before_critical, BackupManager
+from guignomap.validators import validate_and_clean_input, InputValidator
 
 
 # =============================================================================
@@ -67,7 +67,7 @@ def init_db():
 def auto_import_streets():
     """Import automatique des rues depuis OSM cache"""
     try:
-        from osm import load_geometry_cache
+        from guignomap.osm import load_geometry_cache
         
         with get_session() as session:
             cache = load_geometry_cache()
