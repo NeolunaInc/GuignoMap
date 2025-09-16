@@ -32,7 +32,12 @@ def db_retry(max_retries=3, backoff_factor=1):
                     else:
                         print(f"Max retries reached for {func.__name__}")
                         break
-            raise last_exception
+            
+            # Si aucune exception capturée, lever une erreur générique
+            if last_exception is not None:
+                raise RuntimeError(f"Échec d'initialisation DB: {last_exception}") from last_exception
+            else:
+                raise RuntimeError(f"Échec d'initialisation DB pour {func.__name__}: raison inconnue")
         return wrapper
     return decorator
 
@@ -74,7 +79,8 @@ def test_connection():
         engine = get_engine()
         with engine.connect() as conn:
             result = conn.execute(text("SELECT 1 as test"))
-            return result.fetchone()[0] == 1
+            row = result.fetchone()
+            return row is not None and row[0] == 1
     except Exception as e:
         print(f"Erreur test connexion DB: {e}")
         return False
