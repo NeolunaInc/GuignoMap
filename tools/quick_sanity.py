@@ -32,7 +32,7 @@ def main():
         cursor = conn.cursor()
         
         # Generate timestamp for files
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         print("🔧 GuignoMap v4.1 - Quick Sanity Check with Assertions")
         print("=" * 60)
@@ -140,8 +140,8 @@ def main():
         
         # === WRITE CSV FILES (ALWAYS) ===
         
-        status_file = exports_dir / f"sanity_status_counts_{timestamp}.csv"
-        unassigned_file = exports_dir / f"sanity_unassigned_{timestamp}.csv"
+        status_file = exports_dir / f"status_counts_{timestamp}.csv"
+        unassigned_file = exports_dir / f"unassigned_{timestamp}.csv"
         
         try:
             # Status counts CSV
