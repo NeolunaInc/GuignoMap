@@ -1,0 +1,5 @@
+﻿pytest
+ftfy
+# Optionnels pour activer les tests Excel/PDF:
+# xlsxwriter
+# reportlab
