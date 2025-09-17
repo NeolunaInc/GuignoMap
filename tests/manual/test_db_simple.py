@@ -27,12 +27,16 @@ def test_db_simple():
             print(f"✅ Connexion réussie! Test query result: {test_value}")
         
         print("✅ Connexion base de données fonctionnelle!")
-        return True
+        assert True  # Connection successful
         
     except Exception as e:
         print(f"❌ Erreur de connexion: {e}")
-        return False
+        assert False, f"Database connection failed: {e}"
 
 if __name__ == "__main__":
-    success = test_db_simple()
+    try:
+        test_db_simple()
+        success = True
+    except AssertionError:
+        success = False
     sys.exit(0 if success else 1)

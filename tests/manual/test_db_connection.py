@@ -22,11 +22,11 @@ def test_connection_with_ip():
             print(f"Version PostgreSQL: {version}")
         
         conn.close()
-        return True
+        assert True  # Connection successful
         
     except Exception as e:
         print(f"❌ Erreur de connexion IPv6: {e}")
-        return False
+        assert False, f"IPv6 connection failed: {e}"
 
 def test_connection_with_hostname():
     """Test connection with hostname via custom DNS"""
@@ -59,21 +59,29 @@ def test_connection_with_hostname():
         
         conn.close()
         socket.getaddrinfo = original_getaddrinfo
-        return True
+        assert True  # Connection successful
         
     except Exception as e:
         print(f"❌ Erreur de connexion hostname: {e}")
         socket.getaddrinfo = original_getaddrinfo
-        return False
+        assert False, f"Hostname connection failed: {e}"
 
 if __name__ == "__main__":
     print("=== Test de connectivité Supabase PostgreSQL ===")
     
     print("\n1. Test avec adresse IPv6 directe:")
-    ipv6_success = test_connection_with_ip()
+    try:
+        test_connection_with_ip()
+        ipv6_success = True
+    except AssertionError:
+        ipv6_success = False
     
     print("\n2. Test avec hostname (DNS custom):")
-    hostname_success = test_connection_with_hostname()
+    try:
+        test_connection_with_hostname()
+        hostname_success = True
+    except AssertionError:
+        hostname_success = False
     
     if ipv6_success or hostname_success:
         print("\n✅ Au moins une méthode de connexion fonctionne!")
