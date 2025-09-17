@@ -1,6 +1,6 @@
 """
 Module OSM pour Guigno-Map
-G√®re l'import et le cache des donn√©es OpenStreetMap pour Mascouche
+Gère l'import et le cache des données OpenStreetMap pour Mascouche
 """
 
 import io
@@ -13,7 +13,7 @@ import overpy
 CACHE_FILE = Path(__file__).parent / "osm_cache.json"
 ADDR_CACHE_FILE = Path(__file__).parent / "osm_addresses.json"
 
-# Toutes les voies routi√®res nomm√©es de Mascouche
+# Toutes les voies routières nommées de Mascouche
 QUERY_STREETS_ALL = """
 [out:json][timeout:300];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
@@ -23,9 +23,9 @@ area["name"="Mascouche"]["boundary"="administrative"]->.a;
 (._;>;);
 out body;
 """
-# Note: R√©cup√®re TOUS les types de voies incluant petites rues, all√©es, chemins pi√©tonniers
+# Note: Récupère TOUS les types de voies incluant petites rues, allées, chemins piétonniers
 
-# Requ√™te pour les adresses
+# Requête pour les adresses
 QUERY_ADDR_NODES = """
 [out:json][timeout:180];
 area["name"="Mascouche"]["boundary"="administrative"]->.a;
@@ -38,8 +38,8 @@ out tags center;
 
 def generate_streets_csv(city="Mascouche"):
     """
-    G√©n√®re un CSV avec les noms des rues principales de la ville
-    Filtre automatiquement les rues priv√©es et les petites ruelles
+    Génère un CSV avec les noms des rues principales de la ville
+    Filtre automatiquement les rues privées et les petites ruelles
     """
     try:
         api = overpy.Overpass()
@@ -51,19 +51,19 @@ def generate_streets_csv(city="Mascouche"):
             if not name:
                 continue
             g = getattr(way, "geometry", None)
-            # garder si on a une vraie g√©om√©trie (>= 2 points)
+            # garder si on a une vraie géométrie (>= 2 points)
             if isinstance(g, list) and len(g) >= 2:
                 streets.append(name)
 
         streets = sorted(set(streets))
         
-        # Assigner automatiquement des secteurs bas√©s sur les patterns de noms
+        # Assigner automatiquement des secteurs basés sur les patterns de noms
         sectors = []
         for street in streets:
-            if any(word in street.lower() for word in ["mont√©e", "chemin", "boulevard"]):
+            if any(word in street.lower() for word in ["montée", "chemin", "boulevard"]):
                 sectors.append("Principal")
             elif any(word in street.lower() for word in ["avenue", "place", "croissant"]):
-                sectors.append("R√©sidentiel")
+                sectors.append("Résidentiel")
             elif "rue" in street.lower():
                 sectors.append("Centre")
             else:
@@ -77,26 +77,26 @@ def generate_streets_csv(city="Mascouche"):
         
         buf = io.StringIO()
         df.to_csv(buf, index=False)
-        print(f"‚úÖ CSV g√©n√©r√© avec {len(streets)} rues principales")
+        print(f"✅ CSV généré avec {len(streets)} rues principales")
         return buf.getvalue().encode("utf-8")
         
     except Exception as e:
-        print(f"‚ùå Erreur OSM: {e}")
-        # Retourner des donn√©es de test en cas d'erreur
+        print(f"'ùå Erreur OSM: {e}")
+        # Retourner des données de test en cas d'erreur
         return create_fallback_csv()
 
 def build_geometry_cache():
     """
-    Construit le cache des g√©om√©tries pour TOUTES les voies de Mascouche
-    Force la r√©solution compl√®te des nodes
+    Construit le cache des géométries pour TOUTES les voies de Mascouche
+    Force la résolution complète des nodes
     """
     try:
-        print("üîÑ R√©cup√©ration compl√®te de toutes les voies de Mascouche...")
+        print("🔄 Récupération complète de toutes les voies de Mascouche...")
         
-        # IMPORTANT: Configurer l'API pour r√©soudre automatiquement les nodes manquants
+        # IMPORTANT: Configurer l'API pour résoudre automatiquement les nodes manquants
         api = overpy.Overpass()
         
-        # Requ√™te am√©lior√©e qui force le retour des coordonn√©es
+        # Requête améliorée qui force le retour des coordonnées
         query = """
         [out:json][timeout:300];
         area["name"="Mascouche"]["boundary"="administrative"]->.a;
@@ -108,27 +108,27 @@ def build_geometry_cache():
         out body;
         """
         
-        print("üì° Connexion √† OpenStreetMap (cela peut prendre 30-60 secondes)...")
+        print("📡 Connexion à OpenStreetMap (cela peut prendre 30-60 secondes)...")
         result = api.query(query)
         
         geo = {}
         stats = {"total": 0, "avec_geo": 0, "sans_geo": 0}
         
-        # Construire un dictionnaire des nodes pour acc√®s rapide
+        # Construire un dictionnaire des nodes pour accès rapide
         nodes_dict = {}
         if hasattr(result, 'nodes'):
             for node in result.nodes:
                 if hasattr(node, 'id') and hasattr(node, 'lat') and hasattr(node, 'lon'):
                     nodes_dict[node.id] = (float(node.lat), float(node.lon))
         
-        print(f"üìç {len(nodes_dict)} nodes r√©cup√©r√©s")
+        print(f"📍 {len(nodes_dict)} nodes récupérés")
         
         ways = result.ways if hasattr(result, 'ways') else []
-        print(f"üìä {len(ways)} voies trouv√©es dans OpenStreetMap")
+        print(f"📊 {len(ways)} voies trouvées dans OpenStreetMap")
         
         for way in ways:
             try:
-                # R√©cup√©rer le nom ou ref
+                # Récupérer le nom ou ref
                 if not hasattr(way, 'tags'):
                     continue
                     
@@ -143,9 +143,9 @@ def build_geometry_cache():
                 stats["total"] += 1
                 coords = []
                 
-                # R√©cup√©rer les IDs des nodes
+                # Récupérer les IDs des nodes
                 if hasattr(way, 'nd_ids'):
-                    # Si on a les IDs des nodes, les r√©soudre
+                    # Si on a les IDs des nodes, les résoudre
                     for node_id in way.nd_ids:
                         if node_id in nodes_dict:
                             lat, lon = nodes_dict[node_id]
@@ -170,12 +170,12 @@ def build_geometry_cache():
             except Exception as e:
                 continue
         
-        print(f"‚úÖ R√©sultat: {stats['avec_geo']} voies avec g√©om√©trie sur {stats['total']} trouv√©es")
+        print(f"✅ Résultat: {stats['avec_geo']} voies avec géométrie sur {stats['total']} trouvées")
         
-        # Si on a r√©cup√©r√© des donn√©es, sauvegarder
+        # Si on a récupéré des données, sauvegarder
         if geo:
             CACHE_FILE.write_text(json.dumps(geo, indent=2), encoding="utf-8")
-            print(f"üíæ Cache cr√©√©: {len(geo)} voies sauvegard√©es dans osm_cache.json")
+            print(f"💾 Cache créé: {len(geo)} voies sauvegardées dans osm_cache.json")
             
             # Importer aussi automatiquement dans la DB
             try:
@@ -187,7 +187,7 @@ def build_geometry_cache():
                 db_path = Path(__file__).parent / "guigno_map.db"
                 conn = db.get_conn(db_path)
                 
-                # Ajouter les rues manquantes √† la DB
+                # Ajouter les rues manquantes à la DB
                 for street_name in geo.keys():
                     cursor = conn.execute("SELECT COUNT(*) FROM streets WHERE name = ?", (street_name,))
                     if cursor.fetchone()[0] == 0:
@@ -196,18 +196,18 @@ def build_geometry_cache():
                             (street_name,)
                         )
                 conn.commit()
-                print(f"‚úÖ Rues import√©es dans la base de donn√©es")
+                print(f"✅ Rues importées dans la base de données")
             except Exception as e:
-                print(f"‚ö†Ô∏è Import DB: {e}")
+                print(f"⚠️ Import DB: {e}")
             
             return geo
         
-        # Si aucune donn√©e, utiliser un fallback √©tendu
-        print("‚ö†Ô∏è Aucune donn√©e OSM, utilisation du fallback local")
+        # Si aucune donnée, utiliser un fallback étendu
+        print("⚠️ Aucune donnée OSM, utilisation du fallback local")
         return get_extended_fallback()
             
     except Exception as e:
-        print(f"‚ùå Erreur: {e}")
+        print(f"'ùå Erreur: {e}")
         return get_extended_fallback()
 
 def get_fallback_geometry():
@@ -215,7 +215,7 @@ def get_fallback_geometry():
     return {
         "Autoroute 25": [[[45.70, -73.65], [45.78, -73.58]]],
         "Autoroute 640": [[[45.76, -73.70], [45.76, -73.55]]],
-        "Mont√©e Masson": [[[45.730, -73.620], [45.765, -73.580]]],
+        "Montée Masson": [[[45.730, -73.620], [45.765, -73.580]]],
         "Chemin Sainte-Marie": [[[45.735, -73.615], [45.755, -73.595]]],
         "Boulevard de Mascouche": [[[45.740, -73.610], [45.752, -73.590]]],
         "Chemin des Anglais": [[[45.74, -73.65], [45.75, -73.64]]],
@@ -227,22 +227,22 @@ def get_fallback_geometry():
         "Avenue de la Gare": [[[45.745, -73.601], [45.748, -73.598]]],
         "Rue Dupras": [[[45.745, -73.602], [45.748, -73.599]]],
         "Rue Saint-Pierre": [[[45.746, -73.604], [45.749, -73.600]]],
-        "Rue de l'√âglise": [[[45.747, -73.601], [45.750, -73.599]]],
-        "Avenue des √ârables": [[[45.755, -73.605], [45.758, -73.600]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.750, -73.599]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.758, -73.600]]],
         "Rue des Pins": [[[45.756, -73.603], [45.759, -73.598]]],
         "Rue Brien": [[[45.738, -73.605], [45.741, -73.600]]],
-        "Rue Boh√©mier": [[[45.742, -73.607], [45.745, -73.604]]]
+        "Rue Bohémier": [[[45.742, -73.607], [45.745, -73.604]]]
     }
 
 def get_extended_fallback():
-    """Fallback √©tendu avec les principales voies de Mascouche"""
+    """Fallback étendu avec les principales voies de Mascouche"""
     fallback = {
         # Autoroutes
         "Autoroute 25": [[[45.70, -73.65], [45.72, -73.63], [45.74, -73.61], [45.76, -73.59], [45.78, -73.58]]],
         "Autoroute 640": [[[45.76, -73.70], [45.76, -73.65], [45.76, -73.60], [45.76, -73.55]]],
         
         # Chemins principaux
-        "Mont√©e Masson": [[[45.730, -73.620], [45.740, -73.610], [45.750, -73.600], [45.765, -73.580]]],
+        "Montée Masson": [[[45.730, -73.620], [45.740, -73.610], [45.750, -73.600], [45.765, -73.580]]],
         "Chemin Sainte-Marie": [[[45.735, -73.615], [45.745, -73.605], [45.755, -73.595]]],
         "Boulevard de Mascouche": [[[45.740, -73.610], [45.747, -73.600], [45.752, -73.590]]],
         "Chemin des Anglais": [[[45.74, -73.65], [45.745, -73.645], [45.75, -73.64]]],
@@ -255,64 +255,64 @@ def get_extended_fallback():
         # Avenues
         "Avenue de la Gare": [[[45.745, -73.601], [45.747, -73.599], [45.748, -73.598]]],
         "Avenue Bourque": [[[45.742, -73.603], [45.744, -73.601], [45.746, -73.599]]],
-        "Avenue Cr√©peau": [[[45.743, -73.602], [45.745, -73.600], [45.747, -73.598]]],
+        "Avenue Crépeau": [[[45.743, -73.602], [45.745, -73.600], [45.747, -73.598]]],
         "Avenue Garden": [[[45.751, -73.606], [45.753, -73.604], [45.755, -73.602]]],
         "Avenue de l'Esplanade": [[[45.748, -73.605], [45.750, -73.603], [45.752, -73.601]]],
         
         # Rues du centre
         "Rue Dupras": [[[45.745, -73.602], [45.747, -73.600], [45.748, -73.599]]],
         "Rue Saint-Pierre": [[[45.746, -73.604], [45.748, -73.602], [45.749, -73.600]]],
-        "Rue de l'√âglise": [[[45.747, -73.601], [45.749, -73.599], [45.750, -73.598]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.749, -73.599], [45.750, -73.598]]],
         "Rue Brien": [[[45.738, -73.605], [45.740, -73.603], [45.741, -73.600]]],
-        "Rue Boh√©mier": [[[45.742, -73.607], [45.744, -73.605], [45.745, -73.604]]],
+        "Rue Bohémier": [[[45.742, -73.607], [45.744, -73.605], [45.745, -73.604]]],
         
-        # Rues r√©sidentielles
+        # Rues résidentielles
         "Rue des Pins": [[[45.756, -73.603], [45.758, -73.601], [45.759, -73.598]]],
-        "Avenue des √ârables": [[[45.755, -73.605], [45.757, -73.603], [45.758, -73.600]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.757, -73.603], [45.758, -73.600]]],
         "Rue Gravel": [[[45.738, -73.605], [45.740, -73.603], [45.741, -73.600]]]
     }
     
     # Sauvegarder le fallback
     CACHE_FILE.write_text(json.dumps(fallback, indent=2), encoding="utf-8")
-    print(f"üíæ Fallback sauvegard√© avec {len(fallback)} voies principales")
+    print(f"💾 Fallback sauvegardé avec {len(fallback)} voies principales")
     
     return fallback
 
 def load_geometry_cache():
     """
-    Charge le cache de g√©om√©tries depuis le fichier JSON
-    Cr√©e un cache de base si le fichier n'existe pas
+    Charge le cache de géométries depuis le fichier JSON
+    Crée un cache de base si le fichier n'existe pas
     """
     if not CACHE_FILE.exists():
-        print("‚ö†Ô∏è Cache non trouv√©, construction en cours...")
-        return build_geometry_cache()  # build_geometry_cache() g√®re d√©j√† le fallback en m√©moire
+        print("⚠️ Cache non trouvé, construction en cours...")
+        return build_geometry_cache()  # build_geometry_cache() gère déjà le fallback en mémoire
     
     try:
         with open(CACHE_FILE, 'r', encoding='utf-8') as f:
             cache = json.load(f)
-            print(f"‚úÖ Cache charg√©: {len(cache)} rues")
+            print(f"✅ Cache chargé: {len(cache)} rues")
             return cache
     except Exception as e:
-        print(f"‚ùå Erreur chargement cache: {e}")
-        # Ne pas √©crire de fallback sur disque ! Utiliser build_geometry_cache() qui g√®re le fallback en m√©moire
+        print(f"'ùå Erreur chargement cache: {e}")
+        # Ne pas écrire de fallback sur disque ! Utiliser build_geometry_cache() qui gère le fallback en mémoire
         return build_geometry_cache()
 
 def create_fallback_csv():
     """
-    Cr√©e un CSV de fallback avec quelques rues principales de Mascouche
-    Utilis√© si l'API OSM est indisponible
+    Crée un CSV de fallback avec quelques rues principales de Mascouche
+    Utilisé si l'API OSM est indisponible
     """
     fallback_streets = [
-        ("Mont√©e Masson", "Principal"),
+        ("Montée Masson", "Principal"),
         ("Chemin Sainte-Marie", "Principal"),
         ("Boulevard de Mascouche", "Principal"),
         ("Chemin des Anglais", "Principal"),
         ("Rue Dupras", "Centre"),
         ("Rue Saint-Pierre", "Centre"),
-        ("Rue de l'√âglise", "Centre"),
-        ("Avenue des √ârables", "R√©sidentiel"),
-        ("Rue des Pins", "R√©sidentiel"),
-        ("Avenue Garden", "R√©sidentiel"),
+        ("Rue de l'Église", "Centre"),
+        ("Avenue des Érables", "Résidentiel"),
+        ("Rue des Pins", "Résidentiel"),
+        ("Avenue Garden", "Résidentiel"),
     ]
     
     df = pd.DataFrame(fallback_streets, columns=["name", "sector"])
@@ -320,42 +320,42 @@ def create_fallback_csv():
     
     buf = io.StringIO()
     df.to_csv(buf, index=False)
-    print("‚ö†Ô∏è Mode fallback: 10 rues de test")
+    print("⚠️ Mode fallback: 10 rues de test")
     return buf.getvalue().encode("utf-8")
 
 def create_fallback_cache():
     """
-    Cr√©e un cache minimal pour tests
+    Crée un cache minimal pour tests
     """
     fallback_geo = {
-        "Mont√©e Masson": [[[45.730, -73.620], [45.750, -73.600], [45.765, -73.580]]],
+        "Montée Masson": [[[45.730, -73.620], [45.750, -73.600], [45.765, -73.580]]],
         "Chemin Sainte-Marie": [[[45.735, -73.615], [45.748, -73.602], [45.755, -73.595]]],
         "Boulevard de Mascouche": [[[45.740, -73.610], [45.747, -73.600], [45.752, -73.590]]],
         "Rue Dupras": [[[45.745, -73.602], [45.748, -73.599]]],
         "Rue Saint-Pierre": [[[45.746, -73.604], [45.749, -73.600]]],
-        "Rue de l'√âglise": [[[45.747, -73.601], [45.750, -73.599]]],
-        "Avenue des √ârables": [[[45.755, -73.605], [45.758, -73.600]]],
+        "Rue de l'Église": [[[45.747, -73.601], [45.750, -73.599]]],
+        "Avenue des Érables": [[[45.755, -73.605], [45.758, -73.600]]],
         "Rue des Pins": [[[45.756, -73.603], [45.759, -73.598]]],
         "Avenue Garden": [[[45.753, -73.606], [45.756, -73.601]]],
         "Rue Gravel": [[[45.738, -73.605], [45.741, -73.600]]]
     }
     
     CACHE_FILE.write_text(json.dumps(fallback_geo, indent=2), encoding="utf-8")
-    print("‚ö†Ô∏è Cache fallback cr√©√© avec 10 rues")
+    print("⚠️ Cache fallback créé avec 10 rues")
 
 # Fonction utilitaire pour tests
 def test_osm_connection():
     """
-    Teste la connexion √† l'API Overpass
+    Teste la connexion à l'API Overpass
     """
     try:
         api = overpy.Overpass()
-        # Requ√™te minimale pour tester
+        # Requête minimale pour tester
         result = api.query('[out:json];node(45.7475,-73.6005,45.7476,-73.6004);out;')
-        print("‚úÖ Connexion OSM OK")
+        print("'úÖ Connexion OSM OK")
         return True
     except:
-        print("‚ùå Connexion OSM √©chou√©e")
+        print("❌ Connexion OSM échouée")
         return False
 
 # ========================================
@@ -365,7 +365,7 @@ def test_osm_connection():
 def build_addresses_cache():
     """
     Construit le cache des adresses OSM pour Mascouche
-    R√©cup√®re addr:housenumber + addr:street depuis OSM
+    Récupère addr:housenumber + addr:street depuis OSM
     """
     try:
         api = overpy.Overpass()
@@ -395,7 +395,7 @@ def build_addresses_cache():
             if not num or not street:
                 continue
             
-            # R√©cup√©rer le centre du way
+            # Récupérer le centre du way
             lat = getattr(way, "center_lat", None)
             lon = getattr(way, "center_lon", None)
             
@@ -426,10 +426,10 @@ def build_addresses_cache():
                     "type": "way"
                 })
         
-        # Trier les adresses par num√©ro pour chaque rue
+        # Trier les adresses par numéro pour chaque rue
         for street_name in addresses:
             try:
-                # Tri num√©rique intelligent
+                # Tri numérique intelligent
                 addresses[street_name].sort(
                     key=lambda x: (
                         int(''.join(filter(str.isdigit, x["number"]))) 
@@ -438,18 +438,18 @@ def build_addresses_cache():
                     )
                 )
             except:
-                # Si le tri √©choue, garder l'ordre original
+                # Si le tri échoue, garder l'ordre original
                 pass
         
         # Sauvegarder le cache
         ADDR_CACHE_FILE.write_text(json.dumps(addresses, indent=2), encoding="utf-8")
         total_addresses = sum(len(addrs) for addrs in addresses.values())
-        print(f"‚úÖ Cache adresses cr√©√©: {len(addresses)} rues, {total_addresses} adresses")
+        print(f"✅ Cache adresses créé: {len(addresses)} rues, {total_addresses} adresses")
         return addresses
         
     except Exception as e:
-        print(f"‚ùå Erreur construction cache adresses: {e}")
-        # Cr√©er un cache vide en cas d'erreur
+        print(f"'ùå Erreur construction cache adresses: {e}")
+        # Créer un cache vide en cas d'erreur
         ADDR_CACHE_FILE.write_text(json.dumps({}), encoding="utf-8")
         return {}
 
@@ -458,15 +458,15 @@ def load_addresses_cache():
     Charge le cache d'adresses depuis le fichier JSON
     """
     if not ADDR_CACHE_FILE.exists():
-        print("‚ö†Ô∏è Cache adresses non trouv√©")
+        print("⚠️ Cache adresses non trouvé")
         return {}
     
     try:
         with open(ADDR_CACHE_FILE, 'r', encoding='utf-8') as f:
             cache = json.load(f)
             total_addresses = sum(len(addrs) for addrs in cache.values())
-            print(f"‚úÖ Cache adresses charg√©: {len(cache)} rues, {total_addresses} adresses")
+            print(f"✅ Cache adresses chargé: {len(cache)} rues, {total_addresses} adresses")
             return cache
     except Exception as e:
-        print(f"‚ùå Erreur chargement cache adresses: {e}")
+        print(f"'ùå Erreur chargement cache adresses: {e}")
         return {}

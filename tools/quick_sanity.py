@@ -21,8 +21,8 @@ def main():
     
     # Check if database exists
     if not db_path.exists():
-        print(f"‚ùå Database not found: {db_path}")
-        print("‚ÑπÔ∏è  Run the application first to create the database.")
+        print(f"'ùå Database not found: {db_path}")
+        print("ℹ️  Run the application first to create the database.")
         print("SANITY: FAIL - Database missing")
         return 1
     
@@ -42,7 +42,7 @@ def main():
         tables = [row[0] for row in cursor.fetchall()]
         
         if 'streets' not in tables:
-            print("‚ùå Table 'streets' not found")
+            print("'ùå Table 'streets' not found")
             print("SANITY: FAIL - Missing streets table")
             return 1
         
@@ -59,7 +59,7 @@ def main():
         # 3. Status distribution with counts
         cursor.execute("""
             SELECT 
-                COALESCE(status, 'Non d√©fini') as status,
+                COALESCE(status, 'Non défini') as status,
                 COUNT(*) as count
             FROM streets 
             GROUP BY status 
@@ -83,8 +83,8 @@ def main():
             SELECT 
                 COALESCE(sector, 'Aucun') as sector,
                 name,
-                COALESCE(team, 'Non assign√©e') as team,
-                COALESCE(status, 'Non d√©fini') as status
+                COALESCE(team, 'Non assignée') as team,
+                COALESCE(status, 'Non défini') as status
             FROM streets 
             ORDER BY name 
             LIMIT 10
@@ -124,18 +124,18 @@ def main():
         # === DISPLAY RESULTS ===
         
         print(f"üìä Total des rues: {total_streets}")
-        print(f"üìä Rues non assign√©es: {unassigned_count}")
+        print(f"📊 Rues non assignées: {unassigned_count}")
         print()
         
-        print("üìà R√©partition par statut:")
+        print("📈 Répartition par statut:")
         for status, count in status_counts:
-            print(f"  ‚Ä¢ {status}: {count}")
+            print(f"  • {status}: {count}")
         print(f"  üìã Somme des statuts: {sum_status_counts}")
         print()
         
-        print("üìç Top 10 rues (alphab√©tique):")
+        print("📍 Top 10 rues (alphabétique):")
         for sector, name, team, status in top_streets[:10]:
-            print(f"  ‚Ä¢ {sector} | {name} | {team} | {status}")
+            print(f"  • {sector} | {name} | {team} | {status}")
         print()
         
         # === WRITE CSV FILES (ALWAYS) ===
@@ -156,13 +156,13 @@ def main():
                 writer.writerow(['secteur', 'rue'])
                 writer.writerows(unassigned_streets)
             
-            print("üìÅ Fichiers CSV cr√©√©s:")
-            print(f"  ‚Ä¢ {status_file}")
-            print(f"  ‚Ä¢ {unassigned_file}")
+            print("📁 Fichiers CSV créés:")
+            print(f"  • {status_file}")
+            print(f"  • {unassigned_file}")
             print()
             
         except Exception as e:
-            print(f"‚ö†Ô∏è  Erreur lors de l'√©criture des CSV: {e}")
+            print(f"⚠️  Erreur lors de l'écriture des CSV: {e}")
             print()
         
         # === FINAL SANITY CHECK RESULT ===
@@ -170,22 +170,22 @@ def main():
         conn.close()
         
         if sanity_pass:
-            print("‚úÖ Tous les tests de coh√©rence sont pass√©s")
+            print("✅ Tous les tests de cohérence sont passés")
             print("SANITY: PASS")
             return 0
         else:
-            print("‚ùå √âchec des tests de coh√©rence:")
+            print("❌ Échec des tests de cohérence:")
             for reason in fail_reasons:
-                print(f"  ‚Ä¢ {reason}")
+                print(f"  • {reason}")
             print("SANITY: FAIL - Data integrity issues")
             return 1
             
     except sqlite3.Error as e:
-        print(f"‚ùå Erreur base de donn√©es: {e}")
+        print(f"❌ Erreur base de données: {e}")
         print("SANITY: FAIL - Database error")
         return 1
     except Exception as e:
-        print(f"‚ùå Erreur inattendue: {e}")
+        print(f"'ùå Erreur inattendue: {e}")
         print("SANITY: FAIL - Unexpected error")
         return 1
 

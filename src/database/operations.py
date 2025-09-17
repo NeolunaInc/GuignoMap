@@ -28,7 +28,7 @@ from guignomap.validators import validate_and_clean_input, InputValidator
 # CONFIGURATION & CONSTANTES
 # =============================================================================
 
-# Sch√©ma de migration - utilis√© pour v√©rifier les tables existantes
+# Schéma de migration - utilisé pour vérifier les tables existantes
 REQUIRED_TABLES = ['streets', 'teams', 'notes', 'activity_log', 'addresses']
 
 
@@ -38,10 +38,10 @@ REQUIRED_TABLES = ['streets', 'teams', 'notes', 'activity_log', 'addresses']
 
 @db_retry(max_retries=3)
 def init_db():
-    """Initialise la base de donn√©es avec les donn√©es initiales"""
+    """Initialise la base de données avec les données initiales"""
     try:
         with get_session() as session:
-            # V√©rifier si admin existe
+            # Vérifier si admin existe
             admin_exists = session.execute(
                 text("SELECT COUNT(*) FROM teams WHERE id = 'ADMIN'")
             ).scalar()
@@ -56,11 +56,11 @@ def init_db():
             ).scalar()
             
             if streets_count == 0:
-                print("üîÑ Aucune rue trouv√©e. Import automatique depuis OpenStreetMap...")
+                print("🔄 Aucune rue trouvée. Import automatique depuis OpenStreetMap...")
                 auto_import_streets()
                 
     except Exception as e:
-        print(f"‚ùå Erreur init_db: {e}")
+        print(f"'ùå Erreur init_db: {e}")
         raise
 
 
@@ -72,13 +72,13 @@ def auto_import_streets():
         with get_session() as session:
             cache = load_geometry_cache()
             if not cache:
-                print("‚ö†Ô∏è Aucun cache OSM trouv√©. Utilisez 'Construire carte' dans l'admin.")
+                print("⚠️ Aucun cache OSM trouvé. Utilisez 'Construire carte' dans l'admin.")
                 return
             
             imported = 0
             for street_name in cache.keys():
                 if street_name and street_name.strip():
-                    # V√©rifier si existe d√©j√†
+                    # Vérifier si existe déjà
                     exists = session.execute(
                         text("SELECT COUNT(*) FROM streets WHERE name = :name"),
                         {"name": street_name.strip()}
@@ -92,10 +92,10 @@ def auto_import_streets():
                         imported += 1
             
             session.commit()
-            print(f"‚úÖ {imported} rues import√©es depuis OSM")
+            print(f"✅ {imported} rues importées depuis OSM")
             
     except Exception as e:
-        print(f"‚ùå Erreur auto_import_streets: {e}")
+        print(f"'ùå Erreur auto_import_streets: {e}")
 
 
 # =============================================================================
@@ -109,7 +109,7 @@ def _sha256(txt: str) -> str:
 
 
 def _pbkdf2_verify(stored: str, password: str) -> bool:
-    """V√©rifie un hash PBKDF2 au format Django/Python"""
+    """Vérifie un hash PBKDF2 au format Django/Python"""
     try:
         if not stored.startswith('pbkdf2_sha256$'):
             return False
@@ -135,10 +135,10 @@ def _pbkdf2_verify(stored: str, password: str) -> bool:
 
 @db_retry(max_retries=2)
 def create_team(team_id: str, name: str, password: str) -> bool:
-    """Cr√©e une nouvelle √©quipe"""
+    """Crée une nouvelle équipe"""
     try:
         with get_session() as session:
-            # V√©rifier si l'√©quipe existe d√©j√†
+            # Vérifier si l'équipe existe déjà
             exists = session.execute(
                 text("SELECT COUNT(*) FROM teams WHERE id = :id"),
                 {"id": team_id}
@@ -158,21 +158,21 @@ def create_team(team_id: str, name: str, password: str) -> bool:
             })
             session.commit()
             
-            # Log de l'activit√©
-            log_activity(session, team_id, 'create_team', f"√âquipe '{name}' cr√©√©e")
+            # Log de l'activité
+            log_activity(session, team_id, 'create_team', f"Équipe '{name}' créée")
             
             return True
             
     except Exception as e:
-        print(f"‚ùå Erreur create_team: {e}")
+        print(f"'ùå Erreur create_team: {e}")
         return False
 
 
 @db_retry(max_retries=2)
 def verify_team(team_id: str, password: str) -> bool:
-    """V√©rifie les identifiants d'une √©quipe (multi-format compatible)"""
+    """Vérifie les identifiants d'une équipe (multi-format compatible)"""
     try:
-        # Normalisation des entr√©es
+        # Normalisation des entrées
         team_id = (team_id or "").strip()
         password = (password or "").strip()
         
@@ -180,11 +180,11 @@ def verify_team(team_id: str, password: str) -> bool:
             return False
         
         with get_session() as session:
-            # D√©tecter les colonnes disponibles
+            # Détecter les colonnes disponibles
             cols_info = session.execute(text("PRAGMA table_info(teams)")).fetchall()
             available_cols = {row[1] for row in cols_info}
             
-            # Construire la requ√™te selon les colonnes disponibles
+            # Construire la requête selon les colonnes disponibles
             select_parts = ["id", "name"]
             if "password" in available_cols:
                 select_parts.append("COALESCE(password, '') as password")
@@ -209,7 +209,7 @@ def verify_team(team_id: str, password: str) -> bool:
             
             _, _, stored_plain, stored_hash, stored_salt = result
             
-            # Strat√©gie de v√©rification (ordre de priorit√©)
+            # Stratégie de vérification (ordre de priorité)
             
             # 1) Utiliser verify_password avec Argon2/bcrypt support
             if stored_hash:
@@ -315,7 +315,7 @@ def verify_team(team_id: str, password: str) -> bool:
 
 
 def get_all_teams() -> List[Dict[str, Any]]:
-    """R√©cup√®re toutes les √©quipes actives"""
+    """Récupère toutes les équipes actives"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -329,12 +329,12 @@ def get_all_teams() -> List[Dict[str, Any]]:
             return [dict(row._mapping) for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur get_all_teams: {e}")
+        print(f"'ùå Erreur get_all_teams: {e}")
         return []
 
 
 def teams() -> List[str]:
-    """R√©cup√®re la liste des IDs d'√©quipes actives"""
+    """Récupère la liste des IDs d'équipes actives"""
     try:
         with get_session() as session:
             result = session.execute(
@@ -343,13 +343,13 @@ def teams() -> List[str]:
             return [row[0] for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur teams: {e}")
+        print(f"'ùå Erreur teams: {e}")
         return []
 
 
 @auto_backup_before_critical
 def delete_team(team_id: str) -> bool:
-    """Supprime une √©quipe (soft delete)"""
+    """Supprime une équipe (soft delete)"""
     try:
         with get_session() as session:
             session.execute(
@@ -360,7 +360,7 @@ def delete_team(team_id: str) -> bool:
             return True
             
     except Exception as e:
-        print(f"‚ùå Erreur delete_team: {e}")
+        print(f"'ùå Erreur delete_team: {e}")
         return False
 
 
@@ -369,7 +369,7 @@ def delete_team(team_id: str) -> bool:
 # =============================================================================
 
 def list_streets(team: Optional[str] = None) -> pd.DataFrame:
-    """Liste les rues avec filtrage optionnel par √©quipe"""
+    """Liste les rues avec filtrage optionnel par équipe"""
     try:
         with get_session() as session:
             if team:
@@ -393,12 +393,12 @@ def list_streets(team: Optional[str] = None) -> pd.DataFrame:
             return pd.DataFrame(rows) if rows else pd.DataFrame(columns=['id', 'name', 'sector', 'team', 'status'])
             
     except Exception as e:
-        print(f"‚ùå Erreur list_streets: {e}")
+        print(f"'ùå Erreur list_streets: {e}")
         return pd.DataFrame(columns=['id', 'name', 'sector', 'team', 'status'])
 
 
 def get_unassigned_streets() -> List[str]:
-    """R√©cup√®re les rues non assign√©es √† une √©quipe"""
+    """Récupère les rues non assignées à une équipe"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -409,18 +409,18 @@ def get_unassigned_streets() -> List[str]:
             return [row[0] for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur get_unassigned_streets: {e}")
+        print(f"'ùå Erreur get_unassigned_streets: {e}")
         return []
 
 
 @auto_backup_before_critical
 def assign_streets_to_team(street_names: List[str], team_id: str) -> int:
-    """Assigne plusieurs rues √† une √©quipe"""
+    """Assigne plusieurs rues à une équipe"""
     try:
         with get_session() as session:
             count = 0
             for street_name in street_names:
-                # V√©rifier si la rue existe et n'est pas assign√©e
+                # Vérifier si la rue existe et n'est pas assignée
                 existing = session.execute(text("""
                     SELECT COUNT(*) FROM streets 
                     WHERE name = :name AND (team IS NULL OR team = '')
@@ -436,21 +436,21 @@ def assign_streets_to_team(street_names: List[str], team_id: str) -> int:
             
             session.commit()
             
-            # Log de l'activit√©
+            # Log de l'activité
             if count > 0:
                 log_activity(session, team_id, 'assign_streets', 
-                           f"{count} rues assign√©es √† l'√©quipe")
+                           f"{count} rues assignées à l'équipe")
             
             return count
             
     except Exception as e:
-        print(f"‚ùå Erreur assign_streets_to_team: {e}")
+        print(f"'ùå Erreur assign_streets_to_team: {e}")
         return 0
 
 
 @auto_backup_before_critical
 def set_status(name: str, status: str) -> bool:
-    """Met √† jour le statut d'une rue"""
+    """Met à jour le statut d'une rue"""
     try:
         # Validation du statut
         valid_statuses = ['a_faire', 'en_cours', 'terminee']
@@ -458,7 +458,7 @@ def set_status(name: str, status: str) -> bool:
             return False
         
         with get_session() as session:
-            # V√©rifier si la rue existe
+            # Vérifier si la rue existe
             exists = session.execute(
                 text("SELECT COUNT(*) FROM streets WHERE name = :name"),
                 {"name": name}
@@ -473,7 +473,7 @@ def set_status(name: str, status: str) -> bool:
                 
                 session.commit()
                 
-                # Log de l'activit√©
+                # Log de l'activité
                 team = session.execute(
                     text("SELECT team FROM streets WHERE name = :name"),
                     {"name": name}
@@ -487,7 +487,7 @@ def set_status(name: str, status: str) -> bool:
             return False
             
     except Exception as e:
-        print(f"‚ùå Erreur set_status: {e}")
+        print(f"'ùå Erreur set_status: {e}")
         return False
 
 
@@ -497,7 +497,7 @@ def set_status(name: str, status: str) -> bool:
 
 @auto_backup_before_critical
 def add_note_for_address(street_name: str, team_id: str, address_number: str, comment: str) -> bool:
-    """Ajoute une note pour une adresse sp√©cifique"""
+    """Ajoute une note pour une adresse spécifique"""
     try:
         # Validation et nettoyage
         _, comment = validate_and_clean_input("comment", comment)
@@ -515,19 +515,19 @@ def add_note_for_address(street_name: str, team_id: str, address_number: str, co
             })
             session.commit()
             
-            # Log de l'activit√©
+            # Log de l'activité
             log_activity(session, team_id, 'add_note', 
-                       f"Note ajout√©e: {street_name} #{address_number}")
+                       f"Note ajoutée: {street_name} #{address_number}")
             
             return True
             
     except Exception as e:
-        print(f"‚ùå Erreur add_note_for_address: {e}")
+        print(f"'ùå Erreur add_note_for_address: {e}")
         return False
 
 
 def get_street_addresses_with_notes(street_name: str) -> List[Dict[str, Any]]:
-    """R√©cup√®re les adresses avec notes pour une rue"""
+    """Récupère les adresses avec notes pour une rue"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -540,12 +540,12 @@ def get_street_addresses_with_notes(street_name: str) -> List[Dict[str, Any]]:
             return [dict(row._mapping) for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur get_street_addresses_with_notes: {e}")
+        print(f"'ùå Erreur get_street_addresses_with_notes: {e}")
         return []
 
 
 def get_team_notes(team_id: str) -> List[Dict[str, Any]]:
-    """R√©cup√®re toutes les notes d'une √©quipe"""
+    """Récupère toutes les notes d'une équipe"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -558,7 +558,7 @@ def get_team_notes(team_id: str) -> List[Dict[str, Any]]:
             return [dict(row._mapping) for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur get_team_notes: {e}")
+        print(f"'ùå Erreur get_team_notes: {e}")
         return []
 
 
@@ -567,16 +567,16 @@ def get_team_notes(team_id: str) -> List[Dict[str, Any]]:
 # =============================================================================
 
 def extended_stats() -> Dict[str, Any]:
-    """Statistiques √©tendues de l'application"""
+    """Statistiques étendues de l'application"""
     try:
         from sqlalchemy import text
         with get_session() as session:
             q = text("""
                 SELECT
                   COUNT(*) AS total,
-                  SUM(CASE WHEN lower(status) IN ('done','terminee','termin√©e','complete','completed') THEN 1 ELSE 0 END) AS done,
+                  SUM(CASE WHEN lower(status) IN ('done','terminee','terminée','complete','completed') THEN 1 ELSE 0 END) AS done,
                   SUM(CASE WHEN lower(status) IN ('en_cours','in_progress') THEN 1 ELSE 0 END) AS in_progress,
-                  SUM(CASE WHEN lower(status) IN ('a_faire','√†_faire','todo','to_do') THEN 1 ELSE 0 END) AS todo
+                  SUM(CASE WHEN lower(status) IN ('a_faire','à_faire','todo','to_do') THEN 1 ELSE 0 END) AS todo
                 FROM streets
             """)
             row = session.execute(q).mappings().one()
@@ -587,7 +587,7 @@ def extended_stats() -> Dict[str, Any]:
 
 
 def stats_by_team() -> List[Dict[str, Any]]:
-    """Statistiques par √©quipe"""
+    """Statistiques par équipe"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -608,12 +608,12 @@ def stats_by_team() -> List[Dict[str, Any]]:
             return [dict(row._mapping) for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur stats_by_team: {e}")
+        print(f"'ùå Erreur stats_by_team: {e}")
         return []
 
 
 def recent_activity(limit: int = 10) -> List[Dict[str, Any]]:
-    """Activit√© r√©cente dans l'application"""
+    """Activité récente dans l'application"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -626,12 +626,12 @@ def recent_activity(limit: int = 10) -> List[Dict[str, Any]]:
             return [dict(row._mapping) for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur recent_activity: {e}")
+        print(f"'ùå Erreur recent_activity: {e}")
         return []
 
 
 def export_to_csv() -> str:
-    """Exporte les donn√©es vers CSV"""
+    """Exporte les données vers CSV"""
     try:
         from datetime import datetime
         
@@ -650,16 +650,16 @@ def export_to_csv() -> str:
         return str(filepath)
         
     except Exception as e:
-        print(f"‚ùå Erreur export_to_csv: {e}")
+        print(f"'ùå Erreur export_to_csv: {e}")
         return ""
 
 
 # =============================================================================
-# LOG D'ACTIVIT√â
+# LOG D'ACTIVITÉ
 # =============================================================================
 
 def log_activity(session, team_id: str, action: str, details: str):
-    """Log une activit√© dans la base de donn√©es"""
+    """Log une activité dans la base de données"""
     try:
         session.execute(text("""
             INSERT INTO activity_log (team_id, action, details, created_at)
@@ -672,15 +672,15 @@ def log_activity(session, team_id: str, action: str, details: str):
         # Note: commit fait par la fonction appelante
         
     except Exception as e:
-        print(f"‚ùå Erreur log_activity: {e}")
+        print(f"'ùå Erreur log_activity: {e}")
 
 
 # =============================================================================
-# FONCTIONS MANQUANTES POUR COMPATIBILIT√â APP.PY
+# FONCTIONS MANQUANTES POUR COMPATIBILITÉ APP.PY
 # =============================================================================
 
 def get_team_streets(team_id: str) -> List[Dict[str, Any]]:
-    """R√©cup√®re les rues assign√©es √† une √©quipe avec tous les d√©tails"""
+    """Récupère les rues assignées à une équipe avec tous les détails"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -691,12 +691,12 @@ def get_team_streets(team_id: str) -> List[Dict[str, Any]]:
             """), {"team": team_id})
             return [dict(row._mapping) for row in result]
     except Exception as e:
-        print(f"‚ùå Erreur get_team_streets: {e}")
+        print(f"'ùå Erreur get_team_streets: {e}")
         return []
 
 
 def get_unassigned_streets_count() -> int:
-    """Compte les rues non assign√©es"""
+    """Compte les rues non assignées"""
     try:
         with get_session() as session:
             count = session.execute(text("""
@@ -705,12 +705,12 @@ def get_unassigned_streets_count() -> int:
             """)).scalar() or 0
             return count
     except Exception as e:
-        print(f"‚ùå Erreur get_unassigned_streets_count: {e}")
+        print(f"'ùå Erreur get_unassigned_streets_count: {e}")
         return 0
 
 
 def get_sectors_list() -> List[str]:
-    """R√©cup√®re la liste des secteurs"""
+    """Récupère la liste des secteurs"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -720,20 +720,20 @@ def get_sectors_list() -> List[str]:
             """))
             return [row[0] for row in result]
     except Exception as e:
-        print(f"‚ùå Erreur get_sectors_list: {e}")
+        print(f"'ùå Erreur get_sectors_list: {e}")
         return []
 
 
 def get_teams_list() -> List[str]:
-    """R√©cup√®re la liste des √©quipes (alias pour teams())"""
+    """Récupère la liste des équipes (alias pour teams())"""
     return teams()
 
 
 def bulk_assign_sector(sector: str, team_id: str) -> int:
-    """Assigne toutes les rues d'un secteur √† une √©quipe"""
+    """Assigne toutes les rues d'un secteur à une équipe"""
     try:
         with get_session() as session:
-            # R√©cup√©rer les rues non assign√©es du secteur
+            # Récupérer les rues non assignées du secteur
             result = session.execute(text("""
                 SELECT name FROM streets 
                 WHERE sector = :sector AND (team IS NULL OR team = '')
@@ -746,12 +746,12 @@ def bulk_assign_sector(sector: str, team_id: str) -> int:
             return 0
             
     except Exception as e:
-        print(f"‚ùå Erreur bulk_assign_sector: {e}")
+        print(f"'ùå Erreur bulk_assign_sector: {e}")
         return 0
 
 
 def get_assignations_export_data() -> List[Dict[str, Any]]:
-    """Donn√©es pour export des assignations"""
+    """Données pour export des assignations"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -763,7 +763,7 @@ def get_assignations_export_data() -> List[Dict[str, Any]]:
             """))
             return [dict(row._mapping) for row in result]
     except Exception as e:
-        print(f"‚ùå Erreur get_assignations_export_data: {e}")
+        print(f"'ùå Erreur get_assignations_export_data: {e}")
         return []
 
 
@@ -799,7 +799,7 @@ def export_notes_csv() -> str:
             return str(filepath)
             
     except Exception as e:
-        print(f"‚ùå Erreur export_notes_csv: {e}")
+        print(f"'ùå Erreur export_notes_csv: {e}")
         return ""
 
 
@@ -812,7 +812,7 @@ def import_addresses_from_cache(addr_cache: Dict) -> int:
             for street_name, addresses in addr_cache.items():
                 if isinstance(addresses, list):
                     for addr in addresses:
-                        # Ins√©rer l'adresse si elle n'existe pas
+                        # Insérer l'adresse si elle n'existe pas
                         exists = session.execute(text("""
                             SELECT COUNT(*) FROM addresses 
                             WHERE street_name = :street AND house_number = :num
@@ -829,17 +829,17 @@ def import_addresses_from_cache(addr_cache: Dict) -> int:
             return imported
             
     except Exception as e:
-        print(f"‚ùå Erreur import_addresses_from_cache: {e}")
+        print(f"'ùå Erreur import_addresses_from_cache: {e}")
         return 0
 
 
 def update_street_status(street_name: str, status: str, team_id: str) -> bool:
-    """Met √† jour le statut d'une rue (alias pour set_status)"""
+    """Met à jour le statut d'une rue (alias pour set_status)"""
     return set_status(street_name, status)
 
 
 def get_street_notes_for_team(street_name: str, team_id: str) -> List[Dict[str, Any]]:
-    """R√©cup√®re les notes d'une rue pour une √©quipe sp√©cifique"""
+    """Récupère les notes d'une rue pour une équipe spécifique"""
     try:
         with get_session() as session:
             result = session.execute(text("""
@@ -852,7 +852,7 @@ def get_street_notes_for_team(street_name: str, team_id: str) -> List[Dict[str, 
             return [dict(row._mapping) for row in result]
             
     except Exception as e:
-        print(f"‚ùå Erreur get_street_notes_for_team: {e}")
+        print(f"'ùå Erreur get_street_notes_for_team: {e}")
         return []
 
 
@@ -862,12 +862,12 @@ def add_street_note(street_name: str, team_id: str, address_number: str, comment
 
 
 # =============================================================================
-# COMPATIBILIT√â LEGACY
+# COMPATIBILITÉ LEGACY
 # =============================================================================
 
 def get_backup_manager(db_path=None):
-    """Compatibilit√© avec backup.py - retourne le BackupManager"""
-    # Pour l'instant, utilise encore l'ancien syst√®me de backup
+    """Compatibilité avec backup.py - retourne le BackupManager"""
+    # Pour l'instant, utilise encore l'ancien système de backup
     # TODO: Migrer le backup vers SQLAlchemy dans Phase 2
     if db_path is None:
         db_path = Path(__file__).parent / "guigno_map.db"
@@ -883,7 +883,7 @@ def get_backup_manager(db_path=None):
 # =============================================================================
 
 def export_streets_template(include_assignments: bool = True):
-    """Exporte les rues dans un format CSV standardis√© pour les gestionnaires"""
+    """Exporte les rues dans un format CSV standardisé pour les gestionnaires"""
     import pandas as pd
     from sqlalchemy import text
     try:
@@ -905,17 +905,17 @@ def export_streets_template(include_assignments: bool = True):
         return pd.DataFrame(columns=["name","sector","team","status"])
 
 def upsert_streets_from_csv(file_like) -> dict:
-    """Importe/met √† jour les rues depuis un CSV (upsert par nom de rue)"""
+    """Importe/met à jour les rues depuis un CSV (upsert par nom de rue)"""
     import pandas as pd
     from sqlalchemy import text
     
     def normalize_status(s: str) -> str:
         s = (s or "").strip().lower()
-        if s in {"done","terminee","termin√©e","complete","completed"}:
+        if s in {"done","terminee","terminée","complete","completed"}:
             return "done"
         if s in {"en_cours","in_progress"}:
             return "en_cours"
-        # par d√©faut on consid√®re √† faire
+        # par défaut on considère à faire
         return "a_faire"
     
     try:
@@ -926,7 +926,7 @@ def upsert_streets_from_csv(file_like) -> dict:
         required = {"name","sector","team","status"}
         missing = required - set(df.columns)
         if missing:
-            return {"inserted":0,"updated":0,"skipped":0,"errors":len(df)}  # tout rejet√© car colonnes manquantes
+            return {"inserted":0,"updated":0,"skipped":0,"errors":len(df)}  # tout rejeté car colonnes manquantes
         
         # nettoyage
         for col in ["name","sector","team","status"]:
@@ -972,17 +972,17 @@ def upsert_streets_from_csv(file_like) -> dict:
 
 @db_retry(max_retries=3)
 def ensure_addresses_table():
-    """Cr√©e la table addresses si elle n'existe pas"""
+    """Crée la table addresses si elle n'existe pas"""
     try:
         with get_session() as session:
-            # V√©rifier si la table existe d√©j√†
+            # Vérifier si la table existe déjà
             existing = session.execute(text("""
                 SELECT name FROM sqlite_master 
                 WHERE type='table' AND name='addresses'
             """)).fetchone()
             
             if existing:
-                return True  # Table existe d√©j√†
+                return True  # Table existe déjà
             
             session.execute(text("""
                 CREATE TABLE IF NOT EXISTS addresses (
@@ -1013,7 +1013,7 @@ def bulk_upsert_addresses_from_excel(path_or_buffer, sheet_name=None, chunk_size
     
     Args:
         path_or_buffer: chemin vers fichier .xlsx/.csv ou buffer
-        sheet_name: nom de feuille Excel (None = premi√®re feuille)
+        sheet_name: nom de feuille Excel (None = première feuille)
         chunk_size: taille des paquets pour commit
     
     Returns:
@@ -1026,7 +1026,7 @@ def bulk_upsert_addresses_from_excel(path_or_buffer, sheet_name=None, chunk_size
         try:
             if str(path_or_buffer).lower().endswith(('.xlsx', '.xls')):
                 df_or_dict = pd.read_excel(path_or_buffer, sheet_name=sheet_name, engine="openpyxl")
-                # Si sheet_name=None, pandas retourne un dict, prendre la premi√®re feuille
+                # Si sheet_name=None, pandas retourne un dict, prendre la première feuille
                 if isinstance(df_or_dict, dict):
                     df = list(df_or_dict.values())[0]
                 else:
@@ -1096,7 +1096,7 @@ def bulk_upsert_addresses_from_excel(path_or_buffer, sheet_name=None, chunk_size
                             skipped += 1
                             continue
                         
-                        # Donn√©es optionnelles
+                        # Données optionnelles
                         sector = str(row.get(col_map.get("sector", ""), "")).strip() or None
                         if sector and sector.lower() in ['nan', 'null']:
                             sector = None
@@ -1166,7 +1166,7 @@ def count_addresses_by_street():
 
 
 def get_addresses_by_street(street_name: str) -> list[dict]:
-    """Retourne les adresses (house_number, lat/lon) pour une rue donn√©e."""
+    """Retourne les adresses (house_number, lat/lon) pour une rue donnée."""
     try:
         ensure_addresses_table()
         with get_session() as session:
@@ -1189,16 +1189,16 @@ def get_addresses_by_street(street_name: str) -> list[dict]:
 
 
 # =============================================================================
-# GESTION DES MOTS DE PASSE √âQUIPES
+# GESTION DES MOTS DE PASSE ÉQUIPES
 # =============================================================================
 
 def update_team_password(team_id: str, new_password: str) -> bool:
-    """Met √† jour le mot de passe (hash√©) pour l'√©quipe."""
+    """Met à jour le mot de passe (hashé) pour l'équipe."""
     if not team_id or not new_password or len(new_password.strip()) < 4:
         return False
     try:
         with get_session() as session:
-            # V√©rifier que l'√©quipe existe
+            # Vérifier que l'équipe existe
             exists = session.execute(text("SELECT 1 FROM teams WHERE id=:id"), {"id": team_id}).fetchone()
             if not exists:
                 return False
@@ -1211,7 +1211,7 @@ def update_team_password(team_id: str, new_password: str) -> bool:
             hashed = hash_password(new_password)
             session.execute(text(f"UPDATE teams SET {target}=:p WHERE id=:id"), {"p": hashed, "id": team_id})
             session.commit()
-            # V√©rifie si l'update a fonctionn√© en relisant
+            # Vérifie si l'update a fonctionné en relisant
             check = session.execute(text("SELECT 1 FROM teams WHERE id=:id"), {"id": team_id}).fetchone()
             return check is not None
     except Exception:
@@ -1219,15 +1219,15 @@ def update_team_password(team_id: str, new_password: str) -> bool:
 
 
 def reset_team_password(team_id: str, length: int = 12) -> str:
-    """R√©initialise et retourne le nouveau mot de passe en clair (√† montrer une seule fois)."""
+    """Réinitialise et retourne le nouveau mot de passe en clair (à montrer une seule fois)."""
     if not team_id or length < 4:
         return ""
     try:
         import secrets
         import string
-        # longueur s√©curis√©e, au moins 8 caract√®res
+        # longueur sécurisée, au moins 8 caractères
         safe_length = max(8, min(length, 32))
-        # Combine lettres, chiffres pour lisibilit√© terrain
+        # Combine lettres, chiffres pour lisibilité terrain
         chars = string.ascii_letters + string.digits
         clear = ''.join(secrets.choice(chars) for _ in range(safe_length))
         return clear if update_team_password(team_id, clear) else ""
@@ -1236,7 +1236,7 @@ def reset_team_password(team_id: str, length: int = 12) -> str:
 
 
 def get_teams_list() -> list[tuple]:
-    """R√©cup√®re la liste des √©quipes (id, name)"""
+    """Récupère la liste des équipes (id, name)"""
     try:
         with get_session() as session:
             result = session.execute(text("SELECT id, name FROM teams WHERE active = 1 ORDER BY id"))
