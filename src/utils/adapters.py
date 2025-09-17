@@ -10,7 +10,7 @@ def to_dataframe(records: Any) -> pd.DataFrame:
             return pd.DataFrame([dict(records)])
     except Exception:
         pass
-    # SÃ©quences (list[dict]/list[Row]/list[ORM])
+    # Séquences (list[dict]/list[Row]/list[ORM])
     if isinstance(records, Iterable):
         items = list(records)
         if items and not isinstance(items[0], dict):
