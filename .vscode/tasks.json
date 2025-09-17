@@ -16,9 +16,9 @@
 		{
 			"label": "GuignoMap: Run (Streamlit)",
 			"type": "shell",
-			"command": ".\\.venv\\Scripts\\python.exe -m streamlit run app.py",
+			"command": ".\\.venv\\Scripts\\python.exe -m streamlit run guignomap\\app.py",
 			"options": {
-				"cwd": "${workspaceFolder}\\guignomap",
+				"cwd": "${workspaceFolder}",
 				"env": {
 					"PYTHONUTF8": "1"
 				}
@@ -53,6 +53,19 @@
 			"type": "shell",
 			"command": ".\\.venv\\Scripts\\python.exe scripts\\validate_structure.py",
 			"options": {
+				"env": {
+					"PYTHONUTF8": "1"
+				}
+			},
+			"problemMatcher": [],
+			"group": "test"
+		},
+		{
+			"label": "GuignoMap: Run tests",
+			"type": "shell",
+			"command": ".\\.venv\\Scripts\\python.exe scripts\\run_all_tests.py",
+			"options": {
+				"cwd": "${workspaceFolder}",
 				"env": {
 					"PYTHONUTF8": "1"
 				}
