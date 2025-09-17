@@ -17,6 +17,15 @@ pwd_context = CryptContext(
 )
 
 
+def _get_allow_bcrypt_fallback() -> bool:
+    """Récupère la config ALLOW_BCRYPT_FALLBACK"""
+    try:
+        from src.config import ALLOW_BCRYPT_FALLBACK
+        return ALLOW_BCRYPT_FALLBACK
+    except ImportError:
+        return True  # Par défaut autorisé pendant migration
+
+
 def hash_password(password: str) -> str:
     """Hash un mot de passe avec Argon2"""
     return pwd_context.hash(password)
@@ -33,6 +42,11 @@ def verify_password(password: str, hashed: str) -> Tuple[bool, bool]:
     try:
         # Vérifier d'abord avec passlib (supporte bcrypt et Argon2)
         try:
+            # Vérifier si bcrypt est autorisé si c'est un hash bcrypt
+            if hashed.startswith('$2') and not _get_allow_bcrypt_fallback():
+                print("⚠️ Hash bcrypt détecté mais fallback désactivé")
+                return False, False
+                
             verification_ok = pwd_context.verify(password, hashed)
             if verification_ok:
                 needs_rehash = pwd_context.needs_update(hashed)

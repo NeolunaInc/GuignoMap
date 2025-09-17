@@ -19,7 +19,7 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy import text, and_, or_
 from src.database.connection import get_session, db_retry
 from src.database.models import Street, Team, Note, ActivityLog, Address
-from src.auth.passwords import hash_password, verify_password, verify_password_with_context
+from src.auth.passwords import hash_password, verify_password
 from guignomap.backup import auto_backup_before_critical, BackupManager
 from guignomap.validators import validate_and_clean_input, InputValidator
 
@@ -124,10 +124,6 @@ def _pbkdf2_verify(stored: str, password: str) -> bool:
     except Exception:
         return False
 
-
-def _bcrypt_like(stored: str) -> bool:
-    """D√©tecte les formats bcrypt (non support√©s sans lib)"""
-    return stored.startswith(('$2a$', '$2b$', '$2y$'))
 
 
 # =============================================================================
@@ -882,30 +878,6 @@ def get_backup_manager(db_path=None):
 # MIGRATION PASSWORD LEGACY
 # =============================================================================
 
-def migrate_all_passwords_to_bcrypt():
-    """Migre tous les mots de passe MD5 vers bcrypt"""
-    try:
-        with get_session() as session:
-            # R√©cup√©rer toutes les √©quipes avec hash MD5
-            result = session.execute(text("""
-                SELECT id, password_hash 
-                FROM teams 
-                WHERE password_hash NOT LIKE '$2b$%' AND active = 1
-            """))
-            
-            migrated = 0
-            for row in result:
-                team_id, old_hash = row
-                print(f"‚ö†Ô∏è √âquipe {team_id} a un hash MD5 legacy")
-                print("La migration automatique se fera lors de la prochaine connexion")
-                # Note: la migration se fait automatiquement dans verify_team()
-                
-            print(f"‚úÖ {migrated} mots de passe √† migrer d√©tect√©s")
-            
-    except Exception as e:
-        print(f"‚ùå Erreur migrate_all_passwords_to_bcrypt: {e}")
-
-
 # =============================================================================
 # EXPORT/IMPORT CSV POUR GESTIONNAIRES
 # =============================================================================
@@ -1273,10 +1245,13 @@ def get_teams_list() -> list[tuple]:
         return []
 
 
-def count_hash_algorithms() -> dict:
+def count_hash_algorithms(conn=None) -> dict:
     """
     Compte les algorithmes de hash utilisés par les équipes
     Utile pour suivre la progression de la migration
+    
+    Args:
+        conn: Connection DB optionnelle (utilise get_session() si None)
     """
     try:
         from src.auth.passwords import detect_hash_algo
