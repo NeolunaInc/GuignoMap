@@ -1738,7 +1738,7 @@ def page_assignations_v41():
     import pandas as pd
     st.subheader("🗺️ Assignations", anchor=False)
 
-    tabs = st.tabs(["🎯 Par secteur (rapide)", "🧭 Par rue (manuel)"])
+    tabs = st.tabs(["🎯 Par secteur (rapide)", "🧭 Par rue (manuel)", "📋 Assignation simple"])
 
     # ========== TAB 1 : BULK PAR SECTEUR (inchangé) ==========
     with tabs[0]:
@@ -1878,6 +1878,83 @@ def page_assignations_v41():
                     .rename(columns={"name": "Rue", "sector": "Secteur", "team": "Équipe", "status": "Statut"}),
                     use_container_width=True
                 )
+
+    # ========== TAB 3 : ASSIGNATION SIMPLE PAR RUE ==========
+    with tabs[2]:
+        st.markdown("### 📋 Assignation par rue (simple)")
+        
+        # Récupérer les équipes disponibles  
+        try:
+            teams = db.get_teams_list()  # [(id, name), ...]
+        except Exception:
+            teams = [(t, t) for t in (db.teams() or [])]
+        
+        # Récupérer les rues non assignées
+        try:
+            unassigned_streets = db.get_unassigned_streets()
+        except Exception:
+            unassigned_streets = []
+        
+        if not teams:
+            st.warning("Aucune équipe disponible. Créez d'abord une équipe.")
+            return
+            
+        if not unassigned_streets:
+            st.success("✅ Toutes les rues sont déjà assignées !")
+            return
+        
+        # Interface de sélection
+        with st.container():
+            col1, col2 = st.columns([1, 2])
+            
+            with col1:
+                team_options = [f"{name} ({tid})" for (tid, name) in teams]
+                selected_team_display = st.selectbox(
+                    "Équipe",
+                    options=[""] + team_options,
+                    index=0,
+                    key="simple_assign_team"
+                )
+                
+                # Extraire l'ID de l'équipe
+                team_id = ""
+                if selected_team_display and selected_team_display != "":
+                    team_id = selected_team_display.split("(")[-1].rstrip(")")
+            
+            with col2:
+                selected_streets = st.multiselect(
+                    "Rues à assigner",
+                    options=unassigned_streets,
+                    default=[],
+                    key="simple_assign_streets"
+                )
+        
+        # Option de réassignation (masquée pour simplification)
+        # do_overwrite = st.checkbox("Réassigner si déjà affectée", value=False)
+        
+        # Informations et validation
+        st.caption(f"📊 {len(unassigned_streets)} rue(s) non assignée(s) • {len(selected_streets)} sélectionnée(s)")
+        
+        # Validation et bouton
+        if not team_id or not selected_streets:
+            if st.button("Assigner", disabled=True, use_container_width=True):
+                pass
+            if not team_id and not selected_streets:
+                st.error("Sélectionnez au moins une rue et une équipe.")
+            elif not team_id:
+                st.error("Sélectionnez une équipe.")
+            elif not selected_streets:
+                st.error("Sélectionnez au moins une rue.")
+        else:
+            if st.button("Assigner", use_container_width=True):
+                try:
+                    # Appel à la fonction d'assignation
+                    db.assign_streets_to_team(selected_streets, team_id)
+                    st.toast(f"✅ {len(selected_streets)} rue(s) assignée(s) à {team_id}", icon="✅")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Erreur lors de l'assignation: {e}")
+
 
 def page_export_gestionnaire_v41():
     """Page d'export v4.1 avec nouvelles fonctionnalités"""
