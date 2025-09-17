@@ -6,7 +6,10 @@
 			"type": "shell",
 			"command": "if (!(Test-Path .\\.venv\\Scripts\\python.exe)) { py -m venv .venv }; .\\.venv\\Scripts\\python.exe -m pip install --upgrade pip; .\\.venv\\Scripts\\pip.exe install -r requirements.txt",
 			"options": {
-				"cwd": "${workspaceFolder}"
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"PYTHONUTF8": "1"
+				}
 			},
 			"problemMatcher": []
 		},
@@ -15,7 +18,10 @@
 			"type": "shell",
 			"command": ".\\.venv\\Scripts\\python.exe -m streamlit run app.py",
 			"options": {
-				"cwd": "${workspaceFolder}\\guignomap"
+				"cwd": "${workspaceFolder}\\guignomap",
+				"env": {
+					"PYTHONUTF8": "1"
+				}
 			},
 			"problemMatcher": [],
 			"dependsOn": "GuignoMap: Setup venv",
@@ -35,7 +41,10 @@
 			"type": "shell",
 			"command": ".\\.venv\\Scripts\\python.exe tools\\quick_sanity.py",
 			"options": {
-				"cwd": "${workspaceFolder}"
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"PYTHONUTF8": "1"
+				}
 			},
 			"problemMatcher": []
 		},
@@ -43,6 +52,11 @@
 			"label": "GuignoMap: Validate structure",
 			"type": "shell",
 			"command": ".\\.venv\\Scripts\\python.exe scripts\\validate_structure.py",
+			"options": {
+				"env": {
+					"PYTHONUTF8": "1"
+				}
+			},
 			"problemMatcher": [],
 			"group": "test"
 		}

@@ -6,7 +6,13 @@ Version 3.0 - Production
 
 # pyright: reportCallIssue=false
 
-import sys
+import os, sys
+os.environ.setdefault("PYTHONUTF8", "1")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 from pathlib import Path
 import time
 from datetime import datetime

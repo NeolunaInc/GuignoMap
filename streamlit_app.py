@@ -1,5 +1,12 @@
 # coding: utf-8
-import sys, pathlib, importlib, traceback
+import os, sys
+os.environ.setdefault("PYTHONUTF8", "1")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
+import pathlib, importlib, traceback
 import streamlit as st
 
 ROOT = pathlib.Path(__file__).resolve().parent
