@@ -28,6 +28,8 @@ def _get_allow_bcrypt_fallback() -> bool:
 
 def hash_password(password: str) -> str:
     """Hash un mot de passe avec Argon2"""
+    if password is None or password == "":
+        raise ValueError("Le mot de passe ne peut pas être vide")
     return pwd_context.hash(password)
 
 
@@ -39,6 +41,9 @@ def verify_password(password: str, hashed: str) -> Tuple[bool, bool]:
     Returns:
         Tuple (verification_ok, needs_rehash)
     """
+    if password is None or password == "":
+        raise ValueError("Le mot de passe ne peut pas être vide")
+        
     try:
         # Vérifier d'abord avec passlib (supporte bcrypt et Argon2)
         try:
