@@ -53,6 +53,9 @@ DEFAULT_EXTENSIONS = {'.py', '.md', '.toml', '.json', '.csv', '.txt', '.sql'}
 # Répertoires à ignorer
 IGNORE_DIRS = {'.git', '.venv', '__pycache__', 'node_modules', '.pytest_cache', 'backups'}
 
+# Fichiers à ignorer complètement (contiennent volontairement des patterns mojibake)
+ALLOWLIST_FILES = {"scripts/find_mojibake.py", "scripts/fix_mojibake_db.py", "scripts/fix_mojibake_files.py"}
+
 
 def find_mojibake_in_file(file_path: Path, patterns: List[str], verbose: bool = False) -> List[Tuple[int, str]]:
     """
@@ -94,6 +97,16 @@ def scan_directory(root_dir: Path, extensions: Set[str], patterns: List[str], ve
         # Ignorer les répertoires exclus
         if any(part in IGNORE_DIRS for part in file_path.parts):
             continue
+        
+        # Vérifier si le fichier est dans l'allowlist (chemin relatif)
+        try:
+            relative_path = file_path.relative_to(root_dir)
+            if str(relative_path).replace('\\', '/') in ALLOWLIST_FILES:
+                if verbose:
+                    print(f"⚪ Ignoré (allowlist): {file_path}")
+                continue
+        except ValueError:
+            pass
             
         # Vérifier l'extension
         if file_path.suffix.lower() not in extensions:

@@ -1,6 +1,6 @@
 # PROBLÈME CONNECTIVITÉ SUPABASE IPv6
 
-## üö® Situation actuelle
+## ℹ️ Situation actuelle
 - Supabase PostgreSQL utilise **uniquement IPv6** pour cette instance
 - L'host `db.kdxqspmfycnwzzrmhzpa.supabase.co` résout vers: `2600:1f11:4e2:e202:6514:7431:494f:c00f`
 - Votre réseau local ne supporte **pas IPv6 global** (seulement liaison locale)

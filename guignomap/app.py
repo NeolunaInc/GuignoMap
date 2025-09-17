@@ -211,7 +211,7 @@ def render_login_card(role="benevole"):
     if role == "superviseur" or role == "gestionnaire":
         st.markdown("""
         <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem;">üëî</div>
+            <div style="font-size: 3rem;">👤</div>
             <h2 style="color: #FFD700; margin: 1rem 0;">Espace Gestionnaire</h2>
             <p style="color: #cbd5e1;">Gérez la collecte et les équipes</p>
         </div>
@@ -219,7 +219,7 @@ def render_login_card(role="benevole"):
         
         with st.form("login_gestionnaire", clear_on_submit=False):
             password = st.text_input(
-                "üîê Mot de passe",
+                "🔑 Mot de passe",
                 type="password",
                 placeholder="Entrez le mot de passe gestionnaire"
             )
@@ -227,24 +227,24 @@ def render_login_card(role="benevole"):
             col1, col2, col3 = st.columns([1,2,1])
             with col2:
                 submit = st.form_submit_button(
-                    "üöÄ Connexion",
+                    "🔓 Connexion",
                     width="stretch"
                 )
             
             if submit:
                 if db.verify_team("ADMIN", password):
                     st.session_state.auth = {"role": "supervisor", "team_id": "ADMIN"}
-                    st.success("'úÖ Bienvenue dans l'espace gestionnaire!")
+                    st.success("✅ Bienvenue dans l'espace gestionnaire!")
                     st.snow()
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("'ùå Mot de passe incorrect")
+                    st.error("❌ Mot de passe incorrect")
     
     else:  # Bénévole
         st.markdown("""
         <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem;">üéÖ</div>
+            <div style="font-size: 3rem;">🎄</div>
             <h2 style="color: #FFD700; margin: 1rem 0;">Espace Bénévole</h2>
             <p style="color: #cbd5e1;">Accédez à vos rues assignées</p>
         </div>
@@ -261,7 +261,7 @@ def render_login_card(role="benevole"):
             
             with col2:
                 password = st.text_input(
-                    "üîê Mot de passe",
+                    "🔑 Mot de passe",
                     type="password",
                     placeholder="Mot de passe équipe"
                 )
@@ -281,7 +281,7 @@ def render_login_card(role="benevole"):
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("'ùå Identifiants incorrects")
+                    st.error("❌ Identifiants incorrects")
     
     st.markdown("</div>", unsafe_allow_html=True)
     
@@ -290,7 +290,7 @@ def render_login_card(role="benevole"):
     <div style="text-align: center; margin-top: 2rem; color: #8b92a4;">
         <small>
         Besoin d'aide? Contactez votre gestionnaire<br>
-        üìû 450-474-4133
+        📞 450-474-4133
         </small>
     </div>
     """, unsafe_allow_html=True)
@@ -349,7 +349,7 @@ def render_dashboard_gestionnaire(geo):
             text-align: center;
             box-shadow: 0 4px 15px rgba(59,130,246,0.3);
         ">
-            <div style="font-size: 2.5rem;">'úÖ</div>
+            <div style="font-size: 2.5rem;">✅</div>
             <div style="color: white; font-size: 2rem; font-weight: bold;">{stats['done']}</div>
             <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Terminées</div>
         </div>
@@ -364,7 +364,7 @@ def render_dashboard_gestionnaire(geo):
             text-align: center;
             box-shadow: 0 4px 15px rgba(245,158,11,0.3);
         ">
-            <div style="font-size: 2.5rem;">üö∂</div>
+            <div style="font-size: 2.5rem;">⏳</div>
             <div style="color: white; font-size: 2rem; font-weight: bold;">{stats.get('partial', 0)}</div>
             <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">En cours</div>
         </div>
@@ -381,7 +381,7 @@ def render_dashboard_gestionnaire(geo):
             text-align: center;
             box-shadow: 0 4px 15px rgba(139,92,246,0.3);
         ">
-            <div style="font-size: 2.5rem;">üë•</div>
+            <div style="font-size: 2.5rem;">👥</div>
             <div style="color: white; font-size: 2rem; font-weight: bold;">{teams_count}</div>
             <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Équipes</div>
         </div>
@@ -611,7 +611,7 @@ def create_map(df, geo):
             <strong style='font-size: 14px'>{name}</strong><br>
             <span style='color: {color}'>'óè Statut: {status.replace('_', ' ').title()}</span><br>
             <span>📋 Équipe: {team if team else '⚠️ NON ASSIGNÉE'}</span><br>
-            <span>üìù Notes: {notes}</span>
+            <span>📝 Notes: {notes}</span>
         </div>
         """
         
@@ -676,8 +676,8 @@ def detect_mobile():
 def show_notification(message, type="success"):
     """Affiche une notification stylisée"""
     icons = {
-        "success": "'úÖ",
-        "error": "'ùå",
+        "success": "✅",
+        "error": "❌",
         "warning": "⚠️",
         "info": "ℹ️"
     }
@@ -728,7 +728,7 @@ def show_team_badges(team_id):
         if done >= total * 0.75:
             badges.append("🥇 75% complété")
         if done == total:
-            badges.append("üåü CHAMPION!")
+            badges.append("🏆 CHAMPION!")
         
         if badges:
             st.markdown(f"""
@@ -767,7 +767,7 @@ def page_export_gestionnaire(conn):
     with col1:
         st.markdown("""
         <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
-            <h4>ÔøΩ Rapport PDF</h4>
+            <h4>🧾 Rapport PDF</h4>
             <p><small>Format professionnel pour présentation</small></p>
         </div>
         """, unsafe_allow_html=True)
@@ -809,7 +809,7 @@ def page_export_gestionnaire(conn):
     with col3:
         st.markdown("""
         <div style="text-align: center; padding: 1rem; border: 2px dashed #ccc; border-radius: 10px;">
-            <h4>üì± Liste SMS</h4>
+            <h4>📄 Liste SMS</h4>
             <p><small>Téléphones des bénévoles</small></p>
         </div>
         """, unsafe_allow_html=True)
@@ -880,7 +880,7 @@ def page_accueil_v2(geo):
             margin-bottom: 2rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         ">
-            <h2 style="color: #c41e3a; margin: 0;">üéâ C'EST AUJOURD'HUI!</h2>
+            <h2 style="color: #c41e3a; margin: 0;">🎉 C'EST AUJOURD'HUI!</h2>
             <div style="font-size: 2rem; color: #165b33; margin: 1rem 0;">
                 Bonne Guignolée 2025!
             </div>
@@ -940,7 +940,7 @@ def page_accueil_v2(geo):
             color: white;
             box-shadow: 0 4px 15px rgba(59,130,246,0.3);
         ">
-            <div style="font-size: 3rem;">'úÖ</div>
+            <div style="font-size: 3rem;">✅</div>
             <div style="font-size: 2.5rem; font-weight: bold;">{stats['done']}</div>
             <div>Complétées</div>
         </div>
@@ -956,7 +956,7 @@ def page_accueil_v2(geo):
             color: white;
             box-shadow: 0 4px 15px rgba(245,158,11,0.3);
         ">
-            <div style="font-size: 3rem;">üö∂</div>
+            <div style="font-size: 3rem;">⏳</div>
             <div style="font-size: 2.5rem; font-weight: bold;">{stats.get('partial', 0)}</div>
             <div>En Cours</div>
         </div>
@@ -1053,7 +1053,7 @@ def page_benevole(geo):
     # Mini dashboard équipe
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("üìç Vos rues", total)
+        st.metric("📌 Vos rues", total)
     with col2:
         st.metric("✅ Complétées", done)
     with col3:
@@ -1115,7 +1115,7 @@ def page_benevole(geo):
         st_folium(m, height=650, width=None, returned_objects=[])
     
     with tab2:
-        st.markdown("### üìã Checklist de collecte")
+        st.markdown("### ✅ Checklist de collecte")
         
         # Liste interactive des rues
         for _, row in df_team.iterrows():
@@ -1137,7 +1137,7 @@ def page_benevole(geo):
                         db.set_status(name, 'a_faire')
                         st.rerun()
                 with col2:
-                    if st.button("üö∂ En cours", key=f"progress_{name}", width="stretch"):
+                    if st.button("⏳ En cours", key=f"progress_{name}", width="stretch"):
                         db.set_status(name, 'en_cours')
                         st.rerun()
                 with col3:
@@ -1169,8 +1169,8 @@ def page_benevole(geo):
                     for n in notes_list:
                         st.markdown(f"• **{n['address_number']}** : {n['comment']}")
 
-                # ===== üìç Adresses de la rue (nouveau) =====
-                with st.expander("üìç Adresses de la rue", expanded=False):
+                # ===== 📌 Adresses de la rue (nouveau) =====
+                with st.expander("📌 Adresses de la rue", expanded=False):
                     if st.button("Afficher les adresses", key=f"show_addr_{name}"):
                         try:
                             addrs = db.get_addresses_by_street(name)
@@ -1211,7 +1211,7 @@ def page_benevole(geo):
                             st.info("Aucune adresse trouvée pour cette rue")
     
     with tab3:
-        st.markdown("### üìä Votre historique")
+        st.markdown("### 📊 Votre historique")
         try:
             notes = db.get_team_notes(team_id)
             if notes:  # Liste non vide
@@ -1273,7 +1273,7 @@ def page_benevole_v2(geo):
 
 def page_gestionnaire_v2(geo):
     """Interface gestionnaire moderne (ancien superviseur)"""
-    st.header("üëî Tableau de Bord Gestionnaire")
+    st.header("👤 Tableau de Bord Gestionnaire")
     
     # Vérifier l'authentification
     if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
@@ -1285,11 +1285,11 @@ def page_gestionnaire_v2(geo):
     
     # Tabs
     tabs = st.tabs([
-        "üìä Vue d'ensemble",
+        "📊 Vue d'ensemble",
         "👥 Équipes",
         "🗺️ Assignation",
-        "üì• Export",
-        "üõ† Tech"
+        "📊 Export",
+        "🛠️ Tech"
     ])
     
     with tabs[0]:
@@ -1365,7 +1365,7 @@ def page_gestionnaire_v2(geo):
                 elif not ok_pw:
                     st.error("❌ Mot de passe invalide (minimum 4 caractères)")
                 elif pwd_in != pwd_conf:
-                    st.error("'ùå Les mots de passe ne correspondent pas")
+                    st.error("❌ Les mots de passe ne correspondent pas")
                 else:
                     # Tentative de création avec db.create_team
                     try:
@@ -1515,7 +1515,7 @@ def page_gestionnaire_v2(geo):
                     st.warning("Confirmation incomplète.")
 
         # --- Gestion des backups
-        with st.expander("üíæ Gestion des backups", expanded=False):
+        with st.expander("🗃️ Gestion des backups", expanded=False):
             backup_mgr = db.get_backup_manager()  # Sans DB_PATH, utilise config SQLAlchemy
             
             col1, col2 = st.columns([2, 1])
@@ -1526,7 +1526,7 @@ def page_gestionnaire_v2(geo):
                         st.success(f"Backup créé : {Path(backup_file).name}")
             
             with col2:
-                if st.button("üìã Voir les backups", width="stretch"):
+                if st.button("✅ Voir les backups", width="stretch"):
                     backups = backup_mgr.list_backups()
                     if backups:
                         for backup in backups[:5]:  # Montrer les 5 derniers
@@ -1548,11 +1548,11 @@ def page_superviseur(conn, geo):
     
     # Tabs
     tabs = st.tabs([
-        "üìä Vue d'ensemble",
+        "📊 Vue d'ensemble",
         "👥 Équipes",
         "🗺️ Assignation",
-        "üì• Export",
-        "üõ† Tech"
+        "📊 Export",
+        "🛠️ Tech"
     ])
     
     with tabs[0]:
@@ -1625,7 +1625,7 @@ def page_superviseur(conn, geo):
         
         with col1:
             st.download_button(
-                "üì• Export rues (CSV)",
+                "📊 Export rues (CSV)",
                 db.export_to_csv(),
                 "rapport_rues.csv",
                 "text/csv",
@@ -1634,7 +1634,7 @@ def page_superviseur(conn, geo):
         
         with col2:
             st.download_button(
-                "üì• Export notes (CSV)",
+                "📊 Export notes (CSV)",
                 db.export_notes_csv(),
                 "rapport_notes.csv",
                 "text/csv",
@@ -1867,14 +1867,14 @@ def page_export_gestionnaire_v41():
         # Export CSV standard
         try:
             st.download_button(
-                "üì• Export CSV Standard",
+                "📊 Export CSV Standard",
                 db.export_to_csv(),
                 "rapport_rues.csv",
                 "text/csv",
                 width="stretch"
             )
         except Exception as e:
-            st.button("üì• CSV (Erreur)", disabled=True, width="stretch")
+            st.button("📊 CSV (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     with col2:
@@ -1884,16 +1884,16 @@ def page_export_gestionnaire_v41():
             generator = ReportGenerator()
             excel_data = generator.generate_excel()
             st.download_button(
-                "üìä Export Excel Pro",
+                "📊 Export Excel Pro",
                 excel_data,
                 "guignolee_2025_rapport.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 width="stretch"
             )
         except ImportError:
-            st.button("üìä Excel (Installer xlsxwriter)", disabled=True, width="stretch")
+            st.button("📊 Excel (Installer xlsxwriter)", disabled=True, width="stretch")
         except Exception as e:
-            st.button("üìä Excel (Erreur)", disabled=True, width="stretch")
+            st.button("📊 Excel (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     with col3:
@@ -1928,7 +1928,7 @@ def page_export_gestionnaire_v41():
             if assignations_data:  # Liste non vide
                 csv_data = pd.DataFrame(assignations_data).to_csv(index=False, encoding='utf-8')
                 st.download_button(
-                    "üìã Export CSV Assignations",
+                    "✅ Export CSV Assignations",
                     csv_data,
                     "assignations_secteurs.csv",
                     "text/csv",
@@ -1938,21 +1938,21 @@ def page_export_gestionnaire_v41():
             else:
                 st.button("📋 Assignations (Aucune donnée)", disabled=True, width="stretch")
         except Exception as e:
-            st.button("üìã Assignations (Erreur)", disabled=True, width="stretch")
+            st.button("✅ Assignations (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     with col2:
         # Export notes
         try:
             st.download_button(
-                "üìù Export Notes",
+                "📝 Export Notes",
                 db.export_notes_csv(),
                 "rapport_notes.csv",
                 "text/csv",
                 width="stretch"
             )
         except Exception as e:
-            st.button("üìù Notes (Erreur)", disabled=True, width="stretch")
+            st.button("📝 Notes (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
     # --- CSV d'assignation (export/import) ---
@@ -1961,7 +1961,7 @@ def page_export_gestionnaire_v41():
     with st.expander("Exporter / Importer", expanded=False):
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("üì§ Exporter le template (CSV)", use_container_width=True):
+            if st.button("📤 Exporter le template (CSV)", use_container_width=True):
                 try:
                     df = db.export_streets_template(include_assignments=False)
                     csv_data = df.to_csv(index=False).encode("utf-8")
@@ -2061,7 +2061,7 @@ def page_benevole_mes_rues():
                 with col2:
                     # Bouton "En cours"
                     if st.button(
-                        "üöÄ En cours", 
+                        "🔓 En cours", 
                         key=f"progress_{street_name}",
                         disabled=current_status == 'en_cours',
                         width="stretch"
@@ -2114,7 +2114,7 @@ def page_benevole_mes_rues():
                             height=80
                         )
                     
-                    if st.form_submit_button("üíæ Enregistrer note"):
+                    if st.form_submit_button("🗃️ Enregistrer note"):
                         if address_number and comment:
                             if db.add_street_note(street_name, team_id, address_number, comment):
                                 st.toast(f"📝 Note ajoutée pour {street_name} #{address_number}", icon="📝")
@@ -2201,7 +2201,7 @@ def main():
             st.session_state.page = "benevole"
             st.rerun()
             
-        if st.button("üëî Gestionnaire", width="stretch"):
+        if st.button("👤 Gestionnaire", width="stretch"):
             st.session_state.page = "gestionnaire"  
             st.rerun()
         
@@ -2246,7 +2246,7 @@ def main():
     ">
         <p>
             🎄 Guignolée 2025 - Le Relais de Mascouche 🎄<br>
-            <small>Ensemble, redonnons espoir | üìû 450-474-4133</small>
+            <small>Ensemble, redonnons espoir | 📞 450-474-4133</small>
         </p>
     </div>
     """, unsafe_allow_html=True)

@@ -34,7 +34,7 @@ def main():
         # Generate timestamp for files
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         
-        print("üîç GuignoMap v4.1 - Quick Sanity Check with Assertions")
+        print("🔧 GuignoMap v4.1 - Quick Sanity Check with Assertions")
         print("=" * 60)
         
         # Check if required tables exist
@@ -123,14 +123,14 @@ def main():
         
         # === DISPLAY RESULTS ===
         
-        print(f"üìä Total des rues: {total_streets}")
+        print(f"📊 Total des rues: {total_streets}")
         print(f"📊 Rues non assignées: {unassigned_count}")
         print()
         
         print("📈 Répartition par statut:")
         for status, count in status_counts:
             print(f"  • {status}: {count}")
-        print(f"  üìã Somme des statuts: {sum_status_counts}")
+        print(f"  ✅ Somme des statuts: {sum_status_counts}")
         print()
         
         print("📍 Top 10 rues (alphabétique):")

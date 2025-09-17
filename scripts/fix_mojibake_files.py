@@ -44,6 +44,35 @@ EXCLUDED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.zip', '.sqlite', '.db'
 # Target extensions for text files
 TARGET_EXTENSIONS = {'.py', '.md', '.txt', '.json', '.toml', '.csv', '.yml', '.yaml', '.ini', '.cfg', '.conf'}
 
+# Emoji replacements for correcting corrupted emojis (applied after ftfy)
+EMOJI_REPLACEMENTS = {
+    "ÔøΩ": "🧾",
+    "üëî": "👤",
+    "üîê": "🔑",
+    "üöÄ": "🔓",
+    "üéÖ": "🎄",
+    "üìû": "📞",
+    "üö∂": "⏳",
+    "üë•": "👥",
+    "üìù": "📝",
+    "üåü": "🏆",
+    "üì±": "📄",
+    "üéâ": "🎉",
+    "üìç": "📌",
+    "üìä": "📊",
+    "üõ†": "🛠️",
+    "üíæ": "🗃️",
+    "üìã": "✅",
+    "üì§": "📤",
+    "üì•": "📊",  # Export icon
+    "üö®": "ℹ️",  # Info icon
+    "üîç": "🔧",  # Tools icon
+    "'úÖ": "✅",  # Success icon
+    "'ùå": "❌",  # Error icon
+    "■": "",      # Remove square boxes
+    "□": ""       # Remove empty squares
+}
+
 
 def is_excluded_path(path: Path) -> bool:
     """Check if path should be excluded from processing."""
@@ -112,7 +141,7 @@ def get_files_to_process(base_path: Path, specific_paths: List[str] | None = Non
 
 def fix_file_mojibake(file_path: Path, dry_run: bool = True) -> tuple[bool, str, str, str]:
     """
-    Fix mojibake in a single file using ftfy.
+    Fix mojibake in a single file using ftfy and custom emoji replacements.
     
     Returns:
         (has_changes, original_content, fixed_content, diff_summary)
@@ -124,6 +153,11 @@ def fix_file_mojibake(file_path: Path, dry_run: bool = True) -> tuple[bool, str,
         
         # Fix mojibake using ftfy
         fixed_content = ftfy.fix_text(original_content)
+        
+        # Apply emoji replacements for .py, .md, .txt files
+        if file_path.suffix.lower() in {'.py', '.md', '.txt'}:
+            for corrupted, correct in EMOJI_REPLACEMENTS.items():
+                fixed_content = fixed_content.replace(corrupted, correct)
         
         # Check if there are changes
         has_changes = original_content != fixed_content
