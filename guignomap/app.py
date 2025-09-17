@@ -6,11 +6,16 @@ Version 3.0 - Production
 
 # pyright: reportCallIssue=false
 
+import sys
 from pathlib import Path
 import time
 from datetime import datetime
 import pandas as pd
 import streamlit as st
+
+# Ajout du répertoire parent au path pour importer src
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 # --- Compat Streamlit: retirer `width=` et mapper vers `use_container_width` si pertinent ---
 try:

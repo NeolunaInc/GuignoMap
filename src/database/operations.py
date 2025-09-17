@@ -9,7 +9,6 @@ Migration from raw sqlite3 to SQLAlchemy + PostgreSQL support
 import os
 import pandas as pd
 import hashlib
-import bcrypt
 from datetime import datetime
 import json
 from pathlib import Path
@@ -20,6 +19,7 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy import text, and_, or_
 from src.database.connection import get_session, db_retry
 from src.database.models import Street, Team, Note, ActivityLog, Address
+from src.auth.passwords import hash_password, verify_password, verify_password_with_context
 from guignomap.backup import auto_backup_before_critical, BackupManager
 from guignomap.validators import validate_and_clean_input, InputValidator
 
@@ -102,15 +102,6 @@ def auto_import_streets():
 # AUTHENTIFICATION HELPERS - SUPPORT MULTI-FORMAT
 # =============================================================================
 
-def _try_import_security():
-    """Tente d'importer les fonctions de s√©curit√© avanc√©es"""
-    try:
-        from src.utils.security import verify_password, hash_password
-        return verify_password, hash_password
-    except Exception:
-        return None, None
-
-
 def _sha256(txt: str) -> str:
     """Utilitaire SHA-256"""
     import hashlib
@@ -140,12 +131,10 @@ def _bcrypt_like(stored: str) -> bool:
 
 
 # =============================================================================
-# GESTION DES √âQUIPES ET AUTHENTIFICATION (RE√âCRITE)
+# GESTION DES ÉQUIPES ET AUTHENTIFICATION (RÉÉCRIRE)
 # =============================================================================
 
-def hash_password(password: str) -> str:
-    """Hash un mot de passe avec bcrypt"""
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+# Note: hash_password is now imported from src.auth.passwords
 
 
 @db_retry(max_retries=2)
@@ -162,7 +151,7 @@ def create_team(team_id: str, name: str, password: str) -> bool:
             if exists > 0:
                 return False
             
-            password_hash = _hash_password(password)
+            password_hash = hash_password(password)
             session.execute(text("""
                 INSERT INTO teams (id, name, password_hash, created_at, active)
                 VALUES (:id, :name, :hash, CURRENT_TIMESTAMP, 1)
@@ -193,8 +182,6 @@ def verify_team(team_id: str, password: str) -> bool:
         
         if not team_id or not password:
             return False
-        
-        verify_password, _ = _try_import_security()
         
         with get_session() as session:
             # D√©tecter les colonnes disponibles
@@ -228,52 +215,106 @@ def verify_team(team_id: str, password: str) -> bool:
             
             # Strat√©gie de v√©rification (ordre de priorit√©)
             
-            # 1) Utiliser verify_password avanc√© si disponible
-            if verify_password and stored_hash:
+            # 1) Utiliser verify_password avec Argon2/bcrypt support
+            if stored_hash:
                 try:
-                    if verify_password(password, stored_hash):
+                    verification_ok, needs_rehash = verify_password(password, stored_hash)
+                    if verification_ok:
+                        # Migration paresseuse si nécessaire
+                        if needs_rehash:
+                            new_hash = hash_password(password)
+                            session.execute(
+                                text("UPDATE teams SET password_hash = :hash WHERE id = :id"),
+                                {"hash": new_hash, "id": team_id}
+                            )
+                            session.commit()
+                            print(f"🔄 Migration hash pour équipe {team_id}: bcrypt → Argon2")
                         return True
-                except Exception:
+                except Exception as e:
+                    print(f"⚠️  Erreur verify_password pour {team_id}: {e}")
                     pass
             
-            # 2) Format PBKDF2
+            # 2) Format PBKDF2 (legacy)
             if stored_hash and _pbkdf2_verify(stored_hash, password):
+                # Migration vers Argon2
+                new_hash = hash_password(password)
+                session.execute(
+                    text("UPDATE teams SET password_hash = :hash WHERE id = :id"),
+                    {"hash": new_hash, "id": team_id}
+                )
+                session.commit()
+                print(f"🔄 Migration hash pour équipe {team_id}: PBKDF2 → Argon2")
                 return True
             
-            # 3) Formats bcrypt (d√©tection mais pas de support)
-            if stored_hash and _bcrypt_like(stored_hash):
-                print(f"‚ö†Ô∏è √âquipe {team_id}: bcrypt d√©tect√© mais non support√©")
-                return False
-            
-            # 4) SHA-256 simple (64 hex chars)
+            # 3) SHA-256 simple (64 hex chars) - avec migration
             if stored_hash and len(stored_hash) == 64:
                 if stored_hash == _sha256(password):
+                    # Migration vers Argon2
+                    new_hash = hash_password(password)
+                    session.execute(
+                        text("UPDATE teams SET password_hash = :hash WHERE id = :id"),
+                        {"hash": new_hash, "id": team_id}
+                    )
+                    session.commit()
+                    print(f"🔄 Migration hash pour équipe {team_id}: SHA-256 → Argon2")
                     return True
                 # SHA-256 avec salt environnement
                 import os
                 salt_env = os.environ.get("GM_PWD_SALT", "")
                 if salt_env and stored_hash == _sha256(salt_env + password):
+                    # Migration vers Argon2
+                    new_hash = hash_password(password)
+                    session.execute(
+                        text("UPDATE teams SET password_hash = :hash WHERE id = :id"),
+                        {"hash": new_hash, "id": team_id}
+                    )
+                    session.commit()
+                    print(f"🔄 Migration hash pour équipe {team_id}: SHA-256+salt → Argon2")
                     return True
             
-            # 5) SHA-256 avec salt stock√©
+            # 4) SHA-256 avec salt stocké - avec migration
             if stored_salt and stored_hash:
                 if stored_hash == _sha256(stored_salt + password):
+                    # Migration vers Argon2
+                    new_hash = hash_password(password)
+                    session.execute(
+                        text("UPDATE teams SET password_hash = :hash, password_salt = NULL WHERE id = :id"),
+                        {"hash": new_hash, "id": team_id}
+                    )
+                    session.commit()
+                    print(f"🔄 Migration hash pour équipe {team_id}: SHA-256+salt stocké → Argon2")
                     return True
             
-            # 6) Mot de passe en clair (legacy)
+            # 5) Mot de passe en clair (legacy) - avec migration
             if stored_plain and stored_plain == password:
+                # Migration vers Argon2
+                new_hash = hash_password(password)
+                session.execute(
+                    text("UPDATE teams SET password_hash = :hash, password = NULL WHERE id = :id"),
+                    {"hash": new_hash, "id": team_id}
+                )
+                session.commit()
+                print(f"🔄 Migration hash pour équipe {team_id}: plaintext → Argon2")
                 return True
             
-            # 7) Fallback MD5 legacy
+            # 6) Fallback MD5 legacy - avec migration
             if stored_hash:
                 import hashlib
                 if stored_hash == hashlib.md5(password.encode()).hexdigest():
+                    # Migration vers Argon2
+                    new_hash = hash_password(password)
+                    session.execute(
+                        text("UPDATE teams SET password_hash = :hash WHERE id = :id"),
+                        {"hash": new_hash, "id": team_id}
+                    )
+                    session.commit()
+                    print(f"🔄 Migration hash pour équipe {team_id}: MD5 → Argon2")
                     return True
             
             return False
             
     except Exception as e:
-        print(f"‚ùå Erreur verify_team: {e}")
+        print(f"⚠️ Erreur verify_team: {e}")
         return False
 
 
@@ -1179,16 +1220,6 @@ def get_addresses_by_street(street_name: str) -> list[dict]:
 # GESTION DES MOTS DE PASSE √âQUIPES
 # =============================================================================
 
-def _hash_password(pwd: str) -> str:
-    """Hash un mot de passe avec SHA-256 simple (compatible avec verify_team)"""
-    try:
-        # Utiliser SHA-256 simple pour compatibilit√©
-        return _sha256(pwd)
-    except Exception:
-        import hashlib
-        return hashlib.sha256(pwd.encode("utf-8")).hexdigest()
-
-
 def update_team_password(team_id: str, new_password: str) -> bool:
     """Met √† jour le mot de passe (hash√©) pour l'√©quipe."""
     if not team_id or not new_password or len(new_password.strip()) < 4:
@@ -1205,7 +1236,7 @@ def update_team_password(team_id: str, new_password: str) -> bool:
             if not target:
                 return False
                 
-            hashed = _hash_password(new_password)
+            hashed = hash_password(new_password)
             session.execute(text(f"UPDATE teams SET {target}=:p WHERE id=:id"), {"p": hashed, "id": team_id})
             session.commit()
             # V√©rifie si l'update a fonctionn√© en relisant
@@ -1240,3 +1271,35 @@ def get_teams_list() -> list[tuple]:
             return [(row[0], row[1]) for row in result]
     except Exception:
         return []
+
+
+def count_hash_algorithms() -> dict:
+    """
+    Compte les algorithmes de hash utilisés par les équipes
+    Utile pour suivre la progression de la migration
+    """
+    try:
+        from src.auth.passwords import detect_hash_algo
+        
+        with get_session() as session:
+            result = session.execute(text("SELECT password_hash FROM teams WHERE active = 1 AND password_hash IS NOT NULL"))
+            
+            counts = {"argon2": 0, "bcrypt": 0, "sha256": 0, "md5": 0, "pbkdf2_sha256": 0, "other": 0, "empty": 0}
+            
+            for row in result:
+                hash_value = row[0] or ""
+                algo = detect_hash_algo(hash_value)
+                if algo in counts:
+                    counts[algo] += 1
+                else:
+                    counts["other"] += 1
+            
+            # Compter aussi les équipes avec des mots de passe en clair ou vides
+            empty_hash_result = session.execute(text("SELECT COUNT(*) FROM teams WHERE active = 1 AND (password_hash IS NULL OR password_hash = '')"))
+            counts["empty"] = empty_hash_result.scalar() or 0
+            
+            return counts
+            
+    except Exception as e:
+        print(f"Erreur count_hash_algorithms: {e}")
+        return {"error": str(e)}

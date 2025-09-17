@@ -50,3 +50,27 @@ def get_cdn_base_url():
         return st.secrets["storage"].get("cdn_base_url", "")
     except (KeyError, AttributeError):
         return os.getenv("CDN_BASE_URL", "")
+
+
+# =============================================================================
+# CONFIGURATION AUTHENTIFICATION
+# =============================================================================
+
+def get_auth_config():
+    """Configuration de l'authentification"""
+    try:
+        return {
+            "allow_bcrypt_fallback": st.secrets["auth"].get("allow_bcrypt_fallback", True),
+            "min_password_length": st.secrets["auth"].get("min_password_length", 4),
+            "password_salt": st.secrets["auth"].get("password_salt", "")
+        }
+    except (KeyError, AttributeError):
+        return {
+            "allow_bcrypt_fallback": True,  # Permettre bcrypt pendant migration
+            "min_password_length": 4,
+            "password_salt": os.getenv("GM_PWD_SALT", "")
+        }
+
+
+# Constantes pour accès direct
+ALLOW_BCRYPT_FALLBACK = get_auth_config()["allow_bcrypt_fallback"]
