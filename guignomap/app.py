@@ -23,31 +23,7 @@ import streamlit as st
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# --- Compat Streamlit: retirer `width=` et mapper vers `use_container_width` si pertinent ---
-try:
-    _orig_button = st.button
-    def _button_compat(label, **kwargs):
-        w = str(kwargs.pop("width", "")).lower() if "width" in kwargs else ""
-        if w in {"stretch","full","100%","true"}:
-            kwargs["use_container_width"] = True
-        return _orig_button(label, **kwargs)
-    st.button = _button_compat
-
-    _orig_dl = st.download_button
-    def _download_button_compat(*args, **kwargs):
-        # retirer toute trace de `width` pour éviter l'erreur de signature
-        kwargs.pop("width", None)
-        return _orig_dl(*args, **kwargs)
-    st.download_button = _download_button_compat
-
-    _orig_form_submit = st.form_submit_button
-    def _form_submit_button_compat(label, **kwargs):
-        # supprimer 'width' pour éviter l'erreur de signature
-        kwargs.pop("width", None)
-        return _orig_form_submit(label, **kwargs)
-    st.form_submit_button = _form_submit_button_compat
-except Exception:
-    pass
+# Monkey-patch supprimé - utilisation de composants Streamlit natifs
 
 # Configuration Streamlit (doit être la première commande Streamlit)
 st.set_page_config(
@@ -228,7 +204,7 @@ def render_login_card(role="benevole"):
             with col2:
                 submit = st.form_submit_button(
                     "🔓 Connexion",
-                    width="stretch"
+                    
                 )
             
             if submit:
@@ -269,8 +245,7 @@ def render_login_card(role="benevole"):
             col1, col2, col3 = st.columns([1,2,1])
             with col2:
                 submit = st.form_submit_button(
-                    "🎄 Connexion",
-                    width="stretch"
+                    "🎄 Connexion"
                 )
             
             if submit:
@@ -781,10 +756,10 @@ def page_export_gestionnaire(conn):
                 pdf_data,
                 "rapport_guignolee_2025.pdf",
                 "application/pdf",
-                width="stretch"
+                
             )
         except ImportError:
-            st.button("PDF (Installer reportlab)", disabled=True, width="stretch")
+            st.button("PDF (Installer reportlab)", disabled=True)
     
     with col2:
         st.markdown("""
@@ -801,10 +776,10 @@ def page_export_gestionnaire(conn):
                 excel_data,
                 "guignolee_2025.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                width="stretch"
+                
             )
         except:
-            st.button("Excel (Non disponible)", disabled=True, width="stretch")
+            st.button("Excel (Non disponible)", disabled=True)
     
     with col3:
         st.markdown("""
@@ -820,7 +795,7 @@ def page_export_gestionnaire(conn):
             sms_list,
             "telephones_benevoles.txt",
             "text/plain",
-            width="stretch"
+            
         )
 
 
@@ -1133,15 +1108,15 @@ def page_benevole(geo):
                 # Changement rapide de statut
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    if st.button("⭕ À faire", key=f"todo_{name}", width="stretch"):
+                    if st.button("⭕ À faire", key=f"todo_{name}"):
                         db.set_status(name, 'a_faire')
                         st.rerun()
                 with col2:
-                    if st.button("⏳ En cours", key=f"progress_{name}", width="stretch"):
+                    if st.button("⏳ En cours", key=f"progress_{name}"):
                         db.set_status(name, 'en_cours')
                         st.rerun()
                 with col3:
-                    if st.button("✅ Terminée", key=f"done_{name}", width="stretch"):
+                    if st.button("✅ Terminée", key=f"done_{name}"):
                         db.set_status(name, 'terminee')
                         st.rerun()
                 
@@ -1350,7 +1325,7 @@ def page_gestionnaire_v2(geo):
                     help="Doit correspondre au mot de passe ci-dessus"
                 )
                 
-                submitted = st.form_submit_button("✅ Créer l'équipe", width="stretch")
+                submitted = st.form_submit_button("✅ Créer l'équipe")
 
             if submitted:
                 # Validation avec validators.py
@@ -1456,10 +1431,8 @@ def page_gestionnaire_v2(geo):
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
-        try:
-            TECH_PIN = st.secrets.get("TECH_PIN", "")
-        except:
-            TECH_PIN = ""  # Pas de fichier secrets.toml
+        from src.config import settings
+        TECH_PIN = settings.TECH_PIN
 
         if "tech_ok" not in st.session_state:
             st.session_state.tech_ok = False
@@ -1520,13 +1493,13 @@ def page_gestionnaire_v2(geo):
             
             col1, col2 = st.columns([2, 1])
             with col1:
-                if st.button("🔄 Créer un backup manuel", width="stretch"):
+                if st.button("🔄 Créer un backup manuel"):
                     backup_file = backup_mgr.create_backup("manual")
                     if backup_file:
                         st.success(f"Backup créé : {Path(backup_file).name}")
             
             with col2:
-                if st.button("✅ Voir les backups", width="stretch"):
+                if st.button("✅ Voir les backups"):
                     backups = backup_mgr.list_backups()
                     if backups:
                         for backup in backups[:5]:  # Montrer les 5 derniers
@@ -1651,7 +1624,7 @@ def page_superviseur(conn, geo):
                 db.export_to_csv(),
                 "rapport_rues.csv",
                 "text/csv",
-                width="stretch"
+                
             )
         
         with col2:
@@ -1660,17 +1633,15 @@ def page_superviseur(conn, geo):
                 db.export_notes_csv(),
                 "rapport_notes.csv",
                 "text/csv",
-                width="stretch"
+                
             )
 
     with tabs[4]:
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")  
-        try:
-            TECH_PIN = st.secrets.get("TECH_PIN", "")
-        except:
-            TECH_PIN = ""  # Pas de fichier secrets.toml
+        from src.config import settings
+        TECH_PIN = settings.TECH_PIN
 
         if "tech_ok" not in st.session_state:
             st.session_state.tech_ok = False
@@ -1970,10 +1941,10 @@ def page_export_gestionnaire_v41():
                 db.export_to_csv(),
                 "rapport_rues.csv",
                 "text/csv",
-                width="stretch"
+                
             )
         except Exception as e:
-            st.button("📊 CSV (Erreur)", disabled=True, width="stretch")
+            st.button("📊 CSV (Erreur)", disabled=True)
             st.caption(f"Erreur: {e}")
     
     with col2:
@@ -1987,12 +1958,12 @@ def page_export_gestionnaire_v41():
                 excel_data,
                 "guignolee_2025_rapport.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                width="stretch"
+                
             )
         except ImportError:
-            st.button("📊 Excel (Installer xlsxwriter)", disabled=True, width="stretch")
+            st.button("📊 Excel (Installer xlsxwriter)", disabled=True)
         except Exception as e:
-            st.button("📊 Excel (Erreur)", disabled=True, width="stretch")
+            st.button("📊 Excel (Erreur)", disabled=True)
             st.caption(f"Erreur: {e}")
     
     with col3:
@@ -2006,12 +1977,12 @@ def page_export_gestionnaire_v41():
                 pdf_data,
                 "guignolee_2025_rapport.pdf",
                 "application/pdf",
-                width="stretch"
+                
             )
         except ImportError:
-            st.button("📄 PDF (Installer reportlab)", disabled=True, width="stretch")
+            st.button("📄 PDF (Installer reportlab)", disabled=True)
         except Exception as e:
-            st.button("📄 PDF (Erreur)", disabled=True, width="stretch")
+            st.button("📄 PDF (Erreur)", disabled=True)
             st.caption(f"Erreur: {e}")
     
     # Export CSV assignations (nouveau v4.1)
@@ -2030,14 +2001,12 @@ def page_export_gestionnaire_v41():
                     "✅ Export CSV Assignations",
                     csv_data,
                     "assignations_secteurs.csv",
-                    "text/csv",
-                    width="stretch",
-                    help="Colonnes: secteur, rue, équipe, statut"
+                    "text/csv", help="Colonnes: secteur, rue, équipe, statut"
                 )
             else:
-                st.button("📋 Assignations (Aucune donnée)", disabled=True, width="stretch")
+                st.button("📋 Assignations (Aucune donnée)", disabled=True)
         except Exception as e:
-            st.button("✅ Assignations (Erreur)", disabled=True, width="stretch")
+            st.button("✅ Assignations (Erreur)", disabled=True)
             st.caption(f"Erreur: {e}")
     
     with col2:
@@ -2048,10 +2017,10 @@ def page_export_gestionnaire_v41():
                 db.export_notes_csv(),
                 "rapport_notes.csv",
                 "text/csv",
-                width="stretch"
+                
             )
         except Exception as e:
-            st.button("📝 Notes (Erreur)", disabled=True, width="stretch")
+            st.button("📝 Notes (Erreur)", disabled=True)
             st.caption(f"Erreur: {e}")
     
     # --- CSV d'assignation (export/import) ---
@@ -2163,7 +2132,7 @@ def page_benevole_mes_rues():
                         "🔓 En cours", 
                         key=f"progress_{street_name}",
                         disabled=current_status == 'en_cours',
-                        width="stretch"
+                        
                     ):
                         if db.update_street_status(street_name, 'en_cours', team_id):
                             st.toast(f"✅ {street_name} marquée en cours", icon="🚀")
@@ -2177,7 +2146,7 @@ def page_benevole_mes_rues():
                         "✅ Terminée", 
                         key=f"done_{street_name}",
                         disabled=current_status == 'terminee',
-                        width="stretch"
+                        
                     ):
                         if db.update_street_status(street_name, 'terminee', team_id):
                             st.toast(f"🎉 {street_name} terminée!", icon="🎉")
@@ -2292,22 +2261,22 @@ def main():
         st.markdown("### 🎄 Navigation")
         
         # Boutons de navigation stylisés
-        if st.button("🏠 Accueil", width="stretch"):
+        if st.button("🏠 Accueil"):
             st.session_state.page = "accueil"
             st.rerun()
         
-        if st.button("🎅 Bénévole", width="stretch"):
+        if st.button("🎅 Bénévole"):
             st.session_state.page = "benevole"
             st.rerun()
             
-        if st.button("👤 Gestionnaire", width="stretch"):
+        if st.button("👤 Gestionnaire"):
             st.session_state.page = "gestionnaire"  
             st.rerun()
         
         # Déconnexion si connecté
         if st.session_state.auth:
             st.markdown("---")
-            if st.button("🚪 Déconnexion", width="stretch"):
+            if st.button("🚪 Déconnexion"):
                 st.session_state.auth = None
                 st.rerun()
         
@@ -2356,3 +2325,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
