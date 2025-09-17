@@ -115,7 +115,7 @@ class BackupManager:
         log_file = self.backup_dir / "backup_log.json"
         log = []
         if log_file.exists():
-            with open(log_file, 'r') as f:
+            with open(log_file, 'r', encoding='utf-8') as f:
                 log = json.load(f)
         
         log.append({
@@ -127,7 +127,7 @@ class BackupManager:
         # Garder seulement les 100 derniers logs
         log = log[-100:]
         
-        with open(log_file, 'w') as f:
+        with open(log_file, 'w', encoding='utf-8') as f:
             json.dump(log, f, indent=2)
 
 def auto_backup_before_critical(func):
