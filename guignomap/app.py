@@ -1578,9 +1578,31 @@ def page_superviseur(conn, geo):
                 new_id = st.text_input("Identifiant")
                 new_name = st.text_input("Équipe")
                 new_pass = st.text_input("Mot de passe", type="password")
+                new_pass_confirm = st.text_input("Confirmer le mot de passe", type="password")
                 
-                if st.form_submit_button("Créer"):
-                    if all([new_id, new_name, new_pass]):
+                # Validation du mot de passe
+                password_valid = True
+                error_messages = []
+                
+                if new_pass or new_pass_confirm:  # Si au moins un champ est rempli
+                    if len(new_pass) < 4:
+                        password_valid = False
+                        error_messages.append("Le mot de passe doit contenir au moins 4 caractères")
+                    
+                    if new_pass != new_pass_confirm:
+                        password_valid = False
+                        error_messages.append("Les mots de passe ne correspondent pas")
+                
+                # Affichage des erreurs
+                if error_messages:
+                    for msg in error_messages:
+                        st.error(msg)
+                
+                # Bouton désactivé si validation échoue
+                button_disabled = not (all([new_id, new_name, new_pass, new_pass_confirm]) and password_valid)
+                
+                if st.form_submit_button("Créer", disabled=button_disabled):
+                    if all([new_id, new_name, new_pass]) and password_valid:
                         if db.create_team(new_id, new_name, new_pass):
                             st.success(f"Équipe {new_id} créée")
                             st.rerun()
