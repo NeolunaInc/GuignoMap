@@ -84,7 +84,7 @@ class ReportGenerator:
         summary_sheet.merge_range(1, 0, 1, 4, f'Rapport généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', cell_format)  # A2:E2
         
         # Stats globales
-        from db_v5 import extended_stats
+        from src.database.operations import extended_stats
         stats = extended_stats()
         
         row = 4
@@ -118,7 +118,7 @@ class ReportGenerator:
             streets_sheet.write(0, col, header, header_format)
         
         # Données
-        from db_v5 import list_streets
+        from src.database.operations import list_streets
         df = list_streets()
         
         for idx, row_data in enumerate(df.iterrows(), 1):
@@ -138,7 +138,7 @@ class ReportGenerator:
         teams_sheet = workbook.add_worksheet('Performance équipes')
         teams_sheet.set_column(0, 5, 15)
         
-        from db_v5 import stats_by_team
+        from src.database.operations import stats_by_team
         teams_data = stats_by_team()
         
         if teams_data:
@@ -179,7 +179,7 @@ class ReportGenerator:
         # Résumé
         story.append(Paragraph("Résumé de la collecte", self.styles['SectionTitle']))
         
-        from db_v5 import extended_stats
+        from src.database.operations import extended_stats
         stats = extended_stats()
         
         summary_data = [
@@ -209,7 +209,7 @@ class ReportGenerator:
         # Performance des équipes
         story.append(Paragraph("Performance des équipes", self.styles['SectionTitle']))
         
-        from db_v5 import stats_by_team
+        from src.database.operations import stats_by_team
         teams_data_list = stats_by_team()
         
         if teams_data_list:

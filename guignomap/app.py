@@ -4,11 +4,39 @@ Le Relais de Mascouche
 Version 3.0 - Production
 """
 
+# pyright: reportCallIssue=false
+
 from pathlib import Path
 import time
 from datetime import datetime
 import pandas as pd
 import streamlit as st
+
+# --- Compat Streamlit: retirer `width=` et mapper vers `use_container_width` si pertinent ---
+try:
+    _orig_button = st.button
+    def _button_compat(label, **kwargs):
+        w = str(kwargs.pop("width", "")).lower() if "width" in kwargs else ""
+        if w in {"stretch","full","100%","true"}:
+            kwargs["use_container_width"] = True
+        return _orig_button(label, **kwargs)
+    st.button = _button_compat
+
+    _orig_dl = st.download_button
+    def _download_button_compat(*args, **kwargs):
+        # retirer toute trace de `width` pour éviter l'erreur de signature
+        kwargs.pop("width", None)
+        return _orig_dl(*args, **kwargs)
+    st.download_button = _download_button_compat
+
+    _orig_form_submit = st.form_submit_button
+    def _form_submit_button_compat(label, **kwargs):
+        # supprimer 'width' pour éviter l'erreur de signature
+        kwargs.pop("width", None)
+        return _orig_form_submit(label, **kwargs)
+    st.form_submit_button = _form_submit_button_compat
+except Exception:
+    pass
 
 # Configuration Streamlit (doit être la première commande Streamlit)
 st.set_page_config(
@@ -22,7 +50,7 @@ import folium
 from streamlit_folium import st_folium
 
 # Import des modules locaux
-from src.database import db_v5 as db
+from src.database import operations as db
 from guignomap.validators import validate_and_clean_input
 from guignomap.osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
 from src.utils.adapters import to_dataframe
@@ -124,7 +152,14 @@ def render_header():
     with col3:
         # Stats en temps réel
         stats = db.extended_stats()
-        progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
+        # Normalisation anti-KeyError (valeurs par défaut)
+        stats = stats or {}
+        total = int(stats.get('total') or stats.get('count') or 0)
+        done = int(stats.get('done') or stats.get('completed') or 0)
+        # Réinjecte pour la suite de l'UI si d'autres blocs lisent ces clés
+        stats['total'] = total
+        stats['done'] = done
+        progress = (done / total * 100) if total > 0 else 0
         
         st.markdown(f"""
         <div style="
@@ -1122,6 +1157,47 @@ def page_benevole(geo):
                     st.markdown("**Notes existantes:**")
                     for n in notes_list:
                         st.markdown(f"• **{n['address_number']}** : {n['comment']}")
+
+                # ===== 📍 Adresses de la rue (nouveau) =====
+                with st.expander("📍 Adresses de la rue", expanded=False):
+                    if st.button("Afficher les adresses", key=f"show_addr_{name}"):
+                        try:
+                            addrs = db.get_addresses_by_street(name)
+                        except Exception:
+                            addrs = []
+                        if addrs:
+                            import pandas as pd
+                            df_addr = pd.DataFrame(addrs)
+                            st.dataframe(df_addr.head(300), use_container_width=True)
+                            # Ajout note rapide liée à un numéro
+                            colA, colB = st.columns([1,3])
+                            with colA:
+                                sel_num = st.selectbox(
+                                    "Numéro",
+                                    options=[a["house_number"] for a in addrs][:300],
+                                    key=f"addr_sel_{name}",
+                                )
+                            with colB:
+                                txt_note = st.text_input(
+                                    "Note", key=f"addr_note_{name}", placeholder="Ex.: Absent / Don / Refus…"
+                                )
+                            if st.button("➕ Ajouter note", key=f"addr_add_{name}"):
+                                ok = False
+                                # team_id déjà dispo dans la fonction (variable plus haut)
+                                try:
+                                    ok = bool(db.add_note_for_address(name, team_id, sel_num, txt_note))
+                                except Exception:
+                                    try:
+                                        ok = bool(db.add_street_note(name, team_id, sel_num, txt_note))
+                                    except Exception:
+                                        ok = False
+                                if ok:
+                                    st.success(f"Note ajoutée pour {name} #{sel_num}")
+                                    st.rerun()
+                                else:
+                                    st.error("Échec de l'ajout de note")
+                        else:
+                            st.info("Aucune adresse trouvée pour cette rue")
     
     with tab3:
         st.markdown("### 📊 Votre historique")
@@ -1167,7 +1243,7 @@ def page_benevole_v2(geo):
         st.markdown("### 📝 Journal d'activité de votre équipe")
         try:
             # Afficher les activités récentes de l'équipe
-            from db_v5 import recent_activity
+            from src.database.operations import recent_activity
             activities = recent_activity(20)
             
             if activities:
@@ -1300,6 +1376,62 @@ def page_gestionnaire_v2(geo):
                 st.info("Aucune équipe créée")
         except Exception as e:
             st.info("Liste des équipes non disponible")
+
+        # === 🔐 Modifier / réinitialiser le mot de passe ===
+        with st.expander("🔐 Modifier / réinitialiser le mot de passe", expanded=False):
+            # récupérer les équipes
+            try:
+                teams = db.get_teams_list()
+                options = [f"{t[1]} ({t[0]})" for t in teams] if teams else []
+            except Exception:
+                options = []
+            
+            with st.form("pwd_team_form", clear_on_submit=False):
+                choice = st.selectbox("Équipe", options=options, index=0 if options else None)
+                show = st.checkbox("Afficher le mot de passe", value=False)
+                ty = "default" if show else "password"
+                new1 = st.text_input("Nouveau mot de passe", type=ty, key="pwd_new1")
+                new2 = st.text_input("Confirmer", type=ty, key="pwd_new2")
+                colU, colR = st.columns(2)
+                do_update = colU.form_submit_button("✅ Mettre à jour", use_container_width=True)
+                do_reset  = colR.form_submit_button("🎲 Réinitialiser (aléatoire)", use_container_width=True)
+            
+            # traitement
+            team_id = ""
+            if choice:
+                team_id = choice.split("(")[-1].rstrip(")")
+            
+            if do_update:
+                if not team_id:
+                    st.error("Aucune équipe sélectionnée")
+                elif len(new1) < 4:
+                    st.error("Mot de passe trop court (min 4 caractères)")
+                elif new1 != new2:
+                    st.error("La confirmation ne correspond pas")
+                else:
+                    try:
+                        ok = db.update_team_password(team_id, new1)
+                        if ok:
+                            st.success(f"Mot de passe mis à jour pour {team_id}")
+                            st.rerun()
+                        else:
+                            st.error("Échec de la mise à jour")
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
+            
+            if do_reset:
+                if not team_id:
+                    st.error("Aucune équipe sélectionnée")
+                else:
+                    try:
+                        newpwd = db.reset_team_password(team_id)
+                        if newpwd:
+                            st.success(f"Nouveau mot de passe généré pour {team_id}")
+                            st.code(newpwd)  # à copier maintenant; ne sera plus affiché ensuite
+                        else:
+                            st.error("Échec de la réinitialisation")
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
     
     with tabs[2]:
         # Assignation v4.1
@@ -1569,87 +1701,150 @@ def page_superviseur(conn, geo):
 # ================================================================================
 
 def page_assignations_v41():
-    """Panneau d'assignations v4.1 pour superviseurs"""
-    
-    try:
-        # ===== Bloc Assignations (refactor propre) =====
-        st.subheader("🗺️ Assignations par secteur", anchor=False)
-        
-        # Compteur de rues non assignées (bannière info)
-        unassigned_count = db.get_unassigned_streets_count()
+    """Assignations : au choix par secteur (bulk) OU par rue (manuel)."""
+    import pandas as pd
+    st.subheader("🗺️ Assignations", anchor=False)
+
+    tabs = st.tabs(["🎯 Par secteur (rapide)", "🧭 Par rue (manuel)"])
+
+    # ========== TAB 1 : BULK PAR SECTEUR (inchangé) ==========
+    with tabs[0]:
+        try:
+            unassigned_count = db.get_unassigned_streets_count()
+        except Exception:
+            # fallback si la fonction n'existe pas
+            _df = db.list_streets()
+            unassigned_count = int((_df["team"].isna() | (_df["team"] == "")).sum()) if not _df.empty else 0
+
         if unassigned_count > 0:
             st.info(f"⚠️ {unassigned_count} rue(s) non assignée(s)")
-        
+
         with st.container():
             c1, c2, c3 = st.columns([1, 1.2, 0.7], vertical_alignment="bottom")
-            
+
             with c1:
-                # Récupérer la liste des secteurs
-                liste_secteurs = db.get_sectors_list()
+                try:
+                    liste_secteurs = db.get_sectors_list()
+                except Exception:
+                    liste_secteurs = []
                 secteur = st.selectbox(
                     "SECTEUR À ASSIGNER",
-                    options=[""] + (liste_secteurs if liste_secteurs else []),
+                    options=[""] + (liste_secteurs or []),
                     index=0,
-                    key="assign_sector",
-                    help="Choisissez le secteur à assigner",
-                    label_visibility="visible",
+                    key="assign_sector_v41",
                 )
-            
+
             with c2:
-                # Récupérer la liste des équipes
-                teams = db.get_teams_list()
-                liste_equipes = [f"{team[1]} ({team[0]})" for team in teams] if teams else []
-                
-                if liste_equipes:
-                    team_display = st.selectbox(
-                        "ÉQUIPE", 
-                        options=[""] + liste_equipes, 
-                        index=0, 
-                        key="assign_team"
-                    )
-                    # Extraire l'ID de l'équipe
-                    team = ""
-                    if team_display and team_display != "":
-                        team = team_display.split("(")[-1].rstrip(")")
-                else:
-                    st.info("Aucune équipe disponible")
-                    team = None
-            
+                try:
+                    teams = db.get_teams_list()  # [(id, name), ...]
+                except Exception:
+                    teams = [(t, t) for t in (db.teams() or [])]
+                team_display = st.selectbox(
+                    "ÉQUIPE",
+                    options=[""] + [f"{name} ({tid})" for (tid, name) in teams],
+                    index=0,
+                    key="assign_team_v41",
+                )
+                team = ""
+                if team_display and team_display != "":
+                    team = team_display.split("(")[-1].rstrip(")")
+
             with c3:
-                disabled = not (secteur and team)
-                if st.button("🎯 Assigner tout le secteur", width="stretch", disabled=disabled):
-                    # Appel métier : assigner toutes les rues non assignées du secteur à l'équipe
-                    if secteur and team:
-                        try:
-                            nb = db.bulk_assign_sector(secteur, team)
-                            if nb > 0:
-                                st.toast(f"✅ {nb} rue(s) assignée(s) à l'équipe {team}", icon="✅")
-                                st.rerun()
-                            else:
-                                st.toast("ℹ️ Aucune rue non assignée dans ce secteur", icon="ℹ️")
-                        except Exception as e:
-                            st.error(f"Erreur lors de l'assignation: {e}")
-        
-        # ===== Tableau d'état (uniforme, sans style spécial) =====
+                if st.button("Assigner tout le secteur", use_container_width=True, disabled=not (secteur and team)):
+                    try:
+                        nb = db.bulk_assign_sector(secteur, team)
+                        if nb > 0:
+                            st.toast(f"✅ {nb} rue(s) assignée(s) à {team}", icon="✅")
+                            st.rerun()
+                        else:
+                            st.toast("ℹ️ Aucune rue non assignée dans ce secteur", icon="ℹ️")
+                    except Exception as e:
+                        st.error(f"Erreur lors de l'assignation: {e}")
+
         st.markdown("### 📋 État des assignations")
-        
+        try:
+            df = db.list_streets()
+            if not df.empty:
+                df_disp = df.assign(
+                    Statut=df["status"].map(STATUS_TO_LABEL).fillna("À faire")
+                ).rename(columns={"name": "Rue", "sector": "Secteur", "team": "Équipe"})[
+                    ["Rue", "Secteur", "Équipe", "Statut"]
+                ]
+                st.dataframe(df_disp, use_container_width=True)
+            else:
+                st.info("Aucune rue trouvée")
+        except Exception as e:
+            st.error(f"Erreur d'affichage: {e}")
+
+    # ========== TAB 2 : ASSIGNATION MANUELLE PAR RUE ==========
+    with tabs[1]:
+        # Équipe cible
+        try:
+            teams = db.get_teams_list()
+        except Exception:
+            teams = [(t, t) for t in (db.teams() or [])]
+        team_display = st.selectbox(
+            "ÉQUIPE CIBLE",
+            options=[f"{name} ({tid})" for (tid, name) in teams] if teams else [],
+            index=0 if teams else None,
+            key="team_for_streets",
+        )
+        team_id = team_display.split("(")[-1].rstrip(")") if team_display else None
+
+        # Source de rues (non assignées ou toutes)
+        src = st.radio("Source", ["Rues non assignées", "Toutes les rues"], horizontal=True)
+
+        # Données rues
         df = db.list_streets()
-        if not df.empty:  # Liste non vide
-            df_disp = df.assign(
-                Statut=df["status"].map(STATUS_TO_LABEL).fillna("À faire")
-            ).rename(columns={
-                "name": "Rue", 
-                "sector": "Secteur", 
-                "team": "Équipe"
-            })[["Rue", "Secteur", "Équipe", "Statut"]]
-            
-            st.dataframe(df_disp, use_container_width=True)  # aucun Styler, aucun CSS cellule
+        if df.empty:
+            st.info("Aucune rue dans la base.")
+            return
+
+        # Filtres
+        q = st.text_input("🔎 Filtrer par nom (contient)…", "")
+        sectors = sorted([s for s in df["sector"].dropna().unique().tolist() if str(s).strip()])
+        sector_filter = st.selectbox("Secteur (optionnel)", options=["(Tous)"] + sectors, index=0)
+
+        # Filtrage selon la source
+        if src.startswith("Rues non"):
+            mask_unassigned = df["team"].isna() | (df["team"].astype(str).str.strip() == "")
+            work = df[mask_unassigned].copy()
         else:
-            st.info("Aucune rue trouvée")
-            
-    except Exception as e:
-        st.error(f"Erreur dans le panneau d'assignations: {e}")
-        st.info("Fonctionnalité temporairement indisponible")
+            work = df.copy()
+
+        # Appliquer filtres texte/secteur
+        if q:
+            work = work[work["name"].astype(str).str.contains(q, case=False, na=False)]
+        if sector_filter != "(Tous)":
+            work = work[work["sector"] == sector_filter]
+
+        options = sorted(work["name"].dropna().unique().tolist())
+        selected = st.multiselect("Rues à assigner", options=options, default=[])
+
+        st.caption(f"{len(options)} rue(s) listée(s) • {len(selected)} sélectionnée(s)")
+        do_overwrite = st.checkbox("Réassigner même si déjà affectée (écrase l'équipe actuelle)", value=True)
+
+        colA, colB = st.columns([1, 1])
+        with colA:
+            if st.button("✅ Assigner les rues sélectionnées", use_container_width=True,
+                         disabled=not (team_id and selected)):
+                try:
+                    if team_id:  # Vérification supplémentaire
+                        db.assign_streets_to_team(selected, team_id)
+                        st.success(f"{len(selected)} rue(s) assignée(s) à {team_id}")
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Assignation échouée: {e}")
+
+        with colB:
+            # Affichage d'aperçu des rues choisies
+            if selected:
+                st.write("Aperçu :")
+                st.dataframe(
+                    work[work["name"].isin(selected)][["name", "sector", "team", "status"]]
+                    .rename(columns={"name": "Rue", "sector": "Secteur", "team": "Équipe", "status": "Statut"}),
+                    use_container_width=True
+                )
 
 def page_export_gestionnaire_v41():
     """Page d'export v4.1 avec nouvelles fonctionnalités"""
@@ -1748,6 +1943,47 @@ def page_export_gestionnaire_v41():
         except Exception as e:
             st.button("📝 Notes (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
+    
+    # --- CSV d'assignation (export/import) ---
+    st.markdown("---")
+    st.markdown("### 📄 CSV d'assignation des rues")
+    with st.expander("Exporter / Importer", expanded=False):
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("📤 Exporter le template (CSV)", use_container_width=True):
+                try:
+                    df = db.export_streets_template(include_assignments=False)
+                    csv_data = df.to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        label="📥 Télécharger streets_template.csv",
+                        data=csv_data,
+                        file_name="streets_template.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Erreur lors de l'export: {e}")
+        with c2:
+            up = st.file_uploader("📥 Importer votre CSV modifié", type=["csv"], key="csv_upload")
+            if up is not None:
+                try:
+                    from io import BytesIO
+                    # Convertir en BytesIO si nécessaire
+                    if hasattr(up, 'read'):
+                        file_content = up.read()
+                        if isinstance(file_content, str):
+                            file_like = BytesIO(file_content.encode('utf-8'))
+                        else:
+                            file_like = BytesIO(file_content)
+                    else:
+                        file_like = up
+                    
+                    res = db.upsert_streets_from_csv(file_like)
+                    st.success(f"✅ Import terminé — inserted={res.get('inserted',0)}, updated={res.get('updated',0)}, skipped={res.get('skipped',0)}, errors={res.get('errors',0)}")
+                    if res.get('inserted', 0) > 0 or res.get('updated', 0) > 0:
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Erreur lors de l'import: {e}")
 
 def page_benevole_mes_rues():
     """Vue 'Mes rues' pour bénévoles v4.1"""

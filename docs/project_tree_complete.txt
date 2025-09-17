@@ -1,0 +1,154 @@
+# ================================================================================
+# ARBRE DU PROJET GUIGNOMAP - STRUCTURE COMPLÈTE ET PROPRE
+# Généré le: 2025-09-16 11:05:00
+# Exclusions: __pycache__, .venv, backups/, exports/, .git, *.pyc, *.log, *.db
+# ================================================================================
+
+GuignoMap/
+├── .devcontainer/
+│   └── devcontainer.json                    # Configuration Dev Container
+├── .streamlit/
+│   ├── config.toml                          # ⭐ Configuration Streamlit
+│   ├── secrets.toml                         # 🔐 Secrets (développement)
+│   └── secrets.toml.example                 # 📋 Template secrets
+├── .vscode/
+│   ├── launch.json                          # Configuration debug VS Code
+│   ├── settings.json                        # Paramètres VS Code
+│   └── tasks.json                           # Tâches automatisées
+├── docs/                                    # 📚 Documentation
+│   ├── PHASE1_AUDIT_DATAFRAME.md            # Audit DataFrame
+│   └── PROBLEME_IPV6_SUPABASE.md            # Documentation problème IPv6
+├── guignomap/                               # 🎯 Application principale
+│   ├── assets/                              # 🎨 Ressources statiques
+│   │   ├── banner.png                       # Bannière application
+│   │   ├── guignolee.png                    # Logo Guignolée
+│   │   ├── logo.png                         # Logo Relais
+│   │   └── styles.css                       # ⭐ Styles CSS
+│   ├── logs/                                # (vide - exclus .log)
+│   ├── __init__.py                          # Module Python
+│   ├── app.py                               # ⭐ Interface Streamlit (2000+ lignes)
+│   ├── backup.py                            # 💾 Système de sauvegarde
+│   ├── db.py                                # 🔄 Legacy DB (migration)
+│   ├── db_v5.py                             # ⭐ Base de données SQLAlchemy  
+│   ├── osm.py                               # ⭐ Intégration OpenStreetMap
+│   ├── osm_addresses.json                   # Cache adresses OSM
+│   ├── osm_cache.json                       # Cache géométrie OSM
+│   ├── reports.py                           # 📊 Génération rapports
+│   └── validators.py                        # 🛡️ Validation sécurisée
+├── scripts/                                 # 🔧 Scripts utilitaires
+│   ├── export_repo_audit.py                # Export pour audit
+│   ├── export_repo_min.py                  # Export minimal
+│   ├── export_repo_snapshot.py             # Snapshot repository
+│   ├── fix_app_types.py                    # Corrections types
+│   ├── fix_specific.py                     # Corrections spécifiques
+│   ├── generate_audit_export.py            # 📋 Générateur export audit
+│   ├── generate_audit_optimise.py          # ⭐ Générateur export optimisé
+│   ├── migrate_password_hashes.py          # 🔐 Migration Argon2
+│   ├── migrate_sqlite_to_postgres.py       # 🔄 Migration PostgreSQL
+│   ├── sanity_db_pandas.py                 # 🔍 Vérification DB
+│   ├── smoke_create_map.py                 # 🗺️ Test carte
+│   └── validation_dataframe.ps1            # Script validation PowerShell
+├── src/                                     # 🏗️ Architecture modulaire
+│   ├── auth/                                # 🔐 Authentification
+│   │   └── passwords.py                     # ⭐ Authentification Argon2
+│   ├── database/                            # 💾 Base de données
+│   │   ├── migrations/                      # 🔄 Migrations Alembic
+│   │   │   ├── versions/                    # Versions migrations
+│   │   │   ├── env.py                       # Configuration Alembic
+│   │   │   ├── README                       # Documentation migrations
+│   │   │   └── script.py.mako               # Template migration
+│   │   ├── connection.py                    # ⭐ Connexions PostgreSQL
+│   │   ├── db_v5.py                         # ⭐ Opérations base (duplicate?)
+│   │   └── models.py                        # ⭐ Modèles SQLAlchemy
+│   ├── storage/                             # 💾 Stockage
+│   │   ├── __init__.py                      # Configuration stockage
+│   │   ├── cloud.py                         # ☁️ Stockage S3
+│   │   └── local.py                         # 💻 Stockage local
+│   ├── utils/                               # 🛠️ Utilitaires
+│   │   ├── __init__.py                      # Module utils
+│   │   └── adapters.py                      # 🔄 Adaptateurs données
+│   ├── __init__.py                          # Module src
+│   └── config.py                            # ⭐ Configuration centralisée
+├── tests/                                   # 🧪 Tests
+│   └── manual/                              # Tests manuels
+│       ├── test_db_connection.py            # Test connexion DB
+│       └── test_db_simple.py                # Test simple DB
+├── tools/                                   # ⚡ Outils
+│   └── quick_sanity.py                      # ⚡ Vérification rapide
+├── .gitignore                               # 🚫 Exclusions Git
+├── alembic.ini                              # 🔧 Configuration Alembic
+├── audit_dataframe.ps1                     # 📋 Script audit PowerShell
+├── generate_tree_clean.py                  # 🌳 Générateur arbre propre
+├── GuignoMap_code_export_20250914_audit.txt # 📄 Export audit précédent
+├── GuignoMap_code_export_20250915_final_UTF8.txt # 📄 Export final précédent
+├── lancer_guignomap.bat                    # 🚀 Lanceur Windows Batch
+├── lancer_guignomap.ps1                    # 🚀 Lanceur PowerShell
+├── PHASE1_COMMANDS.md                      # 📋 Documentation Phase 1
+├── README.md                               # 📖 Documentation principale
+├── README_VENV.md                          # 📖 Documentation environnement
+├── requirements.txt                        # 📦 Dépendances production
+├── requirements_freeze.txt                 # 📦 Versions exactes
+├── requirements_freeze_bom.txt             # 📦 Backup versions (BOM)
+├── requirements_freeze_old.txt             # 📦 Backup versions (ancien)
+├── runtime.txt                             # 🐍 Version Python (Streamlit Cloud)
+└── streamlit_app.py                        # ⭐ Point d'entrée Cloud
+
+# ================================================================================
+# STATISTIQUES FINALES
+# ================================================================================
+
+📊 Total éléments inclus: 88
+🚫 Exclusions: __pycache__, .venv, backups/, exports/, .git, *.pyc, *.log, *.db
+📁 Dossiers principaux: 16
+📄 Fichiers source Python: 24
+📄 Fichiers configuration: 12
+📄 Fichiers documentation: 8
+📄 Autres fichiers: 32
+
+# ================================================================================
+# DOSSIERS EXCLUS (polluants)
+# ================================================================================
+
+❌ __pycache__/                             # Cache Python bytecode
+❌ .venv/                                   # Environnement virtuel (165MB+)
+❌ backups/                                 # Sauvegardes automatiques
+❌ exports/                                 # Exports CSV précédents  
+❌ .git/                                    # Métadonnées Git
+❌ *.pyc, *.pyo, *.pyd                      # Bytecode Python
+❌ *.log                                    # Fichiers de logs
+❌ *.db, *.sqlite                           # Bases de données locales
+
+# ================================================================================
+# POINTS CLÉS POUR L'AUDIT
+# ================================================================================
+
+🔍 FICHIERS CRITIQUES (sécurité):
+- src/auth/passwords.py                     # Hachage Argon2
+- guignomap/validators.py                   # Anti-XSS/injection
+- .streamlit/secrets.toml                   # Configuration secrets
+- src/config.py                             # Gestion variables environnement
+
+📊 FICHIERS MÉTIER (application):
+- guignomap/app.py                          # Interface utilisateur principale
+- guignomap/db_v5.py + src/database/        # Couche accès données
+- guignomap/osm.py                          # Intégration cartes
+- guignomap/reports.py                      # Génération rapports
+
+⚙️ FICHIERS INFRASTRUCTURE:
+- src/database/connection.py                # Pool connexions PostgreSQL
+- src/storage/cloud.py                      # Intégration S3
+- alembic.ini + src/database/migrations/    # Migrations base
+- .streamlit/config.toml                    # Configuration interface
+
+🔧 SCRIPTS MAINTENANCE:
+- scripts/migrate_*.py                      # Scripts migration
+- scripts/sanity_*.py                       # Scripts validation
+- tools/quick_sanity.py                     # Vérifications rapides
+
+ARCHITECTURE: Streamlit + PostgreSQL + Folium + S3 + Alembic
+DÉPLOIEMENT: Compatible Streamlit Cloud + Docker
+VERSION: v3.0 Production
+
+===============================================================================
+FIN ARBRE PROJET GUIGNOMAP - 2025-09-16 11:05:00
+===============================================================================

@@ -1,7 +1,10 @@
-import sqlite3
-import pandas as pd
-import hashlib
-import bcrypt
+"""import sqlite3
+
+Database proxy module - redirects to unified operations layerimport pandas as pd
+
+"""import hashlib
+
+from src.database.operations import *import bcrypt
 from backup import auto_backup_before_critical, BackupManager
 from validators import validate_and_clean_input, InputValidator
 from datetime import datetime

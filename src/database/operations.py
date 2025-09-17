@@ -99,7 +99,48 @@ def auto_import_streets():
 
 
 # =============================================================================
-# GESTION DES ÉQUIPES ET AUTHENTIFICATION
+# AUTHENTIFICATION HELPERS - SUPPORT MULTI-FORMAT
+# =============================================================================
+
+def _try_import_security():
+    """Tente d'importer les fonctions de sécurité avancées"""
+    try:
+        from src.utils.security import verify_password, hash_password
+        return verify_password, hash_password
+    except Exception:
+        return None, None
+
+
+def _sha256(txt: str) -> str:
+    """Utilitaire SHA-256"""
+    import hashlib
+    return hashlib.sha256(txt.encode('utf-8')).hexdigest()
+
+
+def _pbkdf2_verify(stored: str, password: str) -> bool:
+    """Vérifie un hash PBKDF2 au format Django/Python"""
+    try:
+        if not stored.startswith('pbkdf2_sha256$'):
+            return False
+        parts = stored.split('$')
+        if len(parts) != 4:
+            return False
+        _, iterations, salt, expected = parts
+        import hashlib
+        import base64
+        actual = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), int(iterations))
+        return base64.b64encode(actual).decode() == expected
+    except Exception:
+        return False
+
+
+def _bcrypt_like(stored: str) -> bool:
+    """Détecte les formats bcrypt (non supportés sans lib)"""
+    return stored.startswith(('$2a$', '$2b$', '$2y$'))
+
+
+# =============================================================================
+# GESTION DES ÉQUIPES ET AUTHENTIFICATION (REÉCRITE)
 # =============================================================================
 
 def hash_password(password: str) -> str:
@@ -121,7 +162,7 @@ def create_team(team_id: str, name: str, password: str) -> bool:
             if exists > 0:
                 return False
             
-            password_hash = hash_password(password)
+            password_hash = _hash_password(password)
             session.execute(text("""
                 INSERT INTO teams (id, name, password_hash, created_at, active)
                 VALUES (:id, :name, :hash, CURRENT_TIMESTAMP, 1)
@@ -144,36 +185,93 @@ def create_team(team_id: str, name: str, password: str) -> bool:
 
 @db_retry(max_retries=2)
 def verify_team(team_id: str, password: str) -> bool:
-    """Vérifie les identifiants d'une équipe"""
+    """Vérifie les identifiants d'une équipe (multi-format compatible)"""
     try:
+        # Normalisation des entrées
+        team_id = (team_id or "").strip()
+        password = (password or "").strip()
+        
+        if not team_id or not password:
+            return False
+        
+        verify_password, _ = _try_import_security()
+        
         with get_session() as session:
-            result = session.execute(
-                text("SELECT password_hash FROM teams WHERE id = :id AND active = 1"),
-                {"id": team_id}
-            ).first()
+            # Détecter les colonnes disponibles
+            cols_info = session.execute(text("PRAGMA table_info(teams)")).fetchall()
+            available_cols = {row[1] for row in cols_info}
+            
+            # Construire la requête selon les colonnes disponibles
+            select_parts = ["id", "name"]
+            if "password" in available_cols:
+                select_parts.append("COALESCE(password, '') as password")
+            else:
+                select_parts.append("'' as password")
+            
+            if "password_hash" in available_cols:
+                select_parts.append("COALESCE(password_hash, '') as password_hash")
+            else:
+                select_parts.append("'' as password_hash")
+            
+            if "password_salt" in available_cols:
+                select_parts.append("COALESCE(password_salt, '') as password_salt")
+            else:
+                select_parts.append("'' as password_salt")
+            
+            query = f"SELECT {', '.join(select_parts)} FROM teams WHERE id = :id AND active = 1 LIMIT 1"
+            result = session.execute(text(query), {"id": team_id}).first()
             
             if not result:
                 return False
             
-            stored_hash = result[0]
+            _, _, stored_plain, stored_hash, stored_salt = result
             
-            # Support bcrypt (nouveau) et MD5 legacy (migration)
-            if stored_hash.startswith('$2b$'):
-                # bcrypt
-                return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
-            else:
-                # MD5 legacy - migrer automatiquement
-                if hashlib.md5(password.encode()).hexdigest() == stored_hash:
-                    # Migrer vers bcrypt
-                    new_hash = hash_password(password)
-                    session.execute(
-                        text("UPDATE teams SET password_hash = :hash WHERE id = :id"),
-                        {"hash": new_hash, "id": team_id}
-                    )
-                    session.commit()
-                    return True
+            # Stratégie de vérification (ordre de priorité)
+            
+            # 1) Utiliser verify_password avancé si disponible
+            if verify_password and stored_hash:
+                try:
+                    if verify_password(password, stored_hash):
+                        return True
+                except Exception:
+                    pass
+            
+            # 2) Format PBKDF2
+            if stored_hash and _pbkdf2_verify(stored_hash, password):
+                return True
+            
+            # 3) Formats bcrypt (détection mais pas de support)
+            if stored_hash and _bcrypt_like(stored_hash):
+                print(f"⚠️ Équipe {team_id}: bcrypt détecté mais non supporté")
                 return False
-                
+            
+            # 4) SHA-256 simple (64 hex chars)
+            if stored_hash and len(stored_hash) == 64:
+                if stored_hash == _sha256(password):
+                    return True
+                # SHA-256 avec salt environnement
+                import os
+                salt_env = os.environ.get("GM_PWD_SALT", "")
+                if salt_env and stored_hash == _sha256(salt_env + password):
+                    return True
+            
+            # 5) SHA-256 avec salt stocké
+            if stored_salt and stored_hash:
+                if stored_hash == _sha256(stored_salt + password):
+                    return True
+            
+            # 6) Mot de passe en clair (legacy)
+            if stored_plain and stored_plain == password:
+                return True
+            
+            # 7) Fallback MD5 legacy
+            if stored_hash:
+                import hashlib
+                if stored_hash == hashlib.md5(password.encode()).hexdigest():
+                    return True
+            
+            return False
+            
     except Exception as e:
         print(f"❌ Erreur verify_team: {e}")
         return False
@@ -434,35 +532,21 @@ def get_team_notes(team_id: str) -> List[Dict[str, Any]]:
 def extended_stats() -> Dict[str, Any]:
     """Statistiques étendues de l'application"""
     try:
+        from sqlalchemy import text
         with get_session() as session:
-            # Stats de base
-            total_streets = session.execute(text("SELECT COUNT(*) FROM streets")).scalar() or 0
-            assigned_streets = session.execute(text("SELECT COUNT(*) FROM streets WHERE team IS NOT NULL AND team != ''")).scalar() or 0
-            completed_streets = session.execute(text("SELECT COUNT(*) FROM streets WHERE status = 'terminee'")).scalar() or 0
-            in_progress_streets = session.execute(text("SELECT COUNT(*) FROM streets WHERE status = 'en_cours'")).scalar() or 0
-            
-            # Stats par statut
-            status_counts = session.execute(text("""
-                SELECT status, COUNT(*) as count
-                FROM streets 
-                GROUP BY status
-            """))
-            status_data = {row[0]: row[1] for row in status_counts}
-            
-            return {
-                'total_streets': total_streets,
-                'assigned_streets': assigned_streets,
-                'unassigned_streets': total_streets - assigned_streets,
-                'completed_streets': completed_streets,
-                'in_progress_streets': in_progress_streets,
-                'todo_streets': total_streets - completed_streets - in_progress_streets,
-                'completion_rate': (completed_streets / total_streets * 100) if total_streets > 0 else 0,
-                'status_breakdown': status_data
-            }
-            
-    except Exception as e:
-        print(f"❌ Erreur extended_stats: {e}")
-        return {}
+            q = text("""
+                SELECT
+                  COUNT(*) AS total,
+                  SUM(CASE WHEN lower(status) IN ('done','terminee','terminée','complete','completed') THEN 1 ELSE 0 END) AS done,
+                  SUM(CASE WHEN lower(status) IN ('en_cours','in_progress') THEN 1 ELSE 0 END) AS in_progress,
+                  SUM(CASE WHEN lower(status) IN ('a_faire','à_faire','todo','to_do') THEN 1 ELSE 0 END) AS todo
+                FROM streets
+            """)
+            row = session.execute(q).mappings().one()
+            return {k: int((row.get(k) or 0)) for k in ("total","done","in_progress","todo")}
+    except Exception:
+        # TODO: log error
+        return {"total": 0, "done": 0, "in_progress": 0, "todo": 0}
 
 
 def stats_by_team() -> List[Dict[str, Any]]:
@@ -779,3 +863,380 @@ def migrate_all_passwords_to_bcrypt():
             
     except Exception as e:
         print(f"❌ Erreur migrate_all_passwords_to_bcrypt: {e}")
+
+
+# =============================================================================
+# EXPORT/IMPORT CSV POUR GESTIONNAIRES
+# =============================================================================
+
+def export_streets_template(include_assignments: bool = True):
+    """Exporte les rues dans un format CSV standardisé pour les gestionnaires"""
+    import pandas as pd
+    from sqlalchemy import text
+    try:
+        with get_session() as session:
+            rows = session.execute(text("SELECT name, sector, team, status FROM streets ORDER BY sector, name")).mappings().all()
+        if not rows:
+            df = pd.DataFrame(columns=["name","sector","team","status"])
+        else:
+            df = pd.DataFrame(rows, columns=["name","sector","team","status"])
+        if not include_assignments:
+            if "team" in df.columns:
+                df["team"] = ""
+            if "status" in df.columns:
+                df["status"] = "a_faire"
+        return df
+    except Exception:
+        # TODO: log error
+        import pandas as pd
+        return pd.DataFrame(columns=["name","sector","team","status"])
+
+def upsert_streets_from_csv(file_like) -> dict:
+    """Importe/met à jour les rues depuis un CSV (upsert par nom de rue)"""
+    import pandas as pd
+    from sqlalchemy import text
+    
+    def normalize_status(s: str) -> str:
+        s = (s or "").strip().lower()
+        if s in {"done","terminee","terminée","complete","completed"}:
+            return "done"
+        if s in {"en_cours","in_progress"}:
+            return "en_cours"
+        # par défaut on considère à faire
+        return "a_faire"
+    
+    try:
+        df = pd.read_csv(file_like)
+        # normaliser les noms de colonnes
+        rename_map = {c: c.strip().lower() for c in df.columns}
+        df.columns = [rename_map[c] for c in df.columns]
+        required = {"name","sector","team","status"}
+        missing = required - set(df.columns)
+        if missing:
+            return {"inserted":0,"updated":0,"skipped":0,"errors":len(df)}  # tout rejeté car colonnes manquantes
+        
+        # nettoyage
+        for col in ["name","sector","team","status"]:
+            df[col] = df[col].fillna("").astype(str).map(lambda x: x.strip())
+        df["status"] = df["status"].map(normalize_status)
+        
+        inserted = updated = skipped = errors = 0
+        with get_session() as session:
+            for _, row in df.iterrows():
+                try:
+                    name = row["name"]
+                    if not name:
+                        skipped += 1
+                        continue
+                    sector = row["sector"]
+                    team = row["team"]
+                    status = row["status"]
+                    r = session.execute(text("SELECT 1 FROM streets WHERE name=:n"), {"n": name}).first()
+                    if r:
+                        session.execute(
+                            text("UPDATE streets SET sector=:s, team=:t, status=:st WHERE name=:n"),
+                            {"s": sector, "t": team, "st": status, "n": name},
+                        )
+                        updated += 1
+                    else:
+                        session.execute(
+                            text("INSERT INTO streets (name, sector, team, status) VALUES (:n,:s,:t,:st)"),
+                            {"n": name, "s": sector, "t": team, "st": status},
+                        )
+                        inserted += 1
+                except Exception:
+                    errors += 1
+            session.commit()
+        return {"inserted": inserted, "updated": updated, "skipped": skipped, "errors": errors}
+    except Exception:
+        # TODO: log error
+        return {"inserted": 0, "updated": 0, "skipped": 0, "errors": 1}
+
+
+# =============================================================================
+# FONCTIONS DE GESTION DES ADRESSES
+# =============================================================================
+
+@db_retry(max_retries=3)
+def ensure_addresses_table():
+    """Crée la table addresses si elle n'existe pas"""
+    try:
+        with get_session() as session:
+            # Vérifier si la table existe déjà
+            existing = session.execute(text("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='addresses'
+            """)).fetchone()
+            
+            if existing:
+                return True  # Table existe déjà
+            
+            session.execute(text("""
+                CREATE TABLE IF NOT EXISTS addresses (
+                    id INTEGER PRIMARY KEY,
+                    street_name TEXT NOT NULL,
+                    house_number TEXT NOT NULL,
+                    latitude REAL,
+                    longitude REAL,
+                    osm_type TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(street_name, house_number)
+                )
+            """))
+            session.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_addresses_street 
+                ON addresses(street_name)
+            """))
+            session.commit()
+        return True
+    except Exception:
+        return False
+
+
+@db_retry(max_retries=3)
+def bulk_upsert_addresses_from_excel(path_or_buffer, sheet_name=None, chunk_size=1000):
+    """
+    Import massif d'adresses depuis Excel/CSV avec upsert portable
+    
+    Args:
+        path_or_buffer: chemin vers fichier .xlsx/.csv ou buffer
+        sheet_name: nom de feuille Excel (None = première feuille)
+        chunk_size: taille des paquets pour commit
+    
+    Returns:
+        dict: {"inserted": int, "updated": int, "skipped": int, "errors": int}
+    """
+    try:
+        ensure_addresses_table()
+        
+        # Lecture du fichier
+        try:
+            if str(path_or_buffer).lower().endswith(('.xlsx', '.xls')):
+                df_or_dict = pd.read_excel(path_or_buffer, sheet_name=sheet_name, engine="openpyxl")
+                # Si sheet_name=None, pandas retourne un dict, prendre la première feuille
+                if isinstance(df_or_dict, dict):
+                    df = list(df_or_dict.values())[0]
+                else:
+                    df = df_or_dict
+            else:
+                df = pd.read_csv(path_or_buffer)
+        except Exception:
+            return {"inserted": 0, "updated": 0, "skipped": 0, "errors": 1}
+        
+        if df.empty:
+            return {"inserted": 0, "updated": 0, "skipped": 0, "errors": 0}
+        
+        # Mapping colonnes (case-insensitive)
+        col_map = {}
+        df_cols = [c.lower().strip() for c in df.columns]
+        
+        # street_name
+        for candidate in ["street", "rue", "nom_rue", "street_name", "nomrue"]:
+            if candidate in df_cols:
+                col_map["street_name"] = df.columns[df_cols.index(candidate)]
+                break
+        
+        # civic_no
+        for candidate in ["civic", "civique", "numero", "no", "civic_no", "civic_number", "nociv"]:
+            if candidate in df_cols:
+                col_map["civic_no"] = df.columns[df_cols.index(candidate)]
+                break
+        
+        # sector (optionnel)
+        for candidate in ["sector", "secteur"]:
+            if candidate in df_cols:
+                col_map["sector"] = df.columns[df_cols.index(candidate)]
+                break
+        
+        # lat (optionnel)
+        for candidate in ["lat", "latitude"]:
+            if candidate in df_cols:
+                col_map["lat"] = df.columns[df_cols.index(candidate)]
+                break
+        
+        # lon (optionnel)
+        for candidate in ["lon", "lng", "longitude"]:
+            if candidate in df_cols:
+                col_map["lon"] = df.columns[df_cols.index(candidate)]
+                break
+        
+        if "street_name" not in col_map or "civic_no" not in col_map:
+            return {"inserted": 0, "updated": 0, "skipped": 0, "errors": 1}
+        
+        inserted = updated = skipped = errors = 0
+        
+        with get_session() as session:
+            for i in range(0, len(df), chunk_size):
+                chunk = df.iloc[i:i+chunk_size]
+                
+                for _, row in chunk.iterrows():
+                    try:
+                        # Normalisation
+                        street_name = str(row[col_map["street_name"]]).strip()
+                        house_number = str(row[col_map["civic_no"]]).strip()
+                        
+                        # Supprimer .0 si Excel a converti en float
+                        if house_number.endswith('.0') and house_number[:-2].isdigit():
+                            house_number = house_number[:-2]
+                        
+                        if not street_name or not house_number or street_name.lower() in ['nan', 'null']:
+                            skipped += 1
+                            continue
+                        
+                        # Données optionnelles
+                        sector = str(row.get(col_map.get("sector", ""), "")).strip() or None
+                        if sector and sector.lower() in ['nan', 'null']:
+                            sector = None
+                        
+                        latitude = longitude = None
+                        if "lat" in col_map:
+                            try:
+                                latitude = float(row[col_map["lat"]])
+                            except (ValueError, TypeError):
+                                latitude = None
+                        
+                        if "lon" in col_map:
+                            try:
+                                longitude = float(row[col_map["lon"]])
+                            except (ValueError, TypeError):
+                                longitude = None
+                        
+                        # Upsert portable (SELECT puis UPDATE/INSERT)
+                        existing = session.execute(
+                            text("SELECT id FROM addresses WHERE street_name = :sn AND house_number = :hn"),
+                            {"sn": street_name, "hn": house_number}
+                        ).fetchone()
+                        
+                        if existing:
+                            session.execute(
+                                text("""UPDATE addresses SET latitude = :lat, longitude = :lon 
+                                        WHERE street_name = :sn AND house_number = :hn"""),
+                                {"lat": latitude, "lon": longitude, "sn": street_name, "hn": house_number}
+                            )
+                            updated += 1
+                        else:
+                            session.execute(
+                                text("""INSERT INTO addresses (street_name, house_number, latitude, longitude) 
+                                        VALUES (:sn, :hn, :lat, :lon)"""),
+                                {"sn": street_name, "hn": house_number, "lat": latitude, "lon": longitude}
+                            )
+                            inserted += 1
+                    
+                    except Exception:
+                        errors += 1
+                
+                # Commit par paquet
+                session.commit()
+        
+        return {"inserted": inserted, "updated": updated, "skipped": skipped, "errors": errors}
+    
+    except Exception:
+        return {"inserted": 0, "updated": 0, "skipped": 0, "errors": 1}
+
+
+@db_retry(max_retries=3)
+def count_addresses_by_street():
+    """
+    Compte les adresses par rue
+    
+    Returns:
+        dict[str, int]: {nom_rue: nombre_adresses}
+    """
+    try:
+        with get_session() as session:
+            result = session.execute(
+                text("SELECT street_name, COUNT(*) as count FROM addresses GROUP BY street_name ORDER BY street_name")
+            ).fetchall()
+            return {row[0]: row[1] for row in result}
+    except Exception:
+        return {}
+
+
+def get_addresses_by_street(street_name: str) -> list[dict]:
+    """Retourne les adresses (house_number, lat/lon) pour une rue donnée."""
+    try:
+        ensure_addresses_table()
+        with get_session() as session:
+            rows = session.execute(
+                text("SELECT house_number, latitude, longitude FROM addresses WHERE street_name = :s"),
+                {"s": street_name},
+            ).all()
+        
+        # tri naturel (ex.: 9, 10, 10A, 11)
+        import re
+        def natkey(s: str):
+            parts = re.findall(r"\d+|\D+", str(s or ""))
+            return [int(p) if p.isdigit() else p for p in parts]
+        
+        out = [{"house_number": r[0], "latitude": r[1], "longitude": r[2]} for r in rows]
+        out.sort(key=lambda d: natkey(d["house_number"]))
+        return out
+    except Exception:
+        return []
+
+
+# =============================================================================
+# GESTION DES MOTS DE PASSE ÉQUIPES
+# =============================================================================
+
+def _hash_password(pwd: str) -> str:
+    """Hash un mot de passe avec SHA-256 simple (compatible avec verify_team)"""
+    try:
+        # Utiliser SHA-256 simple pour compatibilité
+        return _sha256(pwd)
+    except Exception:
+        import hashlib
+        return hashlib.sha256(pwd.encode("utf-8")).hexdigest()
+
+
+def update_team_password(team_id: str, new_password: str) -> bool:
+    """Met à jour le mot de passe (hashé) pour l'équipe."""
+    if not team_id or not new_password or len(new_password.strip()) < 4:
+        return False
+    try:
+        with get_session() as session:
+            # Vérifier que l'équipe existe
+            exists = session.execute(text("SELECT 1 FROM teams WHERE id=:id"), {"id": team_id}).fetchone()
+            if not exists:
+                return False
+            
+            cols = [r[1] for r in session.execute(text("PRAGMA table_info(teams)")).fetchall()]
+            target = "password_hash" if "password_hash" in cols else ("password" if "password" in cols else None)
+            if not target:
+                return False
+                
+            hashed = _hash_password(new_password)
+            session.execute(text(f"UPDATE teams SET {target}=:p WHERE id=:id"), {"p": hashed, "id": team_id})
+            session.commit()
+            # Vérifie si l'update a fonctionné en relisant
+            check = session.execute(text("SELECT 1 FROM teams WHERE id=:id"), {"id": team_id}).fetchone()
+            return check is not None
+    except Exception:
+        return False
+
+
+def reset_team_password(team_id: str, length: int = 12) -> str:
+    """Réinitialise et retourne le nouveau mot de passe en clair (à montrer une seule fois)."""
+    if not team_id or length < 4:
+        return ""
+    try:
+        import secrets
+        import string
+        # longueur sécurisée, au moins 8 caractères
+        safe_length = max(8, min(length, 32))
+        # Combine lettres, chiffres pour lisibilité terrain
+        chars = string.ascii_letters + string.digits
+        clear = ''.join(secrets.choice(chars) for _ in range(safe_length))
+        return clear if update_team_password(team_id, clear) else ""
+    except Exception:
+        return ""
+
+
+def get_teams_list() -> list[tuple]:
+    """Récupère la liste des équipes (id, name)"""
+    try:
+        with get_session() as session:
+            result = session.execute(text("SELECT id, name FROM teams WHERE active = 1 ORDER BY id"))
+            return [(row[0], row[1]) for row in result]
+    except Exception:
+        return []

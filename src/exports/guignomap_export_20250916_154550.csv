@@ -1,0 +1,561 @@
+﻿id,name,sector,team,status
+315,10e Avenue,,,a_faire
+309,1re Avenue,,,a_faire
+312,2e Avenue,,,a_faire
+320,3e Avenue,,,a_faire
+307,4e Avenue,,,a_faire
+298,5e Avenue,,,a_faire
+310,6e Avenue,,,a_faire
+314,7e Avenue,,,a_faire
+301,8e Avenue,,,a_faire
+303,9e Avenue,,,a_faire
+534,Autoroute 1,,,a_faire
+278,Autoroute 25,,,a_faire
+104,Avenue Bourque,,,a_faire
+26,Avenue Charron,,,a_faire
+106,Avenue Crépeau,,,a_faire
+23,Avenue Dupuis,,,a_faire
+156,Avenue Garden,,,a_faire
+184,Avenue Lafleur,,,a_faire
+32,Avenue Laurier,,,a_faire
+130,Avenue Louise,,,a_faire
+28,Avenue Louvain,,,a_faire
+487,Avenue Marie-Victorin,,,a_faire
+343,Avenue Mathieu,,,a_faire
+302,Avenue Michel,,,a_faire
+552,Avenue Napoléon,,,a_faire
+251,Avenue Phillips,,,a_faire
+306,Avenue Pierre,,,a_faire
+37,Avenue Prévert,,,a_faire
+176,Avenue Rawlinson,,,a_faire
+290,Avenue Saint-Denis,,,a_faire
+21,Avenue Saint-Jean,,,a_faire
+289,Avenue Saint-Luc,,,a_faire
+234,Avenue Therrien,,,a_faire
+46,Avenue Victor-Hugo,,,a_faire
+338,Avenue de Chambery,,,a_faire
+260,Avenue de Charlevoix,,,a_faire
+42,Avenue de Charny,,,a_faire
+20,Avenue de Châteaubriant,,,a_faire
+347,Avenue de L'Étang,,,a_faire
+391,Avenue de Maupassant,,,a_faire
+428,Avenue de Maussac,,,a_faire
+179,Avenue de Normandie,,,a_faire
+348,Avenue de l'Envolée,,,a_faire
+129,Avenue de l'Esplanade,,,a_faire
+242,Avenue de la Gare,,,a_faire
+280,Avenue de la Grande Allée,,,a_faire
+19,Avenue des Ancêtres,,,a_faire
+189,Avenue des Bois-Francs,,,a_faire
+413,Avenue des Golfs,,,a_faire
+7,Avenue des Érables,Nord,,a_faire
+349,Avenue du Bocage,,,a_faire
+414,Avenue du Mistral,,,a_faire
+225,Avenue du Noroît,,,a_faire
+55,Avenue du Suroît,,,a_faire
+282,Boulevard Raymond,,,a_faire
+3,Boulevard de Mascouche,Centre,,a_faire
+542,Boulevard des Entreprises,,,a_faire
+543,Chemin Gascon,,,a_faire
+238,Chemin Newton,,,a_faire
+548,Chemin Pincourt,,,a_faire
+500,Chemin Quintal,,,a_faire
+15,Chemin Saint-Henri,,,a_faire
+532,Chemin Saint-Paul,,,a_faire
+13,Chemin Saint-Philippe,,,a_faire
+17,Chemin Saint-Pierre,,,a_faire
+2,Chemin Sainte-Marie,Centre,,a_faire
+16,Chemin de la Cabane-Ronde,,,a_faire
+316,Chemin de la Côte-Georges,,,a_faire
+18,Chemin des Anglais,,,a_faire
+308,Chemin du Lac,,,a_faire
+486,Croissant Augusta,,,a_faire
+64,Croissant D'Auteuil,,,a_faire
+451,Croissant Duland,,,a_faire
+392,Croissant Dumont,,,a_faire
+257,Croissant Fieldcrest,,,a_faire
+101,Croissant Georges-Delfosse,,,a_faire
+228,Croissant Gosselin,,,a_faire
+69,Croissant Guay,,,a_faire
+25,Croissant Lemelin,,,a_faire
+140,Croissant Louise,,,a_faire
+24,Croissant Nelligan,,,a_faire
+117,Croissant Taschereau,,,a_faire
+429,Croissant de Bourguignon,,,a_faire
+430,Croissant de Castelnaud,,,a_faire
+283,Croissant de Galles,,,a_faire
+493,Croissant de Landreville,,,a_faire
+350,Croissant des Geais-Bleus,,,a_faire
+351,Croissant des Grives,,,a_faire
+352,Croissant des Orioles,,,a_faire
+353,Croissant des Roitelets,,,a_faire
+354,Croissant des carouges,,,a_faire
+355,Croissant du Grand-Duc,,,a_faire
+431,Croissant du Trianon,,,a_faire
+393,Croissant françois-Villon,,,a_faire
+551,Escalier,,,a_faire
+1,Montée Masson,Centre,,a_faire
+319,Montée du Domaine,,,a_faire
+39,Place Alain,,,a_faire
+554,Place Ardennes,,,a_faire
+394,Place Balzac,,,a_faire
+116,Place Bertrand,,,a_faire
+96,Place Borduas,,,a_faire
+539,Place Christie,,,a_faire
+395,Place Colette,,,a_faire
+100,Place Colville,,,a_faire
+379,Place Corbeil,,,a_faire
+97,Place Daveluy,,,a_faire
+537,Place Favery,,,a_faire
+36,Place Félix-Leclerc,,,a_faire
+415,Place Glen-Abbey,,,a_faire
+35,Place Jules-Verne,,,a_faire
+452,Place Kennedy,,,a_faire
+381,Place Larose,,,a_faire
+98,Place Longval,,,a_faire
+44,Place Mauriac,,,a_faire
+416,Place Murray-Bay,,,a_faire
+38,Place Prévert,,,a_faire
+43,Place Rimbaud,,,a_faire
+408,Place Saint-Jean,,,a_faire
+396,Place Simonne-Monet-Chartrand,,,a_faire
+256,Place Sullivan,,,a_faire
+504,Place Tracy,,,a_faire
+397,Place Voltaire,,,a_faire
+75,Place de Beaumont,,,a_faire
+432,Place de Chambois,,,a_faire
+433,Place de Chambord,,,a_faire
+398,Place de Charny,,,a_faire
+434,Place de Chenonceau,,,a_faire
+435,Place de Cheverny,,,a_faire
+436,Place de Châtel,,,a_faire
+411,Place de Deauville,,,a_faire
+499,Place de Landreville,,,a_faire
+53,Place de Lille,,,a_faire
+437,Place de Rochefort,,,a_faire
+438,Place de Ségur,,,a_faire
+439,Place de Villandry,,,a_faire
+440,Place de Vincennes,,,a_faire
+417,Place de l'Alizé,,,a_faire
+418,Place de l'Aquilon,,,a_faire
+541,Place de l'Esplanade,,,a_faire
+419,Place de la Brise,,,a_faire
+453,Place de la Charente,,,a_faire
+56,Place de la Tourmente,,,a_faire
+368,Place des Bernaches,,,a_faire
+364,Place des Charmilles,,,a_faire
+356,Place des Colibris,,,a_faire
+454,Place des Corbières,,,a_faire
+357,Place des Fougeraies,,,a_faire
+358,Place des Merles,,,a_faire
+359,Place des Mésanges,,,a_faire
+360,Place des Pluviers,,,a_faire
+556,Place des Rapides,,,a_faire
+361,Place des Roselins,,,a_faire
+362,Place des Sittelles,,,a_faire
+363,Place des Sizerins,,,a_faire
+367,Place des Taillis,,,a_faire
+337,Place des Tourterelles,,,a_faire
+420,Place des Vents,,,a_faire
+455,Place du Calvados,,,a_faire
+365,Place du Grand-Héron,,,a_faire
+441,Place du Louvre,,,a_faire
+495,Place du Luxembourg,,,a_faire
+366,Place du Martinet,,,a_faire
+456,Place du Périgord,,,a_faire
+457,Place du Vert,,,a_faire
+529,Place la Millionnaire,,,a_faire
+531,Rang du Grand-Coteau,,,a_faire
+558,Route Saint-Philippe,,,a_faire
+142,Rue Alex,,,a_faire
+322,Rue Alexander,,,a_faire
+399,Rue Alexandre-Dumas,,,a_faire
+232,Rue Allard,,,a_faire
+546,Rue Amicale,,,a_faire
+323,Rue Andrassy,,,a_faire
+536,Rue André-Le Nôtre,,,a_faire
+54,Rue Annette,,,a_faire
+458,Rue Archambault,,,a_faire
+459,Rue Arsenault,,,a_faire
+517,Rue Auger,,,a_faire
+168,Rue Baker,,,a_faire
+530,Rue Barott,,,a_faire
+52,Rue Baudelaire,,,a_faire
+461,Rue Bazinet,,,a_faire
+462,Rue Beauchamp,,,a_faire
+121,Rue Beaudoin,,,a_faire
+126,Rue Beauregard,,,a_faire
+304,Rue Bergeron,,,a_faire
+247,Rue Birch-Grove,,,a_faire
+382,Rue Bohémier,,,a_faire
+463,Rue Boissonneault,,,a_faire
+244,Rue Bombardier,,,a_faire
+505,Rue Bourgie,,,a_faire
+122,Rue Bourgouin,,,a_faire
+299,Rue Brady,,,a_faire
+229,Rue Breault,,,a_faire
+105,Rue Brien,,,a_faire
+178,Rue Brochu,,,a_faire
+317,Rue Bélanger,,,a_faire
+72,Rue Bérard,,,a_faire
+400,Rue Camus,,,a_faire
+63,Rue Cantin,,,a_faire
+29,Rue Cardinal,,,a_faire
+383,Rue Caron,,,a_faire
+161,Rue Cedar,,,a_faire
+146,Rue Center,,,a_faire
+205,Rue Champagne,,,a_faire
+501,Rue Charbonneau,,,a_faire
+160,Rue Chartrand,,,a_faire
+113,Rue Chauveau,,,a_faire
+71,Rue Chauvette,,,a_faire
+544,Rue Chayer,,,a_faire
+226,Rue Chris-Ada,,,a_faire
+464,Rue Churchill,,,a_faire
+88,Rue Châteauroux,,,a_faire
+185,Rue Circle,,,a_faire
+276,Rue Claudel,,,a_faire
+333,Rue Comtois,,,a_faire
+503,Rue Contant,,,a_faire
+51,Rue Corneille,,,a_faire
+313,Rue Cossette,,,a_faire
+253,Rue Cottage,,,a_faire
+87,Rue Coursol,,,a_faire
+421,Rue Crescent,,,a_faire
+380,Rue Dalpé,,,a_faire
+401,Rue Daudet,,,a_faire
+277,Rue Davaugour,,,a_faire
+127,Rue Demers,,,a_faire
+114,Rue Deslongchamps,,,a_faire
+34,Rue Desportes,,,a_faire
+164,Rue Devoyault,,,a_faire
+163,Rue Doiron,,,a_faire
+510,Rue Dompierre,,,a_faire
+525,Rue Drouin,,,a_faire
+40,Rue Dufort,,,a_faire
+494,Rue Dugas,,,a_faire
+128,Rue Duhamel,,,a_faire
+41,Rue Dumont,,,a_faire
+4,Rue Dupras,Centre,,a_faire
+498,Rue Duval,,,a_faire
+258,Rue Ellis,,,a_faire
+157,Rue Elm,,,a_faire
+187,Rue Forest,,,a_faire
+10,Rue Forget,Sud,,a_faire
+402,Rue Françoise-Giroud,,,a_faire
+233,Rue Gagnon,,,a_faire
+295,Rue Gauthier,,,a_faire
+509,Rue Gauvreau,,,a_faire
+403,Rue George-Sand,,,a_faire
+422,Rue Glen-Abbey,,,a_faire
+169,Rue Glengarry,,,a_faire
+115,Rue Godbout,,,a_faire
+124,Rue Gouin,,,a_faire
+9,Rue Gravel,Sud,,a_faire
+389,Rue Grignon,,,a_faire
+240,Rue Grégoire,,,a_faire
+177,Rue Guilbault,,,a_faire
+174,Rue Henderson,,,a_faire
+300,Rue Henriette,,,a_faire
+507,Rue Herbert,,,a_faire
+224,Rue Hervé-Robinson,,,a_faire
+125,Rue Houle,,,a_faire
+14,Rue Iberville,,,a_faire
+59,Rue Jaywood,,,a_faire
+22,Rue Jeannotte,,,a_faire
+538,Rue Jordan,,,a_faire
+147,Rue Joy,,,a_faire
+404,Rue Jules-Romains,,,a_faire
+255,Rue Kolle,,,a_faire
+516,Rue La Vérendrye,,,a_faire
+138,Rue Labelle,,,a_faire
+47,Rue Lafontaine,,,a_faire
+49,Rue Lamartine,,,a_faire
+109,Rue Lambert,,,a_faire
+162,Rue Lamontagne,,,a_faire
+227,Rue Lamoureux,,,a_faire
+485,Rue Landry,,,a_faire
+11,Rue Lapointe,,,a_faire
+281,Rue Laprade,,,a_faire
+519,Rue Lasalle,,,a_faire
+131,Rue Lauzon,,,a_faire
+68,Rue Laval,,,a_faire
+321,Rue Lavallée,,,a_faire
+294,Rue Le Gardeur,,,a_faire
+30,Rue Lemire,,,a_faire
+102,Rue Lesage,,,a_faire
+60,Rue Lincoln,,,a_faire
+488,Rue Lionel Groulx,,,a_faire
+296,Rue Locas,,,a_faire
+12,Rue Longpré,,,a_faire
+465,Rue Lorraine,,,a_faire
+547,Rue Louis-Blériot,,,a_faire
+279,Rue Louis-Hébert,,,a_faire
+511,Rue Lusignan,,,a_faire
+390,Rue Lussier,,,a_faire
+241,Rue Légaré,,,a_faire
+27,Rue Lévesque,,,a_faire
+527,Rue Mactier,,,a_faire
+153,Rue Maple,,,a_faire
+305,Rue Marcel,,,a_faire
+107,Rue Marchand,,,a_faire
+243,Rue Marconi,,,a_faire
+405,Rue Marguerite-Duras,,,a_faire
+540,Rue Martel,,,a_faire
+466,Rue Mc Cune,,,a_faire
+103,Rue Mercier,,,a_faire
+334,Rue Michigan,,,a_faire
+406,Rue Molière,,,a_faire
+521,Rue Monette,,,a_faire
+264,Rue Montcalm,,,a_faire
+560,Rue Montmartre,,,a_faire
+423,Rue Moorecrest,,,a_faire
+518,Rue Morin,,,a_faire
+522,Rue Morris,,,a_faire
+123,Rue Morrisseau,,,a_faire
+424,Rue Murray-Bay,,,a_faire
+524,Rue Mégantic,,,a_faire
+223,Rue Nelson,,,a_faire
+318,Rue Nicole,,,a_faire
+145,Rue North,,,a_faire
+231,Rue Northview,,,a_faire
+311,Rue Odette,,,a_faire
+335,Rue Ontario,,,a_faire
+528,Rue Pangman,,,a_faire
+31,Rue Paquette,,,a_faire
+108,Rue Parent,,,a_faire
+248,Rue Park Row,,,a_faire
+120,Rue Patenaude,,,a_faire
+237,Rue Pelchat,,,a_faire
+119,Rue Pelletier,,,a_faire
+254,Rue Percival,,,a_faire
+112,Rue Perrier,,,a_faire
+545,Rue Phillips,,,a_faire
+284,Rue Pigeon,,,a_faire
+143,Rue Pine,,,a_faire
+250,Rue Pine-Brook,,,a_faire
+467,Rue Poirier,,,a_faire
+148,Rue Poplar,,,a_faire
+170,Rue Preston,,,a_faire
+235,Rue Principale,,,a_faire
+261,Rue Private,,,a_faire
+111,Rue Pronovost,,,a_faire
+555,Rue Prudent-Beaudry,,,a_faire
+497,Rue Renaud,,,a_faire
+468,Rue River,,,a_faire
+58,Rue Robincrest,,,a_faire
+285,Rue Robinson,,,a_faire
+297,Rue Rochon,,,a_faire
+533,Rue Rolland,,,a_faire
+407,Rue Rostand,,,a_faire
+50,Rue Rousseau,,,a_faire
+502,Rue Roy,,,a_faire
+557,Rue Russel,,,a_faire
+426,Rue Saint-Andrews,,,a_faire
+460,Rue Saint-Arnault,,,a_faire
+384,Rue Saint-Laurent,,,a_faire
+385,Rue Saint-Martin,,,a_faire
+386,Rue Saint-Maurice,,,a_faire
+5,Rue Saint-Pierre,Centre,,a_faire
+99,Rue Sauvé,,,a_faire
+263,Rue Sicard,,,a_faire
+149,Rue South,,,a_faire
+154,Rue Station,,,a_faire
+150,Rue Sunny Side,,,a_faire
+252,Rue Sunset,,,a_faire
+336,Rue Supérieur,,,a_faire
+141,Rue Suzanne,,,a_faire
+409,Rue Séguin,,,a_faire
+506,Rue Tedford,,,a_faire
+110,Rue Terry-Fox,,,a_faire
+249,Rue Thacker,,,a_faire
+167,Rue Trudeau,,,a_faire
+118,Rue Turenne,,,a_faire
+86,Rue Verdier,,,a_faire
+45,Rue Verlaine,,,a_faire
+212,Rue Viola,,,a_faire
+152,Rue Walsh,,,a_faire
+144,Rue West,,,a_faire
+175,Rue Wood,,,a_faire
+425,Rue Woodfern,,,a_faire
+139,Rue d'Albanie,,,a_faire
+286,Rue d'Algérie,,,a_faire
+202,Rue d'Alsace,,,a_faire
+442,Rue d'Amboise,,,a_faire
+410,Rue d'Amiens,,,a_faire
+81,Rue d'Angers,,,a_faire
+70,Rue d'Anjou,,,a_faire
+62,Rue d'Antibes,,,a_faire
+133,Rue d'Argentine,,,a_faire
+207,Rue d'Artois,,,a_faire
+470,Rue d'Auvergne,,,a_faire
+91,Rue d'Avignon,,,a_faire
+84,Rue d'Orléans,,,a_faire
+208,Rue d'Île-de-France,,,a_faire
+339,Rue de Bayeux,,,a_faire
+94,Rue de Bayonne,,,a_faire
+340,Rue de Bellancourt,,,a_faire
+265,Rue de Berthier,,,a_faire
+443,Rue de Boissy,,,a_faire
+77,Rue de Bordeaux,,,a_faire
+471,Rue de Bourgogne,,,a_faire
+514,Rue de Brest,,,a_faire
+513,Rue de Brissac,,,a_faire
+173,Rue de Brompton,,,a_faire
+61,Rue de Calais,,,a_faire
+95,Rue de Cannes,,,a_faire
+341,Rue de Carnac,,,a_faire
+268,Rue de Chambly,,,a_faire
+444,Rue de Chambois,,,a_faire
+259,Rue de Champlain,,,a_faire
+273,Rue de Charlesbourg,,,a_faire
+344,Rue de Chartres,,,a_faire
+445,Rue de Chaumont,,,a_faire
+446,Rue de Chenonceau,,,a_faire
+345,Rue de Cherbourg,,,a_faire
+76,Rue de Clermont,,,a_faire
+136,Rue de Côte-d'Ivoire,,,a_faire
+447,Rue de Davignac,,,a_faire
+90,Rue de Dieppe,,,a_faire
+85,Rue de Dijon,,,a_faire
+559,Rue de Dublin,,,a_faire
+293,Rue de Dubuc,,,a_faire
+448,Rue de Fontainebleau,,,a_faire
+132,Rue de Galles,,,a_faire
+269,Rue de Gaspé,,,a_faire
+151,Rue de Glasgow,,,a_faire
+287,Rue de Grande-Bretagne,,,a_faire
+193,Rue de Greenwich,,,a_faire
+387,Rue de Jean-Talon,,,a_faire
+412,Rue de Limoges,,,a_faire
+165,Rue de Liverpool,,,a_faire
+93,Rue de Lorient,,,a_faire
+239,Rue de Léry,,,a_faire
+266,Rue de Lévis,,,a_faire
+166,Rue de Manchester,,,a_faire
+449,Rue de Margaux,,,a_faire
+135,Rue de Monaco,,,a_faire
+92,Rue de Montbéliard,,,a_faire
+80,Rue de Montpellier,,,a_faire
+274,Rue de Musset,,,a_faire
+324,Rue de Naples,,,a_faire
+82,Rue de Nice,,,a_faire
+496,Rue de Norvège,,,a_faire
+270,Rue de Papineau,,,a_faire
+83,Rue de Paris,,,a_faire
+472,Rue de Picardie,,,a_faire
+450,Rue de Pompadour,,,a_faire
+325,Rue de Pompéi,,,a_faire
+271,Rue de Pontiac,,,a_faire
+272,Rue de Richelieu,,,a_faire
+78,Rue de Rouen,,,a_faire
+535,Rue de Saint-Gabriel,,,a_faire
+346,Rue de Saint-Malo,,,a_faire
+342,Rue de Saint-Étienne,,,a_faire
+469,Rue de Saintonge,,,a_faire
+73,Rue de Sancerre,,,a_faire
+134,Rue de Suisse,,,a_faire
+515,Rue de Toulon,,,a_faire
+67,Rue de Toulouse,,,a_faire
+201,Rue de Touraine,,,a_faire
+89,Rue de Valence,,,a_faire
+291,Rue de Vanier,,,a_faire
+489,Rue de Versailles,,,a_faire
+275,Rue de Viau,,,a_faire
+48,Rue de Vigny,,,a_faire
+33,Rue de l'Acadie,,,a_faire
+473,Rue de l'Aigle,,,a_faire
+474,Rue de l'Albatros,,,a_faire
+57,Rue de l'Alizé,,,a_faire
+388,Rue de l'Amitié,,,a_faire
+292,Rue de l'Amour,,,a_faire
+512,Rue de l'Aéroport,,,a_faire
+236,Rue de l'Hirondelle,,,a_faire
+475,Rue de l'Oiselet,,,a_faire
+549,Rue de l'Orangerie,,,a_faire
+326,Rue de l'Oural,,,a_faire
+6,Rue de l'Église,Centre,,a_faire
+526,Rue de l'Étourneau,,,a_faire
+180,Rue de la Tamise,,,a_faire
+182,Rue de la Verdure,,,a_faire
+327,Rue des Alpes,,,a_faire
+267,Rue des Amis,,,a_faire
+328,Rue des Appalaches,,,a_faire
+491,Rue des Bosquets,,,a_faire
+186,Rue des Bouleaux,,,a_faire
+370,Rue des Bruants,,,a_faire
+374,Rue des Busards,,,a_faire
+372,Rue des Buses,,,a_faire
+329,Rue des Cascades,,,a_faire
+209,Rue des Cerisiers,,,a_faire
+373,Rue des Chardonnerets,,,a_faire
+246,Rue des Cheviot,,,a_faire
+222,Rue des Chrysanthèmes,,,a_faire
+195,Rue des Chênes,,,a_faire
+188,Rue des Cèdres,,,a_faire
+371,Rue des Faucons,,,a_faire
+204,Rue des Flandres,,,a_faire
+490,Rue des Fontaines,,,a_faire
+375,Rue des Futaies,,,a_faire
+476,Rue des Gerbes,,,a_faire
+217,Rue des Glaïeuls,,,a_faire
+520,Rue des Gouverneurs,,,a_faire
+214,Rue des Gros-Arbres,,,a_faire
+181,Rue des Jardins,,,a_faire
+477,Rue des Jonquilles,,,a_faire
+330,Rue des Laurentides,,,a_faire
+200,Rue des Lilas,,,a_faire
+220,Rue des Lys,,,a_faire
+197,Rue des Marguerites,,,a_faire
+376,Rue des Martins-Pêcheurs,,,a_faire
+218,Rue des Muguets,,,a_faire
+377,Rue des Mésanges,,,a_faire
+213,Rue des Nénuphars,,,a_faire
+211,Rue des Oeillets,,,a_faire
+219,Rue des Orchidées,,,a_faire
+492,Rue des Parterres,,,a_faire
+210,Rue des Peupliers,,,a_faire
+8,Rue des Pins,Nord,,a_faire
+221,Rue des Pivoines,,,a_faire
+183,Rue des Plantes,,,a_faire
+478,Rue des Pommiers,,,a_faire
+479,Rue des Prés,,,a_faire
+331,Rue des Pyrénées,,,a_faire
+198,Rue des Pâquerettes,,,a_faire
+332,Rue des Rocheuses,,,a_faire
+199,Rue des Roses,,,a_faire
+191,Rue des Sapins,,,a_faire
+194,Rue des Saules,,,a_faire
+215,Rue des Tilleuls,,,a_faire
+480,Rue des Trembles,,,a_faire
+216,Rue des Trèfles,,,a_faire
+196,Rue des Tulipes,,,a_faire
+190,Rue des Violettes,,,a_faire
+378,Rue des Éperviers,,,a_faire
+192,Rue des Épinettes,,,a_faire
+245,Rue des Érables,,,a_faire
+523,Rue du Berry,,,a_faire
+553,Rue du Bord-de-l'Eau,,,a_faire
+481,Rue du Bourbonnais,,,a_faire
+159,Rue du Curé-Lalande,,,a_faire
+288,Rue du Danemark,,,a_faire
+155,Rue du Dorset,,,a_faire
+369,Rue du Grand-Héron,,,a_faire
+427,Rue du Hameau,,,a_faire
+65,Rue du Havre,,,a_faire
+203,Rue du Limousin,,,a_faire
+482,Rue du Lyonnais,,,a_faire
+66,Rue du Mans,,,a_faire
+508,Rue du Méga Centre,,,a_faire
+137,Rue du Panama,,,a_faire
+206,Rue du Roussillon,,,a_faire
+79,Rue du Verger,,,a_faire
+74,Rue l'Heureux,,,a_faire
+230,Rue Éthier,,,a_faire
+550,Sentier-J,,,a_faire
+158,Terrasse Andrew,,,a_faire
+262,Terrasse Garden,,,a_faire
+172,Terrasse John,,,a_faire
+484,Terrasse Lamarche,,,a_faire
+171,Terrasse Preston,,,a_faire
+483,Terrasse lamarche,,,a_faire

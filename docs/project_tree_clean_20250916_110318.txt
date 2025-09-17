@@ -1,0 +1,135 @@
+# ================================================================================
+# ARBRE DU PROJET GUIGNOMAP - STRUCTURE COMPLÈTE
+# Généré le: 2025-09-16 11:03:18
+# Exclusions: __pycache__, .venv, backups/, exports/, .git, *.pyc, *.log
+# ================================================================================
+
+GuignoMap/
+├── .devcontainer/
+│   └── devcontainer.json (1.0KB)
+├── .streamlit/
+│   ├── config.toml (602B)
+│   ├── secrets.toml (2.7KB)
+│   └── secrets.toml.example (1.9KB)
+├── .vscode/
+│   ├── launch.json (419B)
+│   ├── settings.json (152B)
+│   └── tasks.json (1.4KB)
+├── docs/
+│   ├── PHASE1_AUDIT_DATAFRAME.md (6.2KB)
+│   └── PROBLEME_IPV6_SUPABASE.md (2.4KB)
+├── guignomap/
+│   ├── assets/
+│   │   ├── banner.png (180.8KB)
+│   │   ├── guignolee.png (258.9KB)
+│   │   ├── logo.png (18.2KB)
+│   │   └── styles.css (15.7KB)
+│   ├── logs/
+│   ├── __init__.py (0B)
+│   ├── app.py (75.4KB)
+│   ├── backup.py (5.5KB)
+│   ├── db.py (32.3KB)
+│   ├── db_v5.py (118B)
+│   ├── osm.py (19.3KB)
+│   ├── osm_addresses.json (555.5KB)
+│   ├── osm_cache.json (1.0MB)
+│   ├── reports.py (10.0KB)
+│   └── validators.py (4.7KB)
+├── scripts/
+│   ├── export_repo_audit.py (8.0KB)
+│   ├── export_repo_min.py (0B)
+│   ├── export_repo_snapshot.py (4.1KB)
+│   ├── fix_app_types.py (3.5KB)
+│   ├── fix_specific.py (1.8KB)
+│   ├── generate_audit_export.py (8.5KB)
+│   ├── generate_audit_optimise.py (12.8KB)
+│   ├── migrate_password_hashes.py (9.7KB)
+│   ├── migrate_sqlite_to_postgres.py (9.5KB)
+│   ├── sanity_db_pandas.py (751B)
+│   ├── smoke_create_map.py (1.4KB)
+│   └── validation_dataframe.ps1 (2.0KB)
+├── src/
+│   ├── auth/
+│   │   └── passwords.py (6.1KB)
+│   ├── database/
+│   │   ├── migrations/
+│   │   │   ├── versions/
+│   │   │   ├── env.py (2.4KB)
+│   │   │   ├── README (38B)
+│   │   │   └── script.py.mako (704B)
+│   │   ├── connection.py (4.5KB)
+│   │   ├── db_v5.py (28.6KB)
+│   │   └── models.py (2.4KB)
+│   ├── storage/
+│   │   ├── __init__.py (4.3KB)
+│   │   ├── cloud.py (9.1KB)
+│   │   └── local.py (9.6KB)
+│   ├── utils/
+│   │   ├── __init__.py (28B)
+│   │   └── adapters.py (1007B)
+│   ├── __init__.py (0B)
+│   └── config.py (1.7KB)
+├── tests/
+│   └── manual/
+│       ├── test_db_connection.py (2.9KB)
+│       └── test_db_simple.py (1.2KB)
+├── tools/
+│   └── quick_sanity.py (6.9KB)
+├── .gitignore (1.9KB)
+├── alembic.ini (4.8KB)
+├── audit_dataframe.ps1 (1.8KB)
+├── generate_tree_clean.py (6.2KB)
+├── GuignoMap_code_export_20250914_audit.txt (163.5KB)
+├── GuignoMap_code_export_20250915_final_UTF8.txt (139.1KB)
+├── lancer_guignomap.bat (521B)
+├── lancer_guignomap.ps1 (818B)
+├── PHASE1_COMMANDS.md (5.6KB)
+├── README.md (24.2KB)
+├── README_VENV.md (1.5KB)
+├── requirements.txt (332B)
+├── requirements_freeze.txt (1.1KB)
+├── requirements_freeze_bom.txt (1.1KB)
+├── requirements_freeze_old.txt (2.3KB)
+├── runtime.txt (4B)
+└── streamlit_app.py (845B)
+
+# ================================================================================
+# STATISTIQUES
+# ================================================================================
+
+📊 Total éléments affichés: 88
+🚫 Exclusions appliquées: __pycache__, .venv, backups, exports, *.pyc, *.log, *.db
+📅 Généré le: 2025-09-16 à 11:03:18
+
+# ================================================================================
+# LÉGENDE
+# ================================================================================
+
+📁 Dossiers se terminent par /
+📄 Fichiers avec taille approximative
+├── Élément dans la hiérarchie  
+└── Dernier élément d'un niveau
+│   Continuation de branche
+    Espacement pour sous-éléments
+
+# ================================================================================
+# NOTES IMPORTANTES
+# ================================================================================
+
+✅ INCLUS:
+- Tous les fichiers source (.py, .css, .toml, .md, etc.)
+- Configuration et documentation 
+- Scripts utilitaires et outils
+- Fichiers de déploiement
+
+❌ EXCLUS (polluants):
+- __pycache__/ et *.pyc (cache Python)
+- .venv/ (environnement virtuel)
+- backups/ (sauvegardes automatiques)
+- exports/ (exports précédents)
+- .git/ (métadonnées Git)
+- Fichiers temporaires et logs
+
+===============================================================================
+FIN ARBRE PROJET GUIGNOMAP - 20250916_110318
+===============================================================================
