@@ -1,6 +1,6 @@
 # GuignoMap v5.0 - Commandes PowerShell PHASE 1
 # Migration infrastructure vers prod Streamlit Cloud
-# Windows PowerShell - Toutes les commandes prêtes à exécuter
+# Windows PowerShell - Toutes les commandes prÀªtes À  exécuter
 
 ## 1. Configuration initiale de l'environnement
 
@@ -40,12 +40,12 @@ s3_secret_key = "votre-secret-key"
 alembic revision --autogenerate -m "initial_schema"
 ```
 
-### Appliquer les migrations à PostgreSQL
+### Appliquer les migrations À  PostgreSQL
 ```powershell
 alembic upgrade head
 ```
 
-### Migrer les données SQLite → PostgreSQL
+### Migrer les données SQLite â†’ PostgreSQL
 ```powershell
 python scripts\migrate_sqlite_to_postgres.py
 ```
@@ -69,7 +69,7 @@ python -c "from src.storage import get_storage_info; import json; print(json.dum
 
 ### Tester la connexion PostgreSQL
 ```powershell
-python -c "from src.database.connection import test_connection; print('🔌 Connexion PostgreSQL:', test_connection())"
+python -c "from src.database.connection import test_connection; print('ðŸ”Œ Connexion PostgreSQL:', test_connection())"
 ```
 
 ## 5. Lancement de l'application
@@ -118,7 +118,7 @@ python -c "from src.database.connection import get_engine; print('Pool info:', g
 
 ## 8. Rollback d'urgence (si nécessaire)
 
-### Revenir à SQLite temporairement
+### Revenir À  SQLite temporairement
 ```powershell
 # 1. Modifier src/config.py pour retourner "sqlite:///guigno_map.db"
 # 2. Relancer l'application
@@ -136,7 +136,7 @@ python -c "from src.storage import download_backup; from pathlib import Path; do
 
 ## Notes importantes
 
-1. **Politique de mot de passe** : Conservée à min 4 caractères + confirmation (UI v4.1)
+1. **Politique de mot de passe** : Conservée À  min 4 caractères + confirmation (UI v4.1)
 2. **Migration des hashes** : Automatique lors de la prochaine connexion réussie
 3. **Stockage** : S3 si configuré, sinon fallback local automatique
 4. **Base de données** : PostgreSQL en production, SQLite en dev/fallback
@@ -166,23 +166,23 @@ alembic history
 ## Structure finale v5.0
 ```
 GuignoMap/
-├── .streamlit/
-│   └── secrets.toml              # Configuration centralisée
-├── src/
-│   ├── config.py                 # Accès aux secrets
-│   ├── auth/
-│   │   └── passwords.py          # Argon2 + bcrypt compat
-│   ├── database/
-│   │   ├── connection.py         # PostgreSQL + retry
-│   │   ├── models.py             # SQLAlchemy models
-│   │   └── migrations/           # Alembic migrations
-│   └── storage/
-│       ├── __init__.py           # API unifiée
-│       ├── cloud.py              # Client S3
-│       └── local.py              # Fallback local
-├── scripts/
-│   ├── migrate_sqlite_to_postgres.py
-│   └── migrate_password_hashes.py
-└── guignomap/
-    └── app.py                    # Application Streamlit
+â”œâ”€â”€ .streamlit/
+â”‚   â””â”€â”€ secrets.toml              # Configuration centralisée
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ config.py                 # Accès aux secrets
+â”‚   â”œâ”€â”€ auth/
+â”‚   â”‚   â””â”€â”€ passwords.py          # Argon2 + bcrypt compat
+â”‚   â”œâ”€â”€ database/
+â”‚   â”‚   â”œâ”€â”€ connection.py         # PostgreSQL + retry
+â”‚   â”‚   â”œâ”€â”€ models.py             # SQLAlchemy models
+â”‚   â”‚   â””â”€â”€ migrations/           # Alembic migrations
+â”‚   â””â”€â”€ storage/
+â”‚       â”œâ”€â”€ __init__.py           # API unifiée
+â”‚       â”œâ”€â”€ cloud.py              # Client S3
+â”‚       â””â”€â”€ local.py              # Fallback local
+â”œâ”€â”€ scripts/
+â”‚   â”œâ”€â”€ migrate_sqlite_to_postgres.py
+â”‚   â””â”€â”€ migrate_password_hashes.py
+â””â”€â”€ guignomap/
+    â””â”€â”€ app.py                    # Application Streamlit
 ```

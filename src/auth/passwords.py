@@ -1,6 +1,6 @@
 """
 Gestion des mots de passe avec Argon2 pour GuignoMap v5.0
-Migration compatible depuis bcrypt + politique UI inchangée (min 4 + confirmation)
+Migration compatible depuis bcrypt + politique UI inchang√©e (min 4 + confirmation)
 """
 from passlib.context import CryptContext
 from typing import Tuple
@@ -8,11 +8,11 @@ import bcrypt
 
 
 # Configuration passlib avec Argon2 comme algorithme principal
-# Garde bcrypt pour la compatibilité ascendante (lecture uniquement)
+# Garde bcrypt pour la compatibilit√© ascendante (lecture uniquement)
 pwd_context = CryptContext(
     schemes=["argon2", "bcrypt"],
-    deprecated="auto",  # Marque bcrypt comme obsolète
-    argon2__rounds=2,   # Paramètres Argon2 pour performance/sécurité équilibrée
+    deprecated="auto",  # Marque bcrypt comme obsol√®te
+    argon2__rounds=2,   # Param√®tres Argon2 pour performance/s√©curit√© √©quilibr√©e
     argon2__memory_cost=65536,  # 64 MB
     argon2__parallelism=1,
     argon2__hash_len=32
@@ -34,40 +34,40 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> Tuple[bool, bool]:
     """
-    Vérifie un mot de passe contre son hash
-    Supporte la migration automatique bcrypt → Argon2
+    V√©rifie un mot de passe contre son hash
+    Supporte la migration automatique bcrypt ‚Üí Argon2
     
     Args:
         password: Mot de passe en texte clair
-        hashed: Hash stocké (bcrypt ou Argon2)
+        hashed: Hash stock√© (bcrypt ou Argon2)
         
     Returns:
         Tuple (verification_ok, needs_rehash)
         - verification_ok: True si le mot de passe est correct
-        - needs_rehash: True si le hash doit être mis à jour (migration paresseuse)
+        - needs_rehash: True si le hash doit √™tre mis √† jour (migration paresseuse)
     """
     try:
-        # Vérification avec passlib (supporte bcrypt et Argon2)
+        # V√©rification avec passlib (supporte bcrypt et Argon2)
         verification_ok = pwd_context.verify(password, hashed)
         
         if verification_ok:
-            # Vérifier si une mise à jour du hash est nécessaire
+            # V√©rifier si une mise √† jour du hash est n√©cessaire
             needs_rehash = pwd_context.needs_update(hashed)
             return True, needs_rehash
         else:
             return False, False
             
     except Exception as e:
-        print(f"Erreur vérification mot de passe: {e}")
+        print(f"Erreur v√©rification mot de passe: {e}")
         return False, False
 
 
 def is_bcrypt_hash(hashed: str) -> bool:
     """
-    Détermine si un hash est au format bcrypt
+    D√©termine si un hash est au format bcrypt
     
     Args:
-        hashed: Hash à vérifier
+        hashed: Hash √† v√©rifier
         
     Returns:
         True si c'est un hash bcrypt
@@ -77,10 +77,10 @@ def is_bcrypt_hash(hashed: str) -> bool:
 
 def is_argon2_hash(hashed: str) -> bool:
     """
-    Détermine si un hash est au format Argon2
+    D√©termine si un hash est au format Argon2
     
     Args:
-        hashed: Hash à vérifier
+        hashed: Hash √† v√©rifier
         
     Returns:
         True si c'est un hash Argon2
@@ -91,11 +91,11 @@ def is_argon2_hash(hashed: str) -> bool:
 def migrate_password_if_needed(password: str, old_hash: str) -> Tuple[bool, str]:
     """
     Migration paresseuse d'un mot de passe bcrypt vers Argon2
-    Appelé lors d'une connexion réussie
+    Appel√© lors d'une connexion r√©ussie
     
     Args:
         password: Mot de passe en texte clair (fourni lors de la connexion)
-        old_hash: Hash actuel stocké
+        old_hash: Hash actuel stock√©
         
     Returns:
         Tuple (migrated, new_hash)
@@ -105,9 +105,9 @@ def migrate_password_if_needed(password: str, old_hash: str) -> Tuple[bool, str]
     verification_ok, needs_rehash = verify_password(password, old_hash)
     
     if verification_ok and needs_rehash:
-        # Migration nécessaire : re-hasher avec Argon2
+        # Migration n√©cessaire : re-hasher avec Argon2
         new_hash = hash_password(password)
-        print(f"🔄 Migration hash bcrypt → Argon2")
+        print(f"üîÑ Migration hash bcrypt ‚Üí Argon2")
         return True, new_hash
     
     return False, old_hash
@@ -116,10 +116,10 @@ def migrate_password_if_needed(password: str, old_hash: str) -> Tuple[bool, str]
 def validate_password_policy(password: str) -> Tuple[bool, str]:
     """
     Validation de la politique de mot de passe
-    IMPORTANT: Garder la politique UI v4.1 (min 4 caractères + confirmation)
+    IMPORTANT: Garder la politique UI v4.1 (min 4 caract√®res + confirmation)
     
     Args:
-        password: Mot de passe à valider
+        password: Mot de passe √† valider
         
     Returns:
         Tuple (valid, error_message)
@@ -128,9 +128,9 @@ def validate_password_policy(password: str) -> Tuple[bool, str]:
         return False, "Le mot de passe est requis"
     
     if len(password) < 4:
-        return False, "Le mot de passe doit contenir au moins 4 caractères"
+        return False, "Le mot de passe doit contenir au moins 4 caract√®res"
     
-    # Note: La confirmation est gérée côté UI, pas ici
+    # Note: La confirmation est g√©r√©e c√¥t√© UI, pas ici
     return True, ""
 
 
@@ -140,7 +140,7 @@ def get_password_hash_info(hashed: str) -> dict:
     Utile pour diagnostics et migration
     
     Args:
-        hashed: Hash à analyser
+        hashed: Hash √† analyser
         
     Returns:
         Dictionnaire avec les informations du hash
@@ -160,7 +160,7 @@ def get_password_hash_info(hashed: str) -> dict:
             info['algorithm'] = 'argon2'
             info['needs_update'] = pwd_context.needs_update(hashed)
         
-        # Informations supplémentaires via passlib
+        # Informations suppl√©mentaires via passlib
         hash_info = pwd_context.identify(hashed)
         if hash_info:
             info['passlib_scheme'] = hash_info
@@ -171,15 +171,15 @@ def get_password_hash_info(hashed: str) -> dict:
     return info
 
 
-# Fonctions de compatibilité avec l'ancien système bcrypt
+# Fonctions de compatibilit√© avec l'ancien syst√®me bcrypt
 def legacy_verify_bcrypt(password: str, bcrypt_hash: str) -> bool:
     """
-    Vérification directe bcrypt pour rétrocompatibilité
-    Utilisé uniquement si passlib échoue
+    V√©rification directe bcrypt pour r√©trocompatibilit√©
+    Utilis√© uniquement si passlib √©choue
     
     Args:
         password: Mot de passe en texte clair
-        bcrypt_hash: Hash bcrypt à vérifier
+        bcrypt_hash: Hash bcrypt √† v√©rifier
         
     Returns:
         True si le mot de passe correspond
@@ -187,20 +187,20 @@ def legacy_verify_bcrypt(password: str, bcrypt_hash: str) -> bool:
     try:
         return bcrypt.checkpw(password.encode('utf-8'), bcrypt_hash.encode('utf-8'))
     except Exception as e:
-        print(f"Erreur vérification bcrypt legacy: {e}")
+        print(f"Erreur v√©rification bcrypt legacy: {e}")
         return False
 
 
 def create_test_hashes(password: str = "test123") -> dict:
     """
-    Utilitaire pour créer des hashes de test
-    Aide au développement et aux tests
+    Utilitaire pour cr√©er des hashes de test
+    Aide au d√©veloppement et aux tests
     
     Args:
         password: Mot de passe de test
         
     Returns:
-        Dictionnaire avec les différents hashes
+        Dictionnaire avec les diff√©rents hashes
     """
     return {
         'password': password,

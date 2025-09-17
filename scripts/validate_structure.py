@@ -5,7 +5,7 @@ GuignoMap Structure Validation Script
 
 Validates the project structure for:
 - No circular imports
-- UTF-8 encoding
+- UTF-8 encoding (strict)
 - No hardcoded paths
 - Single database layer
 
@@ -117,30 +117,51 @@ class StructureValidator:
         return not has_cycles
 
     def utf8_encoding(self) -> bool:
-        """Check that all Python files are UTF-8 encoded."""
+        """Check that all Python, Markdown, and TOML files are UTF-8 encoded."""
         self.log_info("Checking UTF-8 encoding...")
         
-        python_files = self.get_python_files()
+        # Get all target files (Python, Markdown, TOML)
+        target_files = []
+        exclude_dirs = {'.venv', '__pycache__', '.git', 'node_modules', 'backups'}
+        
+        for root, dirs, files in os.walk(self.project_root):
+            # Remove excluded directories from traversal
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+            
+            for file in files:
+                if file.endswith(('.py', '.md', '.toml')):
+                    target_files.append(Path(root) / file)
+        
         all_utf8 = True
         
-        for py_file in python_files:
+        for file_path in target_files:
             try:
-                with open(py_file, 'rb') as f:
+                with open(file_path, 'rb') as f:
                     raw_data = f.read()
+                
+                # Handle empty files
+                if len(raw_data) == 0:
+                    continue  # Empty files are OK
                     
                 result = chardet.detect(raw_data)
                 encoding = result.get('encoding', '') if result else ''
                 encoding = encoding.lower() if encoding else 'unknown'
                 
-                if encoding not in ['utf-8', 'ascii', 'utf-8-sig'] and encoding != 'unknown':
-                    self.log_error(f"File {py_file} is not UTF-8 encoded (detected: {encoding})")
+                # Be strict: only accept pure UTF-8 (no BOM, no other encodings)
+                if encoding != 'utf-8' and encoding != 'ascii':
+                    self.log_error(f"File {file_path} is not UTF-8 encoded (detected: {encoding})")
+                    all_utf8 = False
+                    
+                # Check for BOM
+                if raw_data.startswith(b'\xef\xbb\xbf'):
+                    self.log_error(f"File {file_path} has UTF-8 BOM (should be UTF-8 without BOM)")
                     all_utf8 = False
                     
             except Exception as e:
-                self.log_warning(f"Could not check encoding of {py_file}: {e}")
+                self.log_warning(f"Could not check encoding of {file_path}: {e}")
                 
         if all_utf8:
-            self.log_info("✅ All Python files are UTF-8 encoded")
+            self.log_info("✅ All target files are UTF-8 encoded without BOM")
             
         return all_utf8
 
@@ -199,8 +220,8 @@ class StructureValidator:
         db_v5_imports = False
         
         for py_file in python_files:
-            # Skip the compatibility shim
-            if py_file.name == 'db_v5.py':
+            # Skip the compatibility shim and this validation file
+            if py_file.name == 'db_v5.py' or py_file.name == 'validate_structure.py':
                 continue
                 
             try:
@@ -215,9 +236,6 @@ class StructureValidator:
                         continue
                         
                     if 'db_v5' in line and ('import' in line or 'from' in line):
-                        # Make sure it's not in a string or comment - but exclude this validation file
-                        if str(py_file).endswith('validate_structure.py'):
-                            continue
                         if re.search(r'(^|[^#]*)import.*db_v5|from.*db_v5.*import', line):
                             self.log_error(f"Found db_v5 import in {py_file}:{i}: {line.strip()}")
                             db_v5_imports = True

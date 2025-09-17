@@ -1,13 +1,13 @@
 """
-Script de migration SQLite → PostgreSQL pour GuignoMap v5.0
-Copie toutes les données existantes de SQLite vers PostgreSQL
+Script de migration SQLite ‚Üí PostgreSQL pour GuignoMap v5.0
+Copie toutes les donn√©es existantes de SQLite vers PostgreSQL
 """
 import sqlite3
 import sys
 import os
 from pathlib import Path
 
-# Ajouter le répertoire parent au PYTHONPATH pour les imports
+# Ajouter le r√©pertoire parent au PYTHONPATH pour les imports
 sys.path.append(str(Path(__file__).parent.parent))
 
 from src.database.connection import get_engine, execute_transaction
@@ -18,10 +18,10 @@ import pandas as pd
 
 
 def get_sqlite_connection():
-    """Connexion en lecture seule à la base SQLite existante"""
+    """Connexion en lecture seule √† la base SQLite existante"""
     sqlite_path = Path(__file__).parent.parent / "guignomap" / "guigno_map.db"
     if not sqlite_path.exists():
-        print(f"❌ Base SQLite non trouvée: {sqlite_path}")
+        print(f"‚ùå Base SQLite non trouv√©e: {sqlite_path}")
         return None
     
     conn = sqlite3.connect(str(sqlite_path))
@@ -30,19 +30,19 @@ def get_sqlite_connection():
 
 
 def create_postgres_tables():
-    """Créer les tables PostgreSQL via Alembic/SQLAlchemy"""
+    """Cr√©er les tables PostgreSQL via Alembic/SQLAlchemy"""
     try:
         engine = get_engine()
         Base.metadata.create_all(engine)
-        print("✅ Tables PostgreSQL créées")
+        print("‚úÖ Tables PostgreSQL cr√©√©es")
         return True
     except Exception as e:
-        print(f"❌ Erreur création tables PostgreSQL: {e}")
+        print(f"‚ùå Erreur cr√©ation tables PostgreSQL: {e}")
         return False
 
 
 def copy_teams(sqlite_conn, postgres_session):
-    """Copier les équipes SQLite → PostgreSQL"""
+    """Copier les √©quipes SQLite ‚Üí PostgreSQL"""
     try:
         # Lire depuis SQLite
         teams_data = pd.read_sql_query("""
@@ -52,10 +52,10 @@ def copy_teams(sqlite_conn, postgres_session):
         """, sqlite_conn)
         
         if teams_data.empty:
-            print("ℹ️ Aucune équipe à migrer")
+            print("‚ÑπÔ∏è Aucune √©quipe √† migrer")
             return 0
         
-        # Insérer dans PostgreSQL
+        # Ins√©rer dans PostgreSQL
         count = 0
         for _, row in teams_data.iterrows():
             team = Team(
@@ -65,21 +65,21 @@ def copy_teams(sqlite_conn, postgres_session):
                 created_at=pd.to_datetime(row['created_at']) if row['created_at'] else datetime.utcnow(),
                 active=bool(row['active'])
             )
-            postgres_session.merge(team)  # merge pour éviter les doublons
+            postgres_session.merge(team)  # merge pour √©viter les doublons
             count += 1
         
         postgres_session.commit()
-        print(f"✅ {count} équipes migrées")
+        print(f"‚úÖ {count} √©quipes migr√©es")
         return count
         
     except Exception as e:
         postgres_session.rollback()
-        print(f"❌ Erreur migration équipes: {e}")
+        print(f"‚ùå Erreur migration √©quipes: {e}")
         return 0
 
 
 def copy_streets(sqlite_conn, postgres_session):
-    """Copier les rues SQLite → PostgreSQL"""
+    """Copier les rues SQLite ‚Üí PostgreSQL"""
     try:
         # Lire depuis SQLite
         streets_data = pd.read_sql_query("""
@@ -89,10 +89,10 @@ def copy_streets(sqlite_conn, postgres_session):
         """, sqlite_conn)
         
         if streets_data.empty:
-            print("ℹ️ Aucune rue à migrer")
+            print("‚ÑπÔ∏è Aucune rue √† migrer")
             return 0
         
-        # Insérer dans PostgreSQL
+        # Ins√©rer dans PostgreSQL
         count = 0
         for _, row in streets_data.iterrows():
             street = Street(
@@ -106,17 +106,17 @@ def copy_streets(sqlite_conn, postgres_session):
             count += 1
         
         postgres_session.commit()
-        print(f"✅ {count} rues migrées")
+        print(f"‚úÖ {count} rues migr√©es")
         return count
         
     except Exception as e:
         postgres_session.rollback()
-        print(f"❌ Erreur migration rues: {e}")
+        print(f"‚ùå Erreur migration rues: {e}")
         return 0
 
 
 def copy_notes(sqlite_conn, postgres_session):
-    """Copier les notes SQLite → PostgreSQL"""
+    """Copier les notes SQLite ‚Üí PostgreSQL"""
     try:
         # Lire depuis SQLite
         notes_data = pd.read_sql_query("""
@@ -126,10 +126,10 @@ def copy_notes(sqlite_conn, postgres_session):
         """, sqlite_conn)
         
         if notes_data.empty:
-            print("ℹ️ Aucune note à migrer")
+            print("‚ÑπÔ∏è Aucune note √† migrer")
             return 0
         
-        # Insérer dans PostgreSQL
+        # Ins√©rer dans PostgreSQL
         count = 0
         for _, row in notes_data.iterrows():
             note = Note(
@@ -144,25 +144,25 @@ def copy_notes(sqlite_conn, postgres_session):
             count += 1
         
         postgres_session.commit()
-        print(f"✅ {count} notes migrées")
+        print(f"‚úÖ {count} notes migr√©es")
         return count
         
     except Exception as e:
         postgres_session.rollback()
-        print(f"❌ Erreur migration notes: {e}")
+        print(f"‚ùå Erreur migration notes: {e}")
         return 0
 
 
 def copy_activity_logs(sqlite_conn, postgres_session):
-    """Copier les logs d'activité SQLite → PostgreSQL"""
+    """Copier les logs d'activit√© SQLite ‚Üí PostgreSQL"""
     try:
-        # Vérifier si la table existe
+        # V√©rifier si la table existe
         cursor = sqlite_conn.execute("""
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name='activity_log'
         """)
         if not cursor.fetchone():
-            print("ℹ️ Table activity_log non présente dans SQLite")
+            print("‚ÑπÔ∏è Table activity_log non pr√©sente dans SQLite")
             return 0
         
         # Lire depuis SQLite
@@ -173,10 +173,10 @@ def copy_activity_logs(sqlite_conn, postgres_session):
         """, sqlite_conn)
         
         if logs_data.empty:
-            print("ℹ️ Aucun log d'activité à migrer")
+            print("‚ÑπÔ∏è Aucun log d'activit√© √† migrer")
             return 0
         
-        # Insérer dans PostgreSQL
+        # Ins√©rer dans PostgreSQL
         count = 0
         for _, row in logs_data.iterrows():
             log = ActivityLog(
@@ -190,25 +190,25 @@ def copy_activity_logs(sqlite_conn, postgres_session):
             count += 1
         
         postgres_session.commit()
-        print(f"✅ {count} logs d'activité migrés")
+        print(f"‚úÖ {count} logs d'activit√© migr√©s")
         return count
         
     except Exception as e:
         postgres_session.rollback()
-        print(f"❌ Erreur migration logs: {e}")
+        print(f"‚ùå Erreur migration logs: {e}")
         return 0
 
 
 def copy_addresses(sqlite_conn, postgres_session):
-    """Copier les adresses OSM SQLite → PostgreSQL"""
+    """Copier les adresses OSM SQLite ‚Üí PostgreSQL"""
     try:
-        # Vérifier si la table existe
+        # V√©rifier si la table existe
         cursor = sqlite_conn.execute("""
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name='addresses'
         """)
         if not cursor.fetchone():
-            print("ℹ️ Table addresses non présente dans SQLite")
+            print("‚ÑπÔ∏è Table addresses non pr√©sente dans SQLite")
             return 0
         
         # Lire depuis SQLite
@@ -219,10 +219,10 @@ def copy_addresses(sqlite_conn, postgres_session):
         """, sqlite_conn)
         
         if addresses_data.empty:
-            print("ℹ️ Aucune adresse à migrer")
+            print("‚ÑπÔ∏è Aucune adresse √† migrer")
             return 0
         
-        # Insérer dans PostgreSQL
+        # Ins√©rer dans PostgreSQL
         count = 0
         for _, row in addresses_data.iterrows():
             address = Address(
@@ -238,18 +238,18 @@ def copy_addresses(sqlite_conn, postgres_session):
             count += 1
         
         postgres_session.commit()
-        print(f"✅ {count} adresses migrées")
+        print(f"‚úÖ {count} adresses migr√©es")
         return count
         
     except Exception as e:
         postgres_session.rollback()
-        print(f"❌ Erreur migration adresses: {e}")
+        print(f"‚ùå Erreur migration adresses: {e}")
         return 0
 
 
 def main():
-    """Migration complète SQLite → PostgreSQL"""
-    print("🔄 Début migration SQLite → PostgreSQL...")
+    """Migration compl√®te SQLite ‚Üí PostgreSQL"""
+    print("üîÑ D√©but migration SQLite ‚Üí PostgreSQL...")
     
     # Connexions
     sqlite_conn = get_sqlite_connection()
@@ -257,7 +257,7 @@ def main():
         return False
     
     try:
-        # Créer les tables PostgreSQL
+        # Cr√©er les tables PostgreSQL
         if not create_postgres_tables():
             return False
         
@@ -277,11 +277,11 @@ def main():
         postgres_session.close()
         sqlite_conn.close()
         
-        print(f"🎉 Migration terminée ! {total_migrated} enregistrements migrés")
+        print(f"üéâ Migration termin√©e ! {total_migrated} enregistrements migr√©s")
         return True
         
     except Exception as e:
-        print(f"❌ Erreur générale migration: {e}")
+        print(f"‚ùå Erreur g√©n√©rale migration: {e}")
         if 'postgres_session' in locals():
             postgres_session.close()
         sqlite_conn.close()

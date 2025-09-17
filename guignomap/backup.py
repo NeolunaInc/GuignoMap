@@ -1,6 +1,6 @@
 """
-Système de backup automatique pour GuignoMap
-Sauvegarde la base de données et les caches
+Syst√®me de backup automatique pour GuignoMap
+Sauvegarde la base de donn√©es et les caches
 """
 
 import shutil
@@ -18,14 +18,14 @@ class BackupManager:
         self.max_backups = 7  # Garder 7 jours de backups
         
     def create_backup(self, reason="manual"):
-        """Crée un backup complet avec timestamp"""
+        """Cr√©e un backup complet avec timestamp"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_name = f"backup_{timestamp}_{reason}"
         backup_path = self.backup_dir / backup_name
         backup_path.mkdir(exist_ok=True)
         
         try:
-            # Backup de la base de données
+            # Backup de la base de donn√©es
             db_backup = backup_path / "guigno_map.db"
             shutil.copy2(self.db_path, db_backup)
             
@@ -35,7 +35,7 @@ class BackupManager:
                 if cache_path.exists():
                     shutil.copy2(cache_path, backup_path / cache_file)
             
-            # Créer un ZIP
+            # Cr√©er un ZIP
             zip_path = self.backup_dir / f"{backup_name}.zip"
             with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for file in backup_path.iterdir():
@@ -50,24 +50,24 @@ class BackupManager:
             # Log le backup
             self._log_backup(timestamp, reason)
             
-            print(f"✅ Backup créé : {zip_path.name}")
+            print(f"‚úÖ Backup cr√©√© : {zip_path.name}")
             return str(zip_path)
             
         except Exception as e:
-            print(f"❌ Erreur backup : {e}")
+            print(f"‚ùå Erreur backup : {e}")
             if backup_path.exists():
                 shutil.rmtree(backup_path)
             return None
     
     def restore_backup(self, backup_file):
-        """Restaure un backup spécifique"""
+        """Restaure un backup sp√©cifique"""
         backup_path = self.backup_dir / backup_file
         if not backup_path.exists():
-            print(f"❌ Backup introuvable : {backup_file}")
+            print(f"‚ùå Backup introuvable : {backup_file}")
             return False
             
         try:
-            # Créer un backup de sécurité avant restauration
+            # Cr√©er un backup de s√©curit√© avant restauration
             self.create_backup("pre_restore")
             
             # Extraire le ZIP
@@ -83,11 +83,11 @@ class BackupManager:
             # Nettoyer
             shutil.rmtree(temp_dir)
             
-            print(f"✅ Backup restauré : {backup_file}")
+            print(f"‚úÖ Backup restaur√© : {backup_file}")
             return True
             
         except Exception as e:
-            print(f"❌ Erreur restauration : {e}")
+            print(f"‚ùå Erreur restauration : {e}")
             return False
     
     def list_backups(self):
@@ -108,7 +108,7 @@ class BackupManager:
         while len(backups) > self.max_backups:
             oldest = backups.pop(0)
             oldest.unlink()
-            print(f"🗑️ Ancien backup supprimé : {oldest.name}")
+            print(f"üóëÔ∏è Ancien backup supprim√© : {oldest.name}")
     
     def _log_backup(self, timestamp, reason):
         """Log les backups dans un fichier"""
@@ -131,7 +131,7 @@ class BackupManager:
             json.dump(log, f, indent=2)
 
 def auto_backup_before_critical(func):
-    """Décorateur pour backup automatique avant opérations critiques"""
+    """D√©corateur pour backup automatique avant op√©rations critiques"""
     def wrapper(*args, **kwargs):
         # Trouver la connexion DB dans les arguments
         conn = None
@@ -142,12 +142,12 @@ def auto_backup_before_critical(func):
         
         if conn:
             try:
-                # Créer un backup avant l'opération
+                # Cr√©er un backup avant l'op√©ration
                 db_path = Path(__file__).parent / "guigno_map.db"
                 backup_mgr = BackupManager(db_path)
                 backup_mgr.create_backup(f"auto_{func.__name__}")
             except:
-                pass  # Ne pas bloquer l'opération si le backup échoue
+                pass  # Ne pas bloquer l'op√©ration si le backup √©choue
         
         return func(*args, **kwargs)
     return wrapper
