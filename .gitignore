@@ -27,16 +27,15 @@ venv/
 .env.*
 
 # ---- Databases
-*.db
-!guignomap/guigno_map.db
+guignomap/guigno_map.db
+*.log
 
 # ---- Streamlit
 .streamlit/secrets.toml
 
-# ---- Exports générés
-exports/**/*.csv
-exports/**/*.xlsx
-exports/**/*.pdf
+# ---- Exports et backups
+exports/
+backups/
 
 # ---- OS cruft
 *.swp
