@@ -780,10 +780,20 @@ def invalidate_caches():
 # ADDRESSES (import et lecture/assignation)
 # =============================================================================
 
-def assign_addresses_to_team(address_ids, team_id):
-    """Assigne une liste d'adresses à une équipe (team_id) - retourne nb lignes affectées"""
+def assign_addresses_to_team(address_ids: list[int], team_id: str) -> int:
+    """
+    Assigne une liste d'adresses à une équipe
+    
+    Args:
+        address_ids: Liste des IDs d'adresses à assigner
+        team_id: Identifiant de l'équipe
+    
+    Returns:
+        Nombre d'adresses effectivement assignées
+    """
     if not address_ids:
         return 0
+    
     with get_conn() as conn:
         _ensure_foreign_keys(conn)
         cursor = conn.cursor()
@@ -810,41 +820,78 @@ def count_unassigned_addresses() -> int:
         """)
         return int(cur.fetchone()[0])
 
-def get_unassigned_addresses(limit=500, offset=0, street_filter=None, sector=None):
-    """Adresses non assignées, triées Rue + numéro avec pagination et filtres"""
+def get_unassigned_addresses(limit=100, sector=None, street=None, search=None):
+    """
+    Récupère les adresses non assignées avec filtres multiples
+    
+    Args:
+        limit: Nombre max d'adresses à retourner (défaut: 100)
+        sector: Filtre par secteur
+        street: Filtre par nom de rue (LIKE)
+        search: Recherche globale sur rue + numéro (LIKE)
+    
+    Returns:
+        DataFrame avec colonnes: id, street_name, house_number, sector
+    """
     with get_conn() as conn:
         where_conditions = ["(assigned_to IS NULL OR assigned_to = '')"]
         params = []
-        
-        if street_filter:
-            where_conditions.append("street_name LIKE ?")
-            params.append(f"%{str(street_filter).strip()}%")
         
         if sector:
             where_conditions.append("sector = ?")
             params.append(str(sector).strip())
         
+        if street:
+            where_conditions.append("street_name LIKE ?")
+            params.append(f"%{str(street).strip()}%")
+        
+        if search:
+            search_term = f"%{str(search).strip()}%"
+            where_conditions.append("(street_name LIKE ? OR house_number LIKE ?)")
+            params.extend([search_term, search_term])
+        
         where_clause = " AND ".join(where_conditions)
-        params.extend([limit, offset])
+        params.append(str(limit))
         
         return pd.read_sql_query(f"""
             SELECT id, street_name, house_number, sector
             FROM addresses
             WHERE {where_clause}
             ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
-            LIMIT ? OFFSET ?
+            LIMIT ?
         """, conn, params=params)
 
-def get_team_addresses(team_id, limit=500, offset=0):
-    """Adresses assignées à une équipe avec pagination"""
+def get_team_addresses(team_id: str, limit=500, search=None):
+    """
+    Récupère les adresses assignées à une équipe
+    
+    Args:
+        team_id: Identifiant de l'équipe
+        limit: Nombre max d'adresses (défaut: 500)
+        search: Recherche sur rue + numéro (optionnel)
+    
+    Returns:
+        DataFrame avec colonnes: id, street_name, house_number, postal_code, sector, assigned_to
+    """
     with get_conn() as conn:
-        return pd.read_sql_query("""
+        where_conditions = ["assigned_to = ?"]
+        params = [str(team_id).strip()]
+        
+        if search:
+            search_term = f"%{str(search).strip()}%"
+            where_conditions.append("(street_name LIKE ? OR house_number LIKE ?)")
+            params.extend([search_term, search_term])
+        
+        where_clause = " AND ".join(where_conditions)
+        params.append(str(limit))
+        
+        return pd.read_sql_query(f"""
             SELECT id, street_name, house_number, postal_code, sector, assigned_to
             FROM addresses
-            WHERE assigned_to = ?
+            WHERE {where_clause}
             ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
-            LIMIT ? OFFSET ?
-        """, conn, params=(str(team_id).strip(), limit, offset))
+            LIMIT ?
+        """, conn, params=params)
 
 
 def search_addresses(query: str, limit: int = 500) -> pd.DataFrame:
@@ -861,6 +908,79 @@ def search_addresses(query: str, limit: int = 500) -> pd.DataFrame:
             ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
             LIMIT ?
         """, conn, params=[search_term, search_term, limit])
+
+
+def clear_team_assignments(team_id: str) -> int:
+    """
+    Supprime toutes les assignations d'une équipe
+    
+    Args:
+        team_id: Identifiant de l'équipe
+    
+    Returns:
+        Nombre d'adresses désassignées
+    """
+    with get_conn() as conn:
+        _ensure_foreign_keys(conn)
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE addresses
+            SET assigned_to = NULL
+            WHERE assigned_to = ?
+        """, [str(team_id).strip()])
+        conn.commit()
+        rowcount = cursor.rowcount
+        invalidate_caches()
+        return rowcount
+
+
+def stats_addresses() -> dict:
+    """
+    Statistiques globales sur les adresses
+    
+    Returns:
+        Dict avec: total, unassigned, assigned, per_team, percent_geocoded
+    """
+    with get_conn() as conn:
+        # Statistiques de base
+        cursor = conn.cursor()
+        
+        # Total et non-assignées
+        cursor.execute("SELECT COUNT(*) FROM addresses")
+        total = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM addresses WHERE assigned_to IS NULL OR assigned_to = ''")
+        unassigned = cursor.fetchone()[0]
+        
+        # Par équipe
+        cursor.execute("""
+            SELECT assigned_to, COUNT(*) as count
+            FROM addresses
+            WHERE assigned_to IS NOT NULL AND assigned_to != ''
+            GROUP BY assigned_to
+            ORDER BY count DESC
+        """)
+        per_team = dict(cursor.fetchall())
+        
+        # Pourcentage géocodé (approximation si colonnes lat/lon existent)
+        try:
+            cursor.execute("""
+                SELECT COUNT(*) FROM addresses 
+                WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+            """)
+            geocoded = cursor.fetchone()[0]
+            percent_geocoded = round((geocoded / total * 100), 1) if total > 0 else 0.0
+        except:
+            # Colonnes lat/lon n'existent pas
+            percent_geocoded = 0.0
+        
+        return {
+            'total': total,
+            'unassigned': unassigned,
+            'assigned': total - unassigned,
+            'per_team': per_team,
+            'percent_geocoded': percent_geocoded
+        }
 
 
 def test_address_helpers():

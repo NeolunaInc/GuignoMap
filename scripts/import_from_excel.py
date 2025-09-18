@@ -1,22 +1,104 @@
-# scripts/import_from_excel.py
-import pandas as pd
-import sqlite3
-import unicodedata
-import re
-from pathlib import Path
+#!/usr/bin/env python3#!/usr/bin/env python3#!/usr/bin/env python3
 
-DB_PATH = Path("guignomap/guigno_map.db")
-EXCEL_PATH = Path("imports/mascouche_adresses.xlsx")
+"""GuignoMap - Wrapper d'import pour Mascouche"""
 
-def _is_null(x):
-    """Vérifie si une valeur est nulle, NaN, 'nan' (insensible à la casse) ou chaîne vide"""
-    if x is None:
-        return True
-    if pd.isna(x):
-        return True
+import sys""""""
+
+import subprocess
+
+from pathlib import PathGuignoMap - Wrapper d'import pour MascoucheGuignoMap - Wrapper d'import pour Mascouche
+
+
+
+def main():Wrapper du script import_city_excel.py pour maintenir la compatibilitéWrapper du script import_city_excel.py pour maintenir la compatibilité
+
+    script_dir = Path(__file__).parent
+
+    import_script = script_dir / "import_city_excel.py"""""""
+
+    excel_file = script_dir.parent / "imports" / "mascouche_adresses.xlsx"
+
+    import sysimport sys
+
+    print("Lancement de l'import Mascouche...")
+
+    import subprocessimport subprocess
+
+    cmd = [
+
+        sys.executable,from pathlib import Pathfrom pathlib import Path
+
+        str(import_script),
+
+        "--city", "mascouche",
+
+        "--file", str(excel_file)
+
+    ]def main():def main():
+
     
-    # Convertir en string et strip
-    str_x = str(x).strip()
+
+    try:    """Wrapper qui appelle import_city_excel.py avec les paramètres Mascouche"""    """Wrapper qui appelle import_city_excel.py avec les paramètres Mascouche"""
+
+        result = subprocess.run(cmd, check=False)
+
+        return result.returncode    script_dir = Path(__file__).parent    script_dir = Path(__file__).parent
+
+    except Exception as e:
+
+        print(f"Erreur: {e}")    import_script = script_dir / "import_city_excel.py"    import_script = script_dir / "import_city_excel.py"
+
+        return 1
+
+    excel_file = script_dir.parent / "imports" / "mascouche_adresses.xlsx"    excel_file = script_dir.parent / "imports" / "mascouche_adresses.xlsx"
+
+if __name__ == "__main__":
+
+    sys.exit(main())        
+
+    print("🔄 Lancement de l'import Mascouche...")    print("🔄 Lancement de l'import Mascouche...")
+
+    print(f"Script: {import_script}")    print(f"Script: {import_script}")
+
+    print(f"Fichier: {excel_file}")    print(f"Fichier: {excel_file}")
+
+        
+
+    # Appel du script principal    # Appel du script principal
+
+    cmd = [    cmd = [
+
+        sys.executable,        sys.executable,
+
+        str(import_script),        str(import_script),
+
+        "--city", "mascouche",        "--city", "mascouche",
+
+        "--file", str(excel_file)        "--file", str(excel_file)
+
+    ]    ]
+
+        
+
+    try:    try:
+
+        result = subprocess.run(cmd, check=False)        result = subprocess.run(cmd, check=False)
+
+        return result.returncode        return result.returncode
+
+    except Exception as e:    except Exception as e:
+
+        print(f"❌ Erreur lors de l'exécution: {e}")        print(f"❌ Erreur lors de l'exécution: {e}")
+
+        return 1        return 1
+
+
+
+
+
+if __name__ == "__main__":if __name__ == "__main__":
+
+    sys.exit(main())    sys.exit(main())
     
     # Vérifier si c'est une chaîne vide ou "nan" (insensible à la casse)
     if str_x == "" or str_x.lower() == "nan":
