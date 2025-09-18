@@ -6,7 +6,8 @@ Version 3.0 - Production
 
 # pyright: reportCallIssue=false
 
-import os, sys
+import os
+import sys
 os.environ.setdefault("PYTHONUTF8", "1")
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -414,7 +415,7 @@ def render_dashboard_gestionnaire(geo):
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Aucune statistique d'équipe disponible")
-    except Exception as e:
+    except Exception:
         st.warning("Graphiques non disponibles (module plotly manquant)")
         # Fallback vers un tableau simple
         try:
@@ -819,7 +820,6 @@ def page_accueil_v2(geo):
     """Page d'accueil festive avec compte à rebours"""
     
     # Compte à rebours jusqu'au 1er décembre
-    from datetime import datetime, timedelta
     target = datetime(2025, 12, 1, 8, 0, 0)
     now = datetime.now()
     diff = target - now
@@ -1525,7 +1525,7 @@ def page_gestionnaire_v2(geo):
                 st.dataframe(to_dataframe(teams_df), use_container_width=True)
             else:
                 st.info("Aucune équipe créée")
-        except Exception as e:
+        except Exception:
             st.info("Liste des équipes non disponible")
 
         # === 🔐 Modifier / réinitialiser le mot de passe ===
@@ -1873,7 +1873,6 @@ def page_superviseur(conn, geo):
 
 def page_assignations_v41():
     """Assignations : au choix par secteur (bulk) OU par rue (manuel)."""
-    import pandas as pd
     st.subheader("🗺️ Assignations", anchor=False)
 
     tabs = st.tabs(["🎯 Par secteur (rapide)", "🧭 Par rue (manuel)", "📋 Assignation simple"])

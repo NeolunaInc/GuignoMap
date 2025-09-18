@@ -8,12 +8,11 @@ import threading
 from contextlib import contextmanager
 from datetime import datetime
 import pandas as pd
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 import functools
 
 from guignomap.auth import hash_password, verify_password
-from guignomap.backup import auto_backup_before_critical, BackupManager
-from guignomap.validators import validate_and_clean_input, InputValidator
+from guignomap.backup import BackupManager
 
 # Flag d'initialisation globale
 _DB_INITIALIZED = False
@@ -786,6 +785,7 @@ def assign_addresses_to_team(address_ids, team_id):
     if not address_ids:
         return 0
     with get_conn() as conn:
+        _ensure_foreign_keys(conn)
         cursor = conn.cursor()
         placeholders = ','.join('?' for _ in address_ids)
         cursor.execute(f"""
@@ -797,6 +797,18 @@ def assign_addresses_to_team(address_ids, team_id):
         rowcount = cursor.rowcount
         invalidate_caches()
         return rowcount
+
+
+def count_unassigned_addresses() -> int:
+    """Compte le nombre d'adresses non assignées"""
+    with get_conn() as conn:
+        _ensure_foreign_keys(conn)
+        cur = conn.execute("""
+            SELECT COUNT(*) 
+            FROM addresses 
+            WHERE assigned_to IS NULL OR assigned_to = ''
+        """)
+        return int(cur.fetchone()[0])
 
 def get_unassigned_addresses(limit=500, offset=0, street_filter=None, sector=None):
     """Adresses non assignées, triées Rue + numéro avec pagination et filtres"""
@@ -833,3 +845,49 @@ def get_team_addresses(team_id, limit=500, offset=0):
             ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
             LIMIT ? OFFSET ?
         """, conn, params=(str(team_id).strip(), limit, offset))
+
+
+def search_addresses(query: str, limit: int = 500) -> pd.DataFrame:
+    """Recherche d'adresses avec LIKE sur street_name/house_number"""
+    if not query or not query.strip():
+        return pd.DataFrame(columns=['id', 'street_name', 'house_number', 'sector'])
+    
+    with get_conn() as conn:
+        search_term = f"%{str(query).strip()}%"
+        return pd.read_sql_query("""
+            SELECT id, street_name, house_number, sector
+            FROM addresses
+            WHERE street_name LIKE ? OR house_number LIKE ?
+            ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
+            LIMIT ?
+        """, conn, params=[search_term, search_term, limit])
+
+
+def test_address_helpers():
+    """Tests rapides intégrés pour les helpers d'adresses - version déterministe"""
+    try:
+        total_before = count_unassigned_addresses()
+        sample = get_unassigned_addresses(limit=3)
+        assert len(sample) >= 3, f"Pas assez d'adresses non assignées pour le test (n={len(sample)})"
+        ids = [int(x) for x in sample['id'].tolist()[:3]]
+
+        updated = assign_addresses_to_team(ids, 'EQUIPE_TEST')
+        assert updated >= 3, f"Moins de 3 lignes mises à jour (rowcount={updated})"
+
+        # Vérifier qu'elles n'apparaissent plus dans les non assignées
+        still_unassigned = get_unassigned_addresses(limit=10000)
+        still_ids = set(int(x) for x in still_unassigned['id'].tolist())
+        assert not any(i in still_ids for i in ids), "Des IDs assignés sont encore dans non-assignées"
+
+        # Vérifier qu'elles sont bien visibles côté équipe
+        team_df = get_team_addresses('EQUIPE_TEST')
+        team_ids = set(int(x) for x in team_df['id'].tolist())
+        assert all(i in team_ids for i in ids), "IDs non retrouvés côté équipe"
+
+        total_after = count_unassigned_addresses()
+        assert total_before - total_after >= 3, f"Réduction attendue >=3; avant={total_before} après={total_after}"
+
+        print("✅ test_address_helpers: OK")
+    except Exception as e:
+        print("❌ Erreur test_address_helpers:", e)
+        raise

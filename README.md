@@ -29,6 +29,18 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - **Nouveau CSV assignations** : Export spécialisé pour la gestion des secteurs
 - **Interface unifiée** : Tous les exports accessibles depuis l'onglet Export
 
+## 🗃️ Base de données
+
+GuignoMap utilise deux fichiers de base de données SQLite :
+
+- **`guigno_map.sample.db`** : Base de données d'exemple avec données de démonstration (versionnée)
+- **`guigno_map.db`** : Base de données de travail local (ignorée par git)
+
+Pour commencer, copiez le fichier sample vers votre environnement de travail :
+```bash
+cp guignomap/guigno_map.sample.db guignomap/guigno_map.db
+```
+
 ## ✨ Fonctionnalités v4.0 (acquises)
 
 ### 🔒 Sécurité renforcée

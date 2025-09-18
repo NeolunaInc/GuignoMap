@@ -6,14 +6,14 @@ from pathlib import Path
 from datetime import datetime
 import pandas as pd
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 import xlsxwriter
 from io import BytesIO
-from guignomap.database import get_conn, list_streets as db_list_streets
+from guignomap.database import get_conn
 
 # Mapping des statuts pour l'affichage (évite imports circulaires)
 STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
@@ -300,8 +300,6 @@ def export_assignments_to_excel(outfile: str = "exports/assignments.xlsx") -> st
     Returns:
         Chemin du fichier créé
     """
-    from pathlib import Path
-    import pandas as pd
     
     # Récupérer les données des rues directement depuis la DB
     with get_conn() as conn:

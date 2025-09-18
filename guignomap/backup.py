@@ -4,7 +4,6 @@ Sauvegarde la base de données et les caches
 """
 
 import shutil
-import sqlite3
 from pathlib import Path
 from datetime import datetime
 import json

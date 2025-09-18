@@ -167,7 +167,7 @@ def build_geometry_cache():
                 else:
                     stats["sans_geo"] += 1
                     
-            except Exception as e:
+            except Exception:
                 continue
         
         print(f"✅ Résultat: {stats['avec_geo']} voies avec géométrie sur {stats['total']} trouvées")
@@ -196,7 +196,7 @@ def build_geometry_cache():
                             (street_name,)
                         )
                 conn.commit()
-                print(f"✅ Rues importées dans la base de données")
+                print("✅ Rues importées dans la base de données")
             except Exception as e:
                 print(f"⚠️ Import DB: {e}")
             

@@ -5,7 +5,7 @@ Protection contre injections et validation des formats
 
 import re
 import html
-from typing import Optional, Tuple
+from typing import Tuple
 
 class InputValidator:
     """Classe de validation et sanitization des entrées"""

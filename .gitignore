@@ -28,6 +28,7 @@ venv/
 
 # ---- Databases
 guignomap/guigno_map.db
+!guignomap/guigno_map.sample.db
 *.log
 
 # ---- Streamlit
