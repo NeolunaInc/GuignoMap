@@ -1,21 +1,56 @@
 """
-GuignoMap v5.0 - Database operations (SQLite Pure)
-Migration from SQLAlchemy to pure SQLite3 - essential functions only
+GuignoMap - Database operations (SQLite Pure)
+Single file database layer - consolidated from src/database/
 """
-import os
-import pandas as pd
-import hashlib
-from datetime import datetime
-import json
+import sqlite3
 from pathlib import Path
-import secrets
-import string
+import threading
+from contextlib import contextmanager
+from datetime import datetime
+import pandas as pd
 from typing import Optional, List, Dict, Any
 
-from src.database.sqlite_pure import get_conn
 from src.auth.passwords import hash_password, verify_password
 from guignomap.backup import auto_backup_before_critical, BackupManager
 from guignomap.validators import validate_and_clean_input, InputValidator
+
+
+# =============================================================================
+# CONNECTION MANAGEMENT
+# =============================================================================
+
+DB_PATH = Path("guignomap/guigno_map.db")
+_local = threading.local()
+
+def get_conn():
+    """Connexion SQLite thread-safe avec optimisations"""
+    if not hasattr(_local, 'conn') or _local.conn is None:
+        DB_PATH.parent.mkdir(exist_ok=True)
+        _local.conn = sqlite3.connect(
+            DB_PATH, 
+            check_same_thread=False,
+            timeout=30.0
+        )
+        _local.conn.row_factory = sqlite3.Row
+        _local.conn.execute("PRAGMA journal_mode=WAL")
+        _local.conn.execute("PRAGMA synchronous=NORMAL")
+        _local.conn.execute("PRAGMA foreign_keys=ON")
+        _local.conn.execute("PRAGMA temp_store=MEMORY")
+    return _local.conn
+
+@contextmanager
+def get_cursor():
+    """Context manager pour cursor avec auto-commit"""
+    conn = get_conn()
+    cursor = conn.cursor()
+    try:
+        yield cursor
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
 
 
 # =============================================================================
@@ -26,7 +61,6 @@ def _row_dicts(cur):
     """Helper pour convertir curseur en liste de dict"""
     cols = [d[0] for d in cur.description]
     return [dict(zip(cols, row)) for row in cur.fetchall()]
-
 
 def _ensure_foreign_keys(conn):
     """Active les foreign keys pour cette connexion"""
@@ -69,21 +103,6 @@ def initialize_database():
         return {"status": "error", "message": str(e)}
 
 
-def reset_database():
-    """Remet la base à zéro (garde la structure)"""
-    with get_conn() as conn:
-        _ensure_foreign_keys(conn)
-        
-        # Vider les tables dans l'ordre des dépendances
-        conn.execute("DELETE FROM activity_log")
-        conn.execute("DELETE FROM notes")
-        conn.execute("DELETE FROM addresses")
-        conn.execute("DELETE FROM streets")
-        conn.execute("DELETE FROM teams")
-        
-        conn.commit()
-
-
 # =============================================================================
 # TEAM OPERATIONS
 # =============================================================================
@@ -95,7 +114,6 @@ def team_exists(team_id: str) -> bool:
             "SELECT COUNT(*) FROM teams WHERE id = ?", (team_id,)
         ).fetchone()[0]
         return count > 0
-
 
 def create_team(team_id: str, team_name: str, password: str = "") -> dict:
     """Crée une nouvelle équipe"""
@@ -118,7 +136,6 @@ def create_team(team_id: str, team_name: str, password: str = "") -> dict:
             return {"success": True, "message": "Équipe créée avec succès"}
     except Exception as e:
         return {"success": False, "message": str(e)}
-
 
 def authenticate_team(team_id: str, password: str) -> dict:
     """Authentifie une équipe"""
@@ -144,17 +161,16 @@ def authenticate_team(team_id: str, password: str) -> dict:
     except Exception as e:
         return {"success": False, "message": str(e)}
 
-
 def list_teams() -> List[Dict]:
     """Liste toutes les équipes"""
     with get_conn() as conn:
         cur = conn.execute("""
-            SELECT id, nom, is_admin, 
+            SELECT t.id, t.name, t.active, 
                    COUNT(s.id) as assigned_streets
             FROM teams t
-            LEFT JOIN streets s ON t.id = s.team_id
-            GROUP BY t.id, t.nom, t.is_admin
-            ORDER BY t.nom
+            LEFT JOIN streets s ON t.id = s.team
+            GROUP BY t.id, t.name, t.active
+            ORDER BY t.name
         """)
         return _row_dicts(cur)
 
@@ -163,23 +179,35 @@ def list_teams() -> List[Dict]:
 # STREET OPERATIONS
 # =============================================================================
 
-def list_streets() -> pd.DataFrame:
+def list_streets(team: Optional[str] = None) -> pd.DataFrame:
     """Liste toutes les rues avec leurs détails"""
     with get_conn() as conn:
-        cur = conn.execute("""
-            SELECT s.id, s.name, s.sector, s.status, s.team_id,
-                   t.nom as team_name,
-                   COUNT(n.id) as notes_count
-            FROM streets s
-            LEFT JOIN teams t ON s.team_id = t.id
-            LEFT JOIN notes n ON s.id = n.street_id
-            GROUP BY s.id, s.name, s.sector, s.status, s.team_id, t.nom
-            ORDER BY s.name
-        """)
+        if team:
+            cur = conn.execute("""
+                SELECT s.id, s.name, s.sector, s.status, s.team_id,
+                       t.nom as team_name,
+                       COUNT(n.id) as notes_count
+                FROM streets s
+                LEFT JOIN teams t ON s.team_id = t.id
+                LEFT JOIN notes n ON s.id = n.street_id
+                WHERE s.team_id = ?
+                GROUP BY s.id, s.name, s.sector, s.status, s.team_id, t.nom
+                ORDER BY s.name
+            """, (team,))
+        else:
+            cur = conn.execute("""
+                SELECT s.id, s.name, s.sector, s.status, s.team_id,
+                       t.nom as team_name,
+                       COUNT(n.id) as notes_count
+                FROM streets s
+                LEFT JOIN teams t ON s.team_id = t.id
+                LEFT JOIN notes n ON s.id = n.street_id
+                GROUP BY s.id, s.name, s.sector, s.status, s.team_id, t.nom
+                ORDER BY s.name
+            """)
         
         data = _row_dicts(cur)
         return pd.DataFrame(data)
-
 
 def get_street_details(street_id: int) -> Optional[Dict]:
     """Récupère les détails d'une rue"""
@@ -196,7 +224,6 @@ def get_street_details(street_id: int) -> Optional[Dict]:
             cols = [d[0] for d in cur.description]
             return dict(zip(cols, result))
         return None
-
 
 def update_street_status(street_id: int, new_status: str, team_id: Optional[str] = None) -> bool:
     """Met à jour le statut d'une rue"""
@@ -247,7 +274,6 @@ def extended_stats() -> Dict:
             'progress_pct': (done / total * 100) if total > 0 else 0
         }
 
-
 def stats_by_team() -> List[Dict]:
     """Statistiques par équipe"""
     with get_conn() as conn:
@@ -265,7 +291,6 @@ def stats_by_team() -> List[Dict]:
             ORDER BY completed DESC, t.nom
         """)
         return _row_dicts(cur)
-
 
 def recent_activity(limit: int = 20) -> List[Dict]:
     """Activité récente du système"""
@@ -305,7 +330,6 @@ def add_note(street_id: int, team_id: str, content: str) -> bool:
     except Exception:
         return False
 
-
 def get_street_notes(street_id: int) -> List[Dict]:
     """Récupère les notes d'une rue"""
     with get_conn() as conn:
@@ -340,7 +364,6 @@ def count_hash_algorithms() -> Dict[str, int]:
             GROUP BY algorithm
         """)
         return dict(cur.fetchall())
-
 
 def health_check() -> Dict:
     """Vérification de santé de la base"""
@@ -400,3 +423,211 @@ def bulk_assign_streets(team_id: str, sector: Optional[str] = None) -> Dict:
             return {"success": True, "affected_count": affected}
     except Exception as e:
         return {"success": False, "message": str(e)}
+
+
+# =============================================================================
+# UTILITY QUERY FUNCTIONS (Legacy compatibility)
+# =============================================================================
+
+def execute_query(query, params=None):
+    """Exécute une query avec gestion d'erreurs (legacy compatibility)"""
+    with get_cursor() as cursor:
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        return cursor.fetchall()
+
+def fetchone_query(query, params=None):
+    """Exécute une query et retourne le premier résultat"""
+    conn = get_conn()
+    if params:
+        result = conn.execute(query, params).fetchone()
+    else:
+        result = conn.execute(query).fetchone()
+    return result
+
+def fetchall_query(query, params=None):
+    """Exécute une query et retourne tous les résultats"""
+    conn = get_conn()
+    if params:
+        results = conn.execute(query, params).fetchall()
+    else:
+        results = conn.execute(query).fetchall()
+    return results
+
+
+# =============================================================================
+# ALIAS & COMPATIBILITY FUNCTIONS
+# =============================================================================
+
+# Alias pour compatibilité avec l'ancienne API
+init_db = initialize_database
+verify_team = authenticate_team
+
+def teams() -> List[str]:
+    """Retourne la liste des noms d'équipes (compatibilité)"""
+    teams_list = list_teams()
+    return [team['name'] for team in teams_list if team['id'] != 'ADMIN']
+
+def get_teams_list() -> List[tuple]:
+    """Retourne liste des équipes sous forme (id, nom)"""
+    teams_list = list_teams()
+    return [(team['id'], team['name']) for team in teams_list]
+    return [(team['id'], team['nom']) for team in teams_list if team['id'] != 'ADMIN']
+
+def get_all_teams() -> pd.DataFrame:
+    """Retourne DataFrame des équipes"""
+    teams_list = list_teams()
+    return pd.DataFrame(teams_list)
+
+def set_status(street_name: str, status: str) -> bool:
+    """Met à jour le statut d'une rue par nom (legacy)"""
+    with get_conn() as conn:
+        cur = conn.execute("SELECT id FROM streets WHERE name = ?", (street_name,))
+        result = cur.fetchone()
+        if result:
+            return update_street_status(result[0], status)
+        return False
+
+def get_unassigned_streets() -> List[Dict]:
+    """Rues non assignées"""
+    with get_conn() as conn:
+        cur = conn.execute("""
+            SELECT id, name, sector FROM streets 
+            WHERE team_id IS NULL OR team_id = ''
+            ORDER BY name
+        """)
+        return _row_dicts(cur)
+
+def get_unassigned_streets_count() -> int:
+    """Nombre de rues non assignées"""
+    with get_conn() as conn:
+        count = conn.execute("""
+            SELECT COUNT(*) FROM streets 
+            WHERE team_id IS NULL OR team_id = ''
+        """).fetchone()[0]
+        return count
+
+def get_sectors_list() -> List[str]:
+    """Liste des secteurs"""
+    with get_conn() as conn:
+        cur = conn.execute("SELECT DISTINCT sector FROM streets WHERE sector IS NOT NULL ORDER BY sector")
+        return [row[0] for row in cur.fetchall()]
+
+def assign_streets_to_team(street_names: List[str], team_id: str) -> int:
+    """Assigne des rues à une équipe"""
+    count = 0
+    with get_conn() as conn:
+        _ensure_foreign_keys(conn)
+        for street_name in street_names:
+            cur = conn.execute("""
+                UPDATE streets SET team_id = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE name = ?
+            """, (team_id, street_name))
+            count += cur.rowcount
+        conn.commit()
+    return count
+
+def bulk_assign_sector(sector: str, team_id: str) -> int:
+    """Assigne toutes les rues d'un secteur à une équipe"""
+    result = bulk_assign_streets(team_id, sector)
+    return result.get("affected_count", 0)
+
+def get_team_streets(team_id: str) -> List[Dict]:
+    """Rues assignées à une équipe"""
+    df = list_streets(team=team_id)
+    return df.to_dict('records')
+
+def add_street_note(street_name: str, team_id: str, address_num: str, content: str) -> bool:
+    """Ajoute une note à une rue par nom"""
+    with get_conn() as conn:
+        cur = conn.execute("SELECT id FROM streets WHERE name = ?", (street_name,))
+        result = cur.fetchone()
+        if result:
+            return add_note(result[0], team_id, f"{address_num}: {content}")
+        return False
+
+def get_street_notes_for_team(street_name: str, team_id: str) -> List[Dict]:
+    """Notes d'une rue pour une équipe"""
+    with get_conn() as conn:
+        cur = conn.execute("""
+            SELECT n.*, t.nom as team_name
+            FROM notes n
+            LEFT JOIN teams t ON n.team_id = t.id
+            LEFT JOIN streets s ON n.street_id = s.id
+            WHERE s.name = ? AND n.team_id = ?
+            ORDER BY n.created_at DESC
+        """, (street_name, team_id))
+        return _row_dicts(cur)
+
+# Fonctions export (placeholders pour l'instant)
+def export_to_csv():
+    """Export CSV placeholder"""
+    return "CSV export placeholder"
+
+def export_notes_csv():
+    """Export notes CSV placeholder"""
+    return "Notes CSV export placeholder"
+
+def export_streets_template(include_assignments=True):
+    """Export template placeholder"""
+    return pd.DataFrame()
+
+def upsert_streets_from_csv(file_like):
+    """Import CSV placeholder"""
+    return {"success": False, "message": "Import not implemented"}
+
+def get_assignations_export_data():
+    """Export assignations placeholder"""
+    return []
+
+# Fonctions adresses (placeholders)
+def get_street_addresses_with_notes(street_name):
+    """Placeholder adresses avec notes"""
+    return []
+
+def get_addresses_by_street(street_name):
+    """Placeholder adresses par rue"""
+    return []
+
+def add_note_for_address(street_name, team_id, address_num, content):
+    """Placeholder note pour adresse"""
+    return False
+
+def get_team_notes(team_id):
+    """Placeholder notes équipe"""
+    return []
+
+def update_team_password(team_id, new_password):
+    """Met à jour le mot de passe d'une équipe"""
+    try:
+        with get_conn() as conn:
+            password_hash = hash_password(new_password)
+            conn.execute("""
+                UPDATE teams SET password_hash = ? WHERE id = ?
+            """, (password_hash, team_id))
+            conn.commit()
+            return True
+    except Exception:
+        return False
+
+def reset_team_password(team_id):
+    """Remet à zéro le mot de passe d'une équipe"""
+    try:
+        with get_conn() as conn:
+            conn.execute("""
+                UPDATE teams SET password_hash = '' WHERE id = ?
+            """, (team_id,))
+            conn.commit()
+            return "password_reset"
+    except Exception:
+        return None
+
+def import_addresses_from_cache(cache_data):
+    """Import adresses depuis cache"""
+    return 0
+
+def get_backup_manager():
+    """Retourne backup manager"""
+    return BackupManager(str(DB_PATH))

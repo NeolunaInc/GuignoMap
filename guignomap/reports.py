@@ -13,7 +13,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import xlsxwriter
 from io import BytesIO
-from src.database.sqlite_pure import get_conn
+from guignomap.database import get_conn
 
 # Mapping des statuts pour l'affichage (évite imports circulaires)
 STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}

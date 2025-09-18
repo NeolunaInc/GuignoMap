@@ -1,4 +1,4 @@
 """
-Database proxy module - redirects to SQLite pure layer
+Database proxy module - redirects to unified database layer
 """
-from src.database.sqlite_pure import *
+from guignomap.database import *
