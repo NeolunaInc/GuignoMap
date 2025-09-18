@@ -2,7 +2,8 @@
 
 Une application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
 
-## ✨ Nouvelles fonctionnalités v4.1
+## ✨ Version 4.2 - Import et assignation d'adresses
+
 
 ### 👔 Interface Superviseur/Gestionnaire
 - **Assignations par secteur** : Sélection secteur + équipe et assignation en bloc
