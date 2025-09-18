@@ -11,7 +11,7 @@ import pandas as pd
 from typing import Optional, List, Dict, Any
 import functools
 
-from src.auth.passwords import hash_password, verify_password
+from guignomap.auth import hash_password, verify_password
 from guignomap.backup import auto_backup_before_critical, BackupManager
 from guignomap.validators import validate_and_clean_input, InputValidator
 

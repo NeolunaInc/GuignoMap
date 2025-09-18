@@ -21,7 +21,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.database.operations import count_hash_algorithms, get_session
-from src.auth.passwords import hash_password, detect_hash_algo
+from guignomap.auth import hash_password, detect_hash_algo
 from sqlalchemy import text
 
 

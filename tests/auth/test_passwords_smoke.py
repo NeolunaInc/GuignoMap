@@ -10,7 +10,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.auth.passwords import (
+from guignomap.auth import (
     hash_password, 
     verify_password, 
     verify_password_with_context,
