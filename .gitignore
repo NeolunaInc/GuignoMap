@@ -31,6 +31,9 @@ guignomap/guigno_map.db
 !guignomap/guigno_map.sample.db
 *.log
 
+# ---- OSM Cache
+guignomap/osm_cache.json
+
 # ---- Streamlit
 .streamlit/secrets.toml
 
