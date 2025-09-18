@@ -775,3 +775,61 @@ def invalidate_caches():
         for name, obj in inspect.getmembers(current_module):
             if callable(obj) and hasattr(obj, '_cache'):
                 obj._cache.clear()
+
+
+# =============================================================================
+# ADDRESSES (import et lecture/assignation)
+# =============================================================================
+
+def assign_addresses_to_team(address_ids, team_id):
+    """Assigne une liste d'adresses à une équipe (team_id) - retourne nb lignes affectées"""
+    if not address_ids:
+        return 0
+    with get_conn() as conn:
+        cursor = conn.cursor()
+        placeholders = ','.join('?' for _ in address_ids)
+        cursor.execute(f"""
+            UPDATE addresses
+            SET assigned_to = ?
+            WHERE id IN ({placeholders})
+        """, [str(team_id).strip()] + [int(aid) for aid in address_ids])
+        conn.commit()
+        rowcount = cursor.rowcount
+        invalidate_caches()
+        return rowcount
+
+def get_unassigned_addresses(limit=500, offset=0, street_filter=None, sector=None):
+    """Adresses non assignées, triées Rue + numéro avec pagination et filtres"""
+    with get_conn() as conn:
+        where_conditions = ["(assigned_to IS NULL OR assigned_to = '')"]
+        params = []
+        
+        if street_filter:
+            where_conditions.append("street_name LIKE ?")
+            params.append(f"%{str(street_filter).strip()}%")
+        
+        if sector:
+            where_conditions.append("sector = ?")
+            params.append(str(sector).strip())
+        
+        where_clause = " AND ".join(where_conditions)
+        params.extend([limit, offset])
+        
+        return pd.read_sql_query(f"""
+            SELECT id, street_name, house_number, sector
+            FROM addresses
+            WHERE {where_clause}
+            ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
+            LIMIT ? OFFSET ?
+        """, conn, params=params)
+
+def get_team_addresses(team_id, limit=500, offset=0):
+    """Adresses assignées à une équipe avec pagination"""
+    with get_conn() as conn:
+        return pd.read_sql_query("""
+            SELECT id, street_name, house_number, postal_code, sector, assigned_to
+            FROM addresses
+            WHERE assigned_to = ?
+            ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
+            LIMIT ? OFFSET ?
+        """, conn, params=(str(team_id).strip(), limit, offset))

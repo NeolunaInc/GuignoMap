@@ -1241,6 +1241,184 @@ def page_benevole_v2(geo):
             st.info("Journal d'activité temporairement indisponible")
             st.caption(f"Erreur: {e}")
 
+def ui_assign_addresses_admin():
+    """UI d'assignation par adresses avec pagination et filtres (admin seulement)"""
+    # Vérifier les permissions admin
+    if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
+        st.error("⛔ Accès réservé aux administrateurs")
+        return
+    
+    st.subheader("📍 Assignation par adresses", anchor=False)
+    
+    # Initialiser les variables de session pour la pagination
+    if "addr_page" not in st.session_state:
+        st.session_state.addr_page = 0
+    if "addr_sel" not in st.session_state:
+        st.session_state.addr_sel = []
+    
+    # === FILTRES ===
+    with st.container():
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            street_filter = st.text_input(
+                "🔍 Rue contient…", 
+                value="",
+                placeholder="Ex: Avenue, Boulevard...",
+                key="street_filter_addr"
+            )
+        
+        with col2:
+            try:
+                sectors = db.get_sectors_list()
+                sector_options = ["Tous"] + (sectors if sectors else [])
+            except Exception:
+                sector_options = ["Tous"]
+            
+            sector_choice = st.selectbox(
+                "🏘️ Secteur",
+                options=sector_options,
+                index=0,
+                key="sector_filter_addr"
+            )
+            sector = None if sector_choice == "Tous" else sector_choice
+        
+        with col3:
+            page_size = st.selectbox(
+                "📄 Taille page",
+                options=[100, 250, 500],
+                index=0,
+                key="page_size_addr"
+            )
+    
+    # === ÉQUIPE CIBLE ===
+    try:
+        teams = db.get_teams_list()  # [(id, name), ...]
+        team_options = [""] + [f"{name} ({tid})" for (tid, name) in teams]
+    except Exception:
+        team_options = [""]
+    
+    team_display = st.selectbox(
+        "🎯 Équipe cible pour l'assignation",
+        options=team_options,
+        index=0,
+        key="target_team_addr"
+    )
+    target_team_id = ""
+    if team_display and team_display != "":
+        target_team_id = team_display.split("(")[-1].rstrip(")")
+    
+    # === DONNÉES ET PAGINATION ===
+    try:
+        # Récupérer les adresses non assignées avec filtres
+        offset = st.session_state.addr_page * page_size
+        df = db.get_unassigned_addresses(
+            limit=page_size, 
+            offset=offset, 
+            street_filter=street_filter.strip() if street_filter.strip() else None,
+            sector=sector
+        )
+        
+        # Compter le total (approximation)
+        total_df = db.get_unassigned_addresses(
+            limit=1000000, 
+            offset=0, 
+            street_filter=street_filter.strip() if street_filter.strip() else None,
+            sector=sector
+        )
+        total_count = len(total_df)
+        total_pages = (total_count + page_size - 1) // page_size
+        
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des adresses : {e}")
+        return
+    
+    # === PAGINATION ===
+    if total_pages > 1:
+        col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
+        
+        with col1:
+            if st.button("⬅️ Précédent", disabled=st.session_state.addr_page <= 0):
+                st.session_state.addr_page -= 1
+                st.session_state.addr_sel = []  # Reset sélection
+                st.rerun()
+        
+        with col2:
+            if st.button("➡️ Suivant", disabled=st.session_state.addr_page >= total_pages - 1):
+                st.session_state.addr_page += 1
+                st.session_state.addr_sel = []  # Reset sélection
+                st.rerun()
+        
+        with col3:
+            st.info(f"Page {st.session_state.addr_page + 1} / {total_pages} | Total: {total_count} adresses")
+        
+        with col4:
+            if st.button("🔄 Reset page"):
+                st.session_state.addr_page = 0
+                st.session_state.addr_sel = []
+                st.rerun()
+    
+    # === TABLEAU DES ADRESSES ===
+    if not df.empty:
+        st.markdown(f"**Adresses non assignées (page {st.session_state.addr_page + 1}):**")
+        
+        # Créer les options pour le multiselect
+        address_options = []
+        for _, row in df.iterrows():
+            label = f"{row['street_name']} {row['house_number']} — (ID:{row['id']})"
+            address_options.append((label, row['id']))
+        
+        # Multiselect pour sélectionner les adresses
+        selected_labels = st.multiselect(
+            "📋 Sélectionner les adresses à assigner:",
+            options=[opt[0] for opt in address_options],
+            default=[],
+            key=f"addr_multiselect_{st.session_state.addr_page}"
+        )
+        
+        # Extraire les IDs sélectionnés
+        selected_ids = [
+            addr_id for label, addr_id in address_options 
+            if label in selected_labels
+        ]
+        st.session_state.addr_sel = selected_ids
+        
+        # Afficher le tableau pour référence
+        st.dataframe(df[['street_name', 'house_number', 'sector']], use_container_width=True)
+        
+        # === ASSIGNATION ===
+        if selected_ids and target_team_id:
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                st.info(f"🎯 {len(selected_ids)} adresse(s) sélectionnée(s) → Équipe {target_team_id}")
+            with col2:
+                if st.button("✅ Assigner à l'équipe", type="primary", use_container_width=True):
+                    try:
+                        assigned_count = db.assign_addresses_to_team(selected_ids, target_team_id)
+                        st.success(f"✅ {assigned_count} adresse(s) assignée(s) à l'équipe {target_team_id}")
+                        
+                        # Invalider les caches si disponible
+                        try:
+                            db.invalidate_caches()
+                        except:
+                            pass
+                        
+                        # Reset sélection et recharger la page
+                        st.session_state.addr_sel = []
+                        st.rerun()
+                        
+                    except Exception as e:
+                        st.error(f"❌ Erreur lors de l'assignation : {e}")
+        
+        elif selected_ids and not target_team_id:
+            st.warning("⚠️ Veuillez sélectionner une équipe cible")
+        elif not selected_ids and target_team_id:
+            st.info("ℹ️ Veuillez sélectionner des adresses à assigner")
+    
+    else:
+        st.info("✅ Aucune adresse non assignée trouvée avec ces filtres")
+
+
 def page_gestionnaire_v2(geo):
     """Interface gestionnaire moderne (ancien superviseur)"""
     st.header("👤 Tableau de Bord Gestionnaire")
@@ -1419,10 +1597,14 @@ def page_gestionnaire_v2(geo):
         page_assignations_v41()
     
     with tabs[3]:
+        # Assignation par adresses
+        ui_assign_addresses_admin()
+    
+    with tabs[4]:
         # Export amélioré v4.1
         page_export_gestionnaire_v41()
 
-    with tabs[4]:
+    with tabs[5]:
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
