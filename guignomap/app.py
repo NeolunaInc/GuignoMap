@@ -1242,181 +1242,173 @@ def page_benevole_v2(geo):
             st.caption(f"Erreur: {e}")
 
 def ui_assign_addresses_admin():
-    """UI d'assignation par adresses avec pagination et filtres (admin seulement)"""
+    """UI d'assignation par adresses avec filtres et carte (admin seulement)"""
     # Vérifier les permissions admin
     if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
         st.error("⛔ Accès réservé aux administrateurs")
         return
     
-    st.subheader("📍 Assignation par adresses", anchor=False)
-    
-    # Initialiser les variables de session pour la pagination
-    if "addr_page" not in st.session_state:
-        st.session_state.addr_page = 0
-    if "addr_sel" not in st.session_state:
-        st.session_state.addr_sel = []
+    st.subheader("📍 Assignation d'adresses", anchor=False)
     
     # === FILTRES ===
     with st.container():
-        col1, col2, col3 = st.columns([2, 1, 1])
+        col1, col2 = st.columns([2, 1])
         
         with col1:
             street_filter = st.text_input(
-                "🔍 Rue contient…", 
+                "🔍 Filtrer par rue (contient)", 
                 value="",
-                placeholder="Ex: Avenue, Boulevard...",
-                key="street_filter_addr"
+                placeholder="Ex: Avenue, Boulevard, Cantin...",
+                key="street_filter_addr",
+                help="Recherche insensible à la casse"
             )
         
         with col2:
             try:
-                sectors = db.get_sectors_list()
-                sector_options = ["Tous"] + (sectors if sectors else [])
+                teams_list = db.list_teams()
+                team_options = [f"{team['name']} ({team['id']})" for team in teams_list if team['id'] != 'ADMIN']
             except Exception:
-                sector_options = ["Tous"]
+                team_options = []
             
-            sector_choice = st.selectbox(
-                "🏘️ Secteur",
-                options=sector_options,
-                index=0,
-                key="sector_filter_addr"
-            )
-            sector = None if sector_choice == "Tous" else sector_choice
-        
-        with col3:
-            page_size = st.selectbox(
-                "📄 Taille page",
-                options=[100, 250, 500],
-                index=0,
-                key="page_size_addr"
+            selected_team = st.selectbox(
+                "👥 Équipe à assigner",
+                options=team_options,
+                index=0 if team_options else None,
+                key="team_selector_addr",
+                help="Sélectionnez l'équipe qui recevra les adresses"
             )
     
-    # === ÉQUIPE CIBLE ===
+    # === ADRESSES NON ASSIGNÉES ===
     try:
-        teams = db.get_teams_list()  # [(id, name), ...]
-        team_options = [""] + [f"{name} ({tid})" for (tid, name) in teams]
-    except Exception:
-        team_options = [""]
-    
-    team_display = st.selectbox(
-        "🎯 Équipe cible pour l'assignation",
-        options=team_options,
-        index=0,
-        key="target_team_addr"
-    )
-    target_team_id = ""
-    if team_display and team_display != "":
-        target_team_id = team_display.split("(")[-1].rstrip(")")
-    
-    # === DONNÉES ET PAGINATION ===
-    try:
-        # Récupérer les adresses non assignées avec filtres
-        offset = st.session_state.addr_page * page_size
-        df = db.get_unassigned_addresses(
-            limit=page_size, 
-            offset=offset, 
-            street_filter=street_filter.strip() if street_filter.strip() else None,
-            sector=sector
+        # Récupérer les adresses non assignées avec filtre
+        unassigned_df = db.get_unassigned_addresses(
+            limit=1000, 
+            street_filter=street_filter if street_filter.strip() else None
         )
         
-        # Compter le total (approximation)
-        total_df = db.get_unassigned_addresses(
-            limit=1000000, 
-            offset=0, 
-            street_filter=street_filter.strip() if street_filter.strip() else None,
-            sector=sector
-        )
-        total_count = len(total_df)
-        total_pages = (total_count + page_size - 1) // page_size
+        if unassigned_df.empty:
+            if street_filter.strip():
+                st.info(f"🔍 Aucune adresse non assignée trouvée pour '{street_filter}'")
+            else:
+                st.info("✅ Toutes les adresses sont assignées !")
+            return
         
-    except Exception as e:
-        st.error(f"Erreur lors du chargement des adresses : {e}")
-        return
-    
-    # === PAGINATION ===
-    if total_pages > 1:
-        col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
-        
-        with col1:
-            if st.button("⬅️ Précédent", disabled=st.session_state.addr_page <= 0):
-                st.session_state.addr_page -= 1
-                st.session_state.addr_sel = []  # Reset sélection
-                st.rerun()
-        
-        with col2:
-            if st.button("➡️ Suivant", disabled=st.session_state.addr_page >= total_pages - 1):
-                st.session_state.addr_page += 1
-                st.session_state.addr_sel = []  # Reset sélection
-                st.rerun()
-        
-        with col3:
-            st.info(f"Page {st.session_state.addr_page + 1} / {total_pages} | Total: {total_count} adresses")
-        
-        with col4:
-            if st.button("🔄 Reset page"):
-                st.session_state.addr_page = 0
-                st.session_state.addr_sel = []
-                st.rerun()
-    
-    # === TABLEAU DES ADRESSES ===
-    if not df.empty:
-        st.markdown(f"**Adresses non assignées (page {st.session_state.addr_page + 1}):**")
-        
-        # Créer les options pour le multiselect
+        # Préparer les options pour le multiselect
         address_options = []
-        for _, row in df.iterrows():
-            label = f"{row['street_name']} {row['house_number']} — (ID:{row['id']})"
-            address_options.append((label, row['id']))
+        address_map = {}  # label -> row data
         
-        # Multiselect pour sélectionner les adresses
-        selected_labels = st.multiselect(
-            "📋 Sélectionner les adresses à assigner:",
-            options=[opt[0] for opt in address_options],
-            default=[],
-            key=f"addr_multiselect_{st.session_state.addr_page}"
+        for idx, row in unassigned_df.iterrows():
+            label = f"{row['street_name']} {row['house_number']}"
+            address_options.append(label)
+            address_map[label] = row
+        
+        # Multiselect des adresses
+        selected_addresses = st.multiselect(
+            f"📍 Adresses non assignées ({len(address_options)} trouvées)",
+            options=address_options,
+            key="address_multiselect",
+            help="Sélectionnez les adresses à assigner à l'équipe choisie"
         )
         
-        # Extraire les IDs sélectionnés
-        selected_ids = [
-            addr_id for label, addr_id in address_options 
-            if label in selected_labels
-        ]
-        st.session_state.addr_sel = selected_ids
+        # === CARTE MINI ===
+        if selected_addresses:
+            # Récupérer les données des adresses sélectionnées
+            selected_data = [address_map[addr] for addr in selected_addresses]
+            
+            # Calculer le centre de la carte
+            geocoded_addresses = [addr for addr in selected_data if pd.notna(addr.get('latitude')) and pd.notna(addr.get('longitude'))]
+            
+            if geocoded_addresses:
+                # Centrer sur la moyenne des coordonnées
+                avg_lat = sum(addr['latitude'] for addr in geocoded_addresses) / len(geocoded_addresses)
+                avg_lon = sum(addr['longitude'] for addr in geocoded_addresses) / len(geocoded_addresses)
+                center = [avg_lat, avg_lon]
+                zoom = 14
+            else:
+                # Centrer sur la ville par défaut
+                center = [config_ville.VILLE_CENTRE[0], config_ville.VILLE_CENTRE[1]]
+                zoom = 12
+            
+            # Créer la mini carte
+            m = folium.Map(location=center, zoom_start=zoom, tiles="OpenStreetMap")
+            
+            # Ajouter les marqueurs pour les adresses sélectionnées
+            for addr in selected_data:
+                if pd.notna(addr.get('latitude')) and pd.notna(addr.get('longitude')):
+                    folium.Marker(
+                        location=[addr['latitude'], addr['longitude']],
+                        popup=f"{addr['street_name']} {addr['house_number']}",
+                        tooltip=f"{addr['street_name']} {addr['house_number']}",
+                        icon=folium.Icon(color='red', icon='home')
+                    ).add_to(m)
+            
+            st.markdown("### 🗺️ Aperçu des adresses sélectionnées")
+            st_folium(m, height=400, width=None, returned_objects=[])
         
-        # Afficher le tableau pour référence
-        st.dataframe(df[['street_name', 'house_number', 'sector']], use_container_width=True)
-        
-        # === ASSIGNATION ===
-        if selected_ids and target_team_id:
-            col1, col2 = st.columns([2, 1])
-            with col1:
-                st.info(f"🎯 {len(selected_ids)} adresse(s) sélectionnée(s) → Équipe {target_team_id}")
+        # === BOUTON D'ASSIGNATION ===
+        if selected_addresses and selected_team:
+            # Extraire l'ID de l'équipe du format "Nom (ID)"
+            team_id = selected_team.split("(")[-1].rstrip(")")
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
             with col2:
-                if st.button("✅ Assigner à l'équipe", type="primary", use_container_width=True):
+                if st.button(
+                    f"🎯 Assigner {len(selected_addresses)} adresse(s) à {team_id}",
+                    type="primary",
+                    use_container_width=True
+                ):
                     try:
-                        assigned_count = db.assign_addresses_to_team(selected_ids, target_team_id)
-                        st.success(f"✅ {assigned_count} adresse(s) assignée(s) à l'équipe {target_team_id}")
+                        # Récupérer les IDs des adresses sélectionnées
+                        selected_ids = [address_map[addr]['id'] for addr in selected_addresses]
                         
-                        # Invalider les caches si disponible
-                        try:
+                        # Assigner les adresses
+                        success_count = db.assign_addresses_to_team(selected_ids, team_id)
+                        
+                        if success_count > 0:
+                            st.success(f"✅ {success_count} adresse(s) assignée(s) à l'équipe {team_id}")
+                            
+                            # Invalider les caches pour rafraîchir les données
                             db.invalidate_caches()
-                        except:
-                            pass
-                        
-                        # Reset sélection et recharger la page
-                        st.session_state.addr_sel = []
-                        st.rerun()
-                        
+                            
+                            # Rafraîchir la page
+                            time.sleep(1)  # Petit délai pour voir le message
+                            st.rerun()
+                        else:
+                            st.error("❌ Aucune adresse n'a pu être assignée")
+                            
                     except Exception as e:
-                        st.error(f"❌ Erreur lors de l'assignation : {e}")
+                        st.error(f"❌ Erreur lors de l'assignation: {e}")
         
-        elif selected_ids and not target_team_id:
-            st.warning("⚠️ Veuillez sélectionner une équipe cible")
-        elif not selected_ids and target_team_id:
-            st.info("ℹ️ Veuillez sélectionner des adresses à assigner")
+        elif selected_addresses and not selected_team:
+            st.warning("⚠️ Veuillez sélectionner une équipe pour l'assignation")
+        elif not selected_addresses and selected_team:
+            st.info("ℹ️ Sélectionnez des adresses à assigner")
+        
+        # === STATISTIQUES ===
+        with st.expander("📊 Statistiques des adresses", expanded=False):
+            try:
+                # Compter toutes les adresses
+                with db.get_conn() as conn:
+                    total_addresses = conn.execute("SELECT COUNT(*) FROM addresses").fetchone()[0]
+                    assigned_count = conn.execute("SELECT COUNT(*) FROM addresses WHERE assigned_to IS NOT NULL AND assigned_to != ''").fetchone()[0]
+                    unassigned_count = total_addresses - assigned_count
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Total adresses", total_addresses)
+                
+                with col2:
+                    st.metric("Assignées", assigned_count)
+                
+                with col3:
+                    st.metric("Non assignées", unassigned_count)
+            except Exception as e:
+                st.error(f"Erreur stats: {e}")
     
-    else:
-        st.info("✅ Aucune adresse non assignée trouvée avec ces filtres")
+    except Exception as e:
+        st.error(f"❌ Erreur lors du chargement des adresses: {e}")
+        st.info("Fonctionnalité temporairement indisponible")
 
 
 def page_gestionnaire_v2(geo):

@@ -279,6 +279,13 @@ def atomic_swap_tables(conn):
         
         print(f"✅ {preserved_count} assignements préservés")
     
+    # Supprimer les index existants pour rendre l'opération idempotente
+    print("🗑️ Suppression des index existants")
+    conn.execute("DROP INDEX IF EXISTS idx_addr_key")
+    conn.execute("DROP INDEX IF EXISTS idx_addresses_street")
+    conn.execute("DROP INDEX IF EXISTS idx_addresses_sector")
+    conn.execute("DROP INDEX IF EXISTS idx_addresses_assigned")
+    
     # Créer les index
     print("🔗 Création des index")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_addr_key ON addresses_new(addr_key)")
