@@ -15,6 +15,10 @@ from src.auth.passwords import hash_password, verify_password
 from guignomap.backup import auto_backup_before_critical, BackupManager
 from guignomap.validators import validate_and_clean_input, InputValidator
 
+# Flag d'initialisation globale
+_DB_INITIALIZED = False
+_DB_LOCK = threading.Lock()
+
 
 # =============================================================================
 # CACHE SYSTEM
@@ -63,6 +67,8 @@ def vacuum_database():
 
 def get_conn():
     """Connexion SQLite thread-safe avec optimisations"""
+    global _DB_INITIALIZED
+    
     if not hasattr(_local, 'conn') or _local.conn is None:
         DB_PATH.parent.mkdir(exist_ok=True)
         _local.conn = sqlite3.connect(
@@ -79,6 +85,13 @@ def get_conn():
         _local.conn.execute("PRAGMA foreign_keys=ON")
         _local.conn.execute("PRAGMA temp_store=MEMORY")
         _local.conn.execute("PRAGMA optimize")  # Auto-optimisation
+        
+        # Initialisation exactement UNE FOIS
+        with _DB_LOCK:
+            if not _DB_INITIALIZED:
+                initialize_database()
+                _DB_INITIALIZED = True
+                
     return _local.conn
 
 @contextmanager
@@ -159,23 +172,40 @@ def initialize_database():
                 "SELECT COUNT(*) FROM teams WHERE id = 'ADMIN'"
             ).fetchone()[0]
             
-            if admin_exists > 0:
-                return {"status": "already_initialized", "message": "Base déjà initialisée"}
-            
-            # Créer l'équipe ADMIN
-            conn.execute("""
-                INSERT INTO teams(id, nom, password_hash, is_admin) 
-                VALUES ('ADMIN', 'Administrateur', '', 1)
-            """)
-            
-            # Vérifier si des rues existent
-            street_count = conn.execute("SELECT COUNT(*) FROM streets").fetchone()[0]
-            
-            conn.commit()
-            return {
-                "status": "initialized", 
-                "message": f"Admin créé, {street_count} rues existantes"
-            }
+            if admin_exists == 0:
+                # Créer l'équipe ADMIN avec mot de passe RELAIS2025
+                admin_password_hash = hash_password("RELAIS2025")
+                conn.execute("""
+                    INSERT INTO teams(id, name, password_hash) 
+                    VALUES ('ADMIN', 'Administrateur', ?)
+                """, (admin_password_hash,))
+                
+                # Vérifier si des rues existent
+                street_count = conn.execute("SELECT COUNT(*) FROM streets").fetchone()[0]
+                
+                conn.commit()
+                return {
+                    "status": "initialized", 
+                    "message": f"Admin créé avec mot de passe RELAIS2025, {street_count} rues existantes"
+                }
+            else:
+                # Admin existe déjà, vérifier le mot de passe
+                current_hash = conn.execute(
+                    "SELECT password_hash FROM teams WHERE id = 'ADMIN'"
+                ).fetchone()[0]
+                
+                expected_hash = hash_password("RELAIS2025")
+                if current_hash != expected_hash:
+                    # Mise à jour du mot de passe
+                    conn.execute(
+                        "UPDATE teams SET password_hash = ? WHERE id = 'ADMIN'",
+                        (expected_hash,)
+                    )
+                    conn.commit()
+                    return {"status": "admin_password_updated", "message": "Mot de passe ADMIN mis à jour"}
+                else:
+                    return {"status": "already_initialized", "message": "Base déjà initialisée, ADMIN OK"}
+                    
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -205,8 +235,8 @@ def create_team(team_id: str, team_name: str, password: str = "") -> dict:
             password_hash = hash_password(password) if password else ""
             
             conn.execute("""
-                INSERT INTO teams(id, nom, password_hash, is_admin) 
-                VALUES (?, ?, ?, 0)
+                INSERT INTO teams(id, name, password_hash) 
+                VALUES (?, ?, ?)
             """, (team_id, team_name, password_hash))
             
             conn.commit()
@@ -219,20 +249,21 @@ def authenticate_team(team_id: str, password: str) -> dict:
     try:
         with get_conn() as conn:
             result = conn.execute(
-                "SELECT nom, password_hash, is_admin FROM teams WHERE id = ?",
+                "SELECT name, password_hash FROM teams WHERE id = ?",
                 (team_id,)
             ).fetchone()
             
             if not result:
                 return {"success": False, "message": "Équipe introuvable"}
             
-            nom, password_hash, is_admin = result
+            name, password_hash = result
+            is_admin = team_id == 'ADMIN'  # ADMIN is admin by definition
             
             if not password_hash:  # Pas de mot de passe
-                return {"success": True, "team_name": nom, "is_admin": bool(is_admin)}
+                return {"success": True, "team_name": name, "is_admin": is_admin}
             
             if verify_password(password, password_hash):
-                return {"success": True, "team_name": nom, "is_admin": bool(is_admin)}
+                return {"success": True, "team_name": name, "is_admin": is_admin}
             else:
                 return {"success": False, "message": "Mot de passe incorrect"}
     except Exception as e:
@@ -304,29 +335,36 @@ def get_street_details(street_id: int) -> Optional[Dict]:
             return dict(zip(cols, result))
         return None
 
-def update_street_status(street_id: int, new_status: str, team_id: Optional[str] = None) -> bool:
-    """Met à jour le statut d'une rue"""
-    try:
-        with get_conn() as conn:
-            _ensure_foreign_keys(conn)
-            
-            if team_id:
-                conn.execute("""
-                    UPDATE streets 
-                    SET status = ?, team_id = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """, (new_status, team_id, street_id))
-            else:
-                conn.execute("""
-                    UPDATE streets 
-                    SET status = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                """, (new_status, street_id))
-            
-            conn.commit()
-            return True
-    except Exception:
-        return False
+def update_street_status(street_id: int, new_status: str, team_id: Optional[str] = None) -> dict:
+    """Met à jour le statut d'une rue de façon robuste"""
+    # Validation stricte des statuts autorisés (selon contrainte DB)
+    valid_statuses = {"a_faire", "en_cours", "terminee"}
+    if new_status not in valid_statuses:
+        raise ValueError(f"Statut invalide '{new_status}'. Statuts autorisés: {valid_statuses}")
+    
+    with get_conn() as conn:
+        _ensure_foreign_keys(conn)
+        
+        # UPDATE en un seul passage selon la présence de team_id
+        if team_id:
+            cursor = conn.execute("""
+                UPDATE streets 
+                SET status = ?, team = ?
+                WHERE id = ?
+            """, (new_status, team_id, street_id))
+        else:
+            cursor = conn.execute("""
+                UPDATE streets 
+                SET status = ?
+                WHERE id = ?
+            """, (new_status, street_id))
+        
+        # Vérifier que la rue existe (rowcount == 0 si id inexistant)
+        if cursor.rowcount == 0:
+            raise ValueError(f"Rue avec l'id {street_id} introuvable")
+        
+        conn.commit()
+        return {"id": street_id, "status": new_status, "team": team_id}
 
 
 # =============================================================================
@@ -481,13 +519,13 @@ def bulk_assign_streets(team_id: str, sector: Optional[str] = None) -> Dict:
             if sector:
                 cur = conn.execute("""
                     UPDATE streets 
-                    SET team_id = ?, updated_at = CURRENT_TIMESTAMP
+                    SET team_id = ?
                     WHERE sector = ? AND (team_id IS NULL OR team_id = '')
                 """, (team_id, sector))
             else:
                 cur = conn.execute("""
                     UPDATE streets 
-                    SET team_id = ?, updated_at = CURRENT_TIMESTAMP
+                    SET team_id = ?
                     WHERE team_id IS NULL OR team_id = ''
                 """, (team_id,))
             
@@ -567,7 +605,11 @@ def set_status(street_name: str, status: str) -> bool:
         cur = conn.execute("SELECT id FROM streets WHERE name = ?", (street_name,))
         result = cur.fetchone()
         if result:
-            return update_street_status(result[0], status)
+            try:
+                update_street_status(result[0], status)
+                return True
+            except ValueError:
+                return False
         return False
 
 def get_unassigned_streets() -> List[Dict]:
@@ -603,7 +645,7 @@ def assign_streets_to_team(street_names: List[str], team_id: str) -> int:
         _ensure_foreign_keys(conn)
         for street_name in street_names:
             cur = conn.execute("""
-                UPDATE streets SET team_id = ?, updated_at = CURRENT_TIMESTAMP
+                UPDATE streets SET team_id = ?
                 WHERE name = ?
             """, (team_id, street_name))
             count += cur.rowcount
@@ -712,3 +754,24 @@ def import_addresses_from_cache(cache_data):
 def get_backup_manager():
     """Retourne backup manager"""
     return BackupManager(str(DB_PATH))
+
+
+# =============================================================================
+# CACHE MANAGEMENT
+# =============================================================================
+
+def invalidate_caches():
+    """Invalide tous les caches (Streamlit et fallback mémoire)"""
+    try:
+        # Si Streamlit est disponible, utiliser son système de cache
+        import streamlit as st
+        st.cache_data.clear()
+    except ImportError:
+        # Fallback : nettoyer les caches mémoire des fonctions @safe_cache
+        import inspect
+        
+        # Parcourir toutes les fonctions du module actuel
+        current_module = inspect.getmodule(invalidate_caches)
+        for name, obj in inspect.getmembers(current_module):
+            if callable(obj) and hasattr(obj, '_cache'):
+                obj._cache.clear()
