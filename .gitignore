@@ -1,95 +1,43 @@
-# ===============================================
-# GITIGNORE POUR GUIGNO-MAP
-# ===============================================
-
-# ----------------------------------------
-# ENVIRONNEMENTS PYTHON
-# ----------------------------------------
-.venv/
-venv/
-env/
-ENV/
+# ---- Python / Streamlit / Tools
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
-
-# ----------------------------------------
-# BASES DE DONNÉES
-# ----------------------------------------
-*.db
-*.sqlite
-*.sqlite3
-guigno_map.db
-
-# ----------------------------------------
-# CACHES & DONNÉES TEMPORAIRES
-# ----------------------------------------
-osm_cache.json
-*.cache
-*.tmp
+*.so
+*.dylib
+*.egg-info/
+.eggs/
+.build/
+dist/
+build/
+.cache/
+.coverage*
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
 .DS_Store
 Thumbs.db
 
-# ----------------------------------------
-# LOGS & EXPORTS
-# ----------------------------------------
-*.log
-export_*.txt
-rapport_*.csv
+# ---- Environnement
+.venv/
+venv/
+.env
+.env.*
 
-# ----------------------------------------
-# VS CODE & ÉDITEURS
-# ----------------------------------------
-.vscode/
-*.swp
-*.swo
-*~
+# ---- Databases
+*.db
+!guignomap/guigno_map.db
 
-# ----------------------------------------
-# SYSTÈME WINDOWS/LINUX
-# ----------------------------------------
-*.Zone.Identifier
-.Trash-*
-Desktop.ini
-
-# ----------------------------------------
-# DÉPENDANCES NODE (si ajoutées plus tard)
-# ----------------------------------------
-node_modules/
-npm-debug.log*
-
-# ----------------------------------------
-# STREAMLIT
-# ----------------------------------------
+# ---- Streamlit
 .streamlit/secrets.toml
 
-# ----------------------------------------
-# DONNÉES SENSIBLES
-# ----------------------------------------
-*.key
-*.pem
-.env
-config.ini
+# ---- Exports générés
+exports/**/*.csv
+exports/**/*.xlsx
+exports/**/*.pdf
 
-# ----------------------------------------
-# FICHIERS DE SAUVEGARDE
-# ----------------------------------------
-*.bak
-*.backup
-*.save
-*~
-
-# ----------------------------------------
-# KEEP THESE FILES (exceptions)
-# ----------------------------------------
-!.streamlit/config.toml
-!guignomap/assets/
-!requirements.txt
-!README.md
-# exports snapshots
-/exports/
-export.txt
+# ---- OS cruft
+*.swp
+*.tmp
