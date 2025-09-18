@@ -13,7 +13,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import xlsxwriter
 from io import BytesIO
-from guignomap.database import get_conn
+from guignomap.database import get_conn, list_streets as db_list_streets
 
 # Mapping des statuts pour l'affichage (évite imports circulaires)
 STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
@@ -288,3 +288,36 @@ class ReportGenerator:
         doc.build(story)
         output.seek(0)
         return output.getvalue()
+
+
+def export_assignments_to_excel(outfile: str = "exports/assignments.xlsx") -> str:
+    """
+    Exporte les assignations de rues vers un fichier Excel.
+    
+    Args:
+        outfile: Chemin du fichier de sortie
+    
+    Returns:
+        Chemin du fichier créé
+    """
+    from pathlib import Path
+    import pandas as pd
+    
+    # Récupérer les données des rues directement depuis la DB
+    with get_conn() as conn:
+        cur = conn.execute("""
+            SELECT id, name, sector, status, team
+            FROM streets
+            ORDER BY name
+        """)
+        cols = [d[0] for d in cur.description]
+        rows = cur.fetchall()
+        df = pd.DataFrame(rows, columns=cols)
+    
+    # Créer le dossier exports s'il n'existe pas
+    Path("exports").mkdir(exist_ok=True)
+    
+    # Exporter vers Excel
+    df.to_excel(outfile, index=False)
+    
+    return outfile
