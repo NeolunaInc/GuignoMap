@@ -11,24 +11,18 @@ RUN_DB_EXT = bool(os.getenv("RUN_DB_EXT_TESTS"))
 @pytest.mark.skipif(not RUN_DB_EXT, reason="External DB tests disabled; set RUN_DB_EXT_TESTS=1 to run")
 def test_db_simple():
     try:
-        from src.database.connection import get_engine, test_connection
+        import guignomap.database as db
         
         print("=== Test de connexion base de données SQLite ===")
         
-        # Test avec la fonction dédiée
-        print("1. Test avec test_connection():")
-        test_connection()
-        
-        # Test manuel avec engine
-        print("\n2. Test manuel avec engine:")
-        engine = get_engine()
-        print(f"✅ Engine créé: {engine.url}")
-        
-        # Tester la connexion SQLite (sans text() wrapper)
-        with engine.connect() as conn:
-            result = conn.execute("SELECT 1 as test")
-            test_value = result.fetchone()[0]
-            print(f"✅ Connexion réussie! Test query result: {test_value}")
+        # Test des fonctions de base
+        print("1. Test extended_stats():")
+        stats = db.extended_stats()
+        print(f"✅ Stats: {stats}")
+
+        print("\n2. Test teams():")
+        teams = db.teams()
+        print(f"✅ Teams: {teams}")
         
         print("✅ Connexion base de données SQLite fonctionnelle!")
         assert True  # Connection successful
