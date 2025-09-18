@@ -16,18 +16,16 @@ DEFAULT_FILES = [
     r"README_VENV.md",
     r"RESUME_ARBRES_EXPORTS.md",
     r"docs\PHASE1_AUDIT_DATAFRAME.md",
-    r"docs\PROBLEME_IPV6_SUPABASE.md",
+    # Legacy doc moved to legacy/PROBLEME_IPV6_SUPABASE.md
     r"guignomap\app.py",
     r"guignomap\backup.py",
-    r"guignomap\db_v5.py",
+    # Legacy db_v5.py removed
     r"guignomap\osm.py",
     r"scripts\find_mojibake.py",
-    r"scripts\fix_mojibake_db.py",
-    r"scripts\fix_mojibake_files.py",
+    # Legacy scripts moved to legacy/scripts/
     r"scripts\generate_audit_optimise.py",
     r"scripts\generate_tree_clean.py",
-    r"scripts\migrate_password_hashes.py",
-    r"scripts\migrate_sqlite_to_postgres.py",
+    # Legacy migration scripts moved to legacy/scripts/
     r"scripts\run_all_tests.py",
     r"scripts\show_hash_stats.py",
     r"scripts\validate_structure.py",

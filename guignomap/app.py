@@ -1484,7 +1484,7 @@ def page_gestionnaire_v2(geo):
 
         # --- Gestion des backups
         with st.expander("🗃️ Gestion des backups", expanded=False):
-            backup_mgr = db.get_backup_manager()  # Sans DB_PATH, utilise config SQLAlchemy
+            backup_mgr = db.get_backup_manager()  # BackupManager pour DB SQLite
             
             col1, col2 = st.columns([2, 1])
             with col1:
@@ -2201,8 +2201,7 @@ def main():
     # Initialisation de la base de données
     db.init_db()
     
-    # Compatibilité legacy supprimée - utilise SQLAlchemy via src.database
-    # Connexion centralisée via get_session() au lieu de sqlite3 direct
+    # Pure SQLite database - no legacy dependencies
     
     # Cache géométrique
     @st.cache_data(ttl=None)

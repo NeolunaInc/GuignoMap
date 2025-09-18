@@ -174,11 +174,7 @@ def env_section() -> str:
         lines.append(f"- streamlit : {_st.__version__}")
     except Exception:
         pass
-    try:
-        import sqlalchemy as _sa
-        lines.append(f"- sqlalchemy : {_sa.__version__}")
-    except Exception:
-        pass
+    # sqlalchemy removed - using pure SQLite now
     try:
         import pandas as _pd
         lines.append(f"- pandas : {_pd.__version__}")
