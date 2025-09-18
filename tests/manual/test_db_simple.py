@@ -3,8 +3,12 @@
 
 import sys
 import os
+import pytest
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+RUN_DB_EXT = bool(os.getenv("RUN_DB_EXT_TESTS"))
+
+@pytest.mark.skipif(not RUN_DB_EXT, reason="External DB tests disabled; set RUN_DB_EXT_TESTS=1 to run")
 def test_db_simple():
     try:
         from src.database.connection import get_engine, test_connection
@@ -22,7 +26,8 @@ def test_db_simple():
         
         # Tester la connexion
         with engine.connect() as conn:
-            result = conn.execute("SELECT 1 as test")
+            from sqlalchemy import text
+            result = conn.execute(text("SELECT 1 as test"))
             test_value = result.fetchone()[0]
             print(f"✅ Connexion réussie! Test query result: {test_value}")
         

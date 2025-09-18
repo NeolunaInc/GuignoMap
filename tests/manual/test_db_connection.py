@@ -2,7 +2,11 @@ import os
 import sys
 import socket
 import psycopg2
+import pytest
 
+RUN_DB_EXT = bool(os.getenv("RUN_DB_EXT_TESTS"))
+
+@pytest.mark.skipif(not RUN_DB_EXT, reason="External DB tests disabled; set RUN_DB_EXT_TESTS=1 to run")
 def test_connection_with_ip():
     """Test connection with direct IPv6 address"""
     # Configuration manuelle avec l'adresse IPv6 résolue
@@ -28,6 +32,7 @@ def test_connection_with_ip():
         print(f"❌ Erreur de connexion IPv6: {e}")
         assert False, f"IPv6 connection failed: {e}"
 
+@pytest.mark.skipif(not RUN_DB_EXT, reason="External DB tests disabled; set RUN_DB_EXT_TESTS=1 to run")
 def test_connection_with_hostname():
     """Test connection with hostname via custom DNS"""
     import socket
