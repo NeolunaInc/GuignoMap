@@ -9,10 +9,41 @@ from contextlib import contextmanager
 from datetime import datetime
 import pandas as pd
 from typing import Optional, List, Dict, Any
+import functools
 
 from src.auth.passwords import hash_password, verify_password
 from guignomap.backup import auto_backup_before_critical, BackupManager
 from guignomap.validators import validate_and_clean_input, InputValidator
+
+
+# =============================================================================
+# CACHE SYSTEM
+# =============================================================================
+
+def safe_cache(func):
+    """Décorateur de cache compatible Streamlit/standalone"""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            # Essayer d'utiliser st.cache_data si Streamlit est disponible
+            import streamlit as st
+            cached_func = st.cache_data(func)
+            return cached_func(*args, **kwargs)
+        except ImportError:
+            # Fallback : cache simple en mémoire
+            if not hasattr(wrapper, '_cache'):
+                wrapper._cache = {}
+            
+            # Créer une clé de cache simple
+            cache_key = str(args) + str(sorted(kwargs.items()))
+            
+            if cache_key in wrapper._cache:
+                return wrapper._cache[cache_key]
+            
+            result = func(*args, **kwargs)
+            wrapper._cache[cache_key] = result
+            return result
+    return wrapper
 
 
 # =============================================================================
@@ -21,6 +52,14 @@ from guignomap.validators import validate_and_clean_input, InputValidator
 
 DB_PATH = Path("guignomap/guigno_map.db")
 _local = threading.local()
+
+def vacuum_database():
+    """Maintenance de la base de données"""
+    with get_conn() as conn:
+        conn.execute("VACUUM")
+        conn.execute("PRAGMA optimize")
+        conn.execute("PRAGMA analysis_limit=1000")
+        conn.execute("PRAGMA optimize")
 
 def get_conn():
     """Connexion SQLite thread-safe avec optimisations"""
@@ -32,10 +71,14 @@ def get_conn():
             timeout=30.0
         )
         _local.conn.row_factory = sqlite3.Row
+        # Optimisations SQLite pour performance 1000+ équipes
         _local.conn.execute("PRAGMA journal_mode=WAL")
         _local.conn.execute("PRAGMA synchronous=NORMAL")
+        _local.conn.execute("PRAGMA cache_size=-64000")  # 64MB cache
+        _local.conn.execute("PRAGMA mmap_size=268435456")  # 256MB mmap
         _local.conn.execute("PRAGMA foreign_keys=ON")
         _local.conn.execute("PRAGMA temp_store=MEMORY")
+        _local.conn.execute("PRAGMA optimize")  # Auto-optimisation
     return _local.conn
 
 @contextmanager
@@ -71,11 +114,45 @@ def _ensure_foreign_keys(conn):
 # INITIALIZATION FUNCTIONS
 # =============================================================================
 
+def create_performance_indexes(conn=None):
+    """Crée les INDEX pour optimiser les performances"""
+    if conn is None:
+        conn = get_conn()
+    
+    indexes = [
+        # INDEX pour les requêtes fréquentes sur streets
+        "CREATE INDEX IF NOT EXISTS idx_streets_team ON streets(team)",
+        "CREATE INDEX IF NOT EXISTS idx_streets_status ON streets(status)", 
+        "CREATE INDEX IF NOT EXISTS idx_streets_name ON streets(name)",
+        "CREATE INDEX IF NOT EXISTS idx_streets_sector ON streets(sector)",
+        
+        # INDEX pour les requêtes fréquentes sur notes (street_name, pas street_id)
+        "CREATE INDEX IF NOT EXISTS idx_notes_street_name ON notes(street_name)",
+        "CREATE INDEX IF NOT EXISTS idx_notes_team_id ON notes(team_id)",
+        "CREATE INDEX IF NOT EXISTS idx_notes_created ON notes(created_at DESC)",
+        
+        # INDEX pour teams 
+        "CREATE INDEX IF NOT EXISTS idx_teams_name ON teams(name)",
+        
+        # INDEX pour activity_log (si elle existe)
+        "CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_activity_team ON activity_log(team_id)",
+    ]
+    
+    for index_sql in indexes:
+        try:
+            conn.execute(index_sql)
+        except Exception as e:
+            print(f"Warning: Could not create index: {e}")
+
 def initialize_database():
     """Initialise la base de données avec les données par défaut"""
     try:
         with get_conn() as conn:
             _ensure_foreign_keys(conn)
+            
+            # Création des INDEX pour optimiser les performances
+            create_performance_indexes(conn)
             
             # Vérifier si l'admin existe
             admin_exists = conn.execute(
@@ -161,6 +238,7 @@ def authenticate_team(team_id: str, password: str) -> dict:
     except Exception as e:
         return {"success": False, "message": str(e)}
 
+@safe_cache
 def list_teams() -> List[Dict]:
     """Liste toutes les équipes"""
     with get_conn() as conn:
@@ -179,6 +257,7 @@ def list_teams() -> List[Dict]:
 # STREET OPERATIONS
 # =============================================================================
 
+@safe_cache
 def list_streets(team: Optional[str] = None) -> pd.DataFrame:
     """Liste toutes les rues avec leurs détails"""
     with get_conn() as conn:
@@ -254,6 +333,7 @@ def update_street_status(street_id: int, new_status: str, team_id: Optional[str]
 # STATISTICS & REPORTING
 # =============================================================================
 
+@safe_cache
 def extended_stats() -> Dict:
     """Statistiques étendues du projet"""
     with get_conn() as conn:
@@ -509,6 +589,7 @@ def get_unassigned_streets_count() -> int:
         """).fetchone()[0]
         return count
 
+@safe_cache
 def get_sectors_list() -> List[str]:
     """Liste des secteurs"""
     with get_conn() as conn:
