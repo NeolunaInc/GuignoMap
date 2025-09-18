@@ -13,9 +13,61 @@ from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 import xlsxwriter
 from io import BytesIO
+from src.database.sqlite_pure import get_conn
 
 # Mapping des statuts pour l'affichage (évite imports circulaires)
 STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
+
+# Fonctions SQLite pures pour les rapports
+def extended_stats():
+    with get_conn() as conn:
+        cur = conn.execute("SELECT status, COUNT(*) as count FROM streets GROUP BY status")
+        status_counts = dict(cur.fetchall())
+        
+        total = sum(status_counts.values())
+        done = status_counts.get('terminee', 0)
+        partial = status_counts.get('en_cours', 0) + status_counts.get('partielle', 0)
+        todo = status_counts.get('a_faire', 0)
+        
+        return {
+            'total': total,
+            'done': done,
+            'partial': partial,
+            'todo': todo
+        }
+
+def list_streets():
+    with get_conn() as conn:
+        cur = conn.execute("""
+            SELECT s.name, s.sector, t.nom as team, s.status, 
+                   COUNT(n.id) as notes
+            FROM streets s 
+            LEFT JOIN teams t ON s.team_id = t.id
+            LEFT JOIN notes n ON s.id = n.street_id
+            GROUP BY s.id, s.name, s.sector, t.nom, s.status
+            ORDER BY s.name
+        """)
+        cols = [d[0] for d in cur.description]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+        return rows
+
+def stats_by_team():
+    with get_conn() as conn:
+        cur = conn.execute("""
+            SELECT t.nom as team_name,
+                   COUNT(s.id) as total_streets,
+                   SUM(CASE WHEN s.status = 'terminee' THEN 1 ELSE 0 END) as done,
+                   SUM(CASE WHEN s.status IN ('en_cours', 'partielle') THEN 1 ELSE 0 END) as in_progress,
+                   COUNT(n.id) as total_notes
+            FROM teams t
+            LEFT JOIN streets s ON t.id = s.team_id
+            LEFT JOIN notes n ON s.id = n.street_id
+            WHERE t.id != 'ADMIN'
+            GROUP BY t.id, t.nom
+            ORDER BY t.nom
+        """)
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, row)) for row in cur.fetchall()]
 
 class ReportGenerator:
     def __init__(self):
@@ -84,7 +136,6 @@ class ReportGenerator:
         summary_sheet.merge_range(1, 0, 1, 4, f'Rapport généré le {datetime.now().strftime("%d/%m/%Y à %H:%M")}', cell_format)  # A2:E2
         
         # Stats globales
-        from src.database.operations import extended_stats
         stats = extended_stats()
         
         row = 4
@@ -118,11 +169,9 @@ class ReportGenerator:
             streets_sheet.write(0, col, header, header_format)
         
         # Données
-        from src.database.operations import list_streets
-        df = list_streets()
+        street_data = list_streets()
         
-        for idx, row_data in enumerate(df.iterrows(), 1):
-            _, row = row_data
+        for idx, row in enumerate(street_data, 1):
             streets_sheet.write(idx, 0, row.get('name', ''), cell_format)
             streets_sheet.write(idx, 1, row.get('sector', ''), cell_format)
             streets_sheet.write(idx, 2, row.get('team', ''), cell_format)
@@ -138,7 +187,6 @@ class ReportGenerator:
         teams_sheet = workbook.add_worksheet('Performance équipes')
         teams_sheet.set_column(0, 5, 15)
         
-        from src.database.operations import stats_by_team
         teams_data = stats_by_team()
         
         if teams_data:
@@ -179,7 +227,7 @@ class ReportGenerator:
         # Résumé
         story.append(Paragraph("Résumé de la collecte", self.styles['SectionTitle']))
         
-        from src.database.operations import extended_stats
+        # Réutilise la fonction extended_stats déjà définie ci-dessus
         stats = extended_stats()
         
         summary_data = [
@@ -209,7 +257,6 @@ class ReportGenerator:
         # Performance des équipes
         story.append(Paragraph("Performance des équipes", self.styles['SectionTitle']))
         
-        from src.database.operations import stats_by_team
         teams_data_list = stats_by_team()
         
         if teams_data_list:

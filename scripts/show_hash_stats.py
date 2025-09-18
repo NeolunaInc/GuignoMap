@@ -19,15 +19,33 @@ if parent_dir not in sys.path:
 def main():
     """Affiche les statistiques des algorithmes de hash"""
     try:
-        from src.database.operations import count_hash_algorithms
+        from src.database.sqlite_pure import get_conn
+        
+        # Fonction locale SQLite pour count_hash_algorithms
+        def count_hash_algorithms():
+            with get_conn() as conn:
+                cur = conn.execute("""
+                    SELECT 
+                        CASE 
+                            WHEN password LIKE 'scrypt:$' THEN 'scrypt'
+                            WHEN password LIKE 'pbkdf2:sha256:$' THEN 'pbkdf2_sha256'
+                            WHEN password LIKE '$' THEN 'bcrypt'
+                            ELSE 'unknown'
+                        END as algorithm,
+                        COUNT(*) as count
+                    FROM teams 
+                    WHERE password IS NOT NULL AND password != ''
+                    GROUP BY algorithm
+                """)
+                return dict(cur.fetchall())
         
         print("🔐 Statistiques des algorithmes de hash des équipes")
         print("=" * 55)
         
         stats = count_hash_algorithms()
         
-        if "error" in stats:
-            print(f"❌ Erreur: {stats['error']}")
+        if not stats:
+            print("❌ Aucune équipe avec mot de passe trouvée")
             return 1
         
         total = sum(v for k, v in stats.items() if k != "empty")

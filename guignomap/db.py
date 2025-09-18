@@ -1,4 +1,4 @@
 """
-Database proxy module - redirects to unified operations layer
+Database proxy module - redirects to SQLite pure layer
 """
-from src.database.operations import *
+from src.database.sqlite_pure import *

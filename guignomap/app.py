@@ -1229,7 +1229,18 @@ def page_benevole_v2(geo):
         st.markdown("### 📝 Journal d'activité de votre équipe")
         try:
             # Afficher les activités récentes de l'équipe
-            from src.database.operations import recent_activity
+            from src.database.sqlite_pure import get_conn
+            
+            # Fonction locale SQLite pour recent_activity
+            def recent_activity(limit=20):
+                with get_conn() as conn:
+                    cur = conn.execute(
+                        "SELECT team_id, action, details, created_at FROM activity_log "
+                        "ORDER BY created_at DESC LIMIT ?", (limit,)
+                    )
+                    cols = [d[0] for d in cur.description]
+                    return [dict(zip(cols, row)) for row in cur.fetchall()]
+            
             activities = recent_activity(20)
             
             if activities:
