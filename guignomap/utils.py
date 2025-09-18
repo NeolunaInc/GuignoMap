@@ -1,7 +1,12 @@
+"""
+Utilitaires pour GuignoMap
+Fonctions helper et adapteurs de données
+"""
 import pandas as pd
 from typing import Any, Iterable
 
 def to_dataframe(records: Any) -> pd.DataFrame:
+    """Convertit divers types de données en DataFrame pandas"""
     if isinstance(records, pd.DataFrame):
         return records
     # RowMapping unique

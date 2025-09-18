@@ -20,9 +20,9 @@ pwd_context = CryptContext(
 def _get_allow_bcrypt_fallback() -> bool:
     """Récupère la config ALLOW_BCRYPT_FALLBACK"""
     try:
-        from src.config import ALLOW_BCRYPT_FALLBACK
-        return ALLOW_BCRYPT_FALLBACK
-    except ImportError:
+        import streamlit as st
+        return st.secrets.get("ALLOW_BCRYPT_FALLBACK", True)
+    except:
         return True  # Par défaut autorisé pendant migration
 
 

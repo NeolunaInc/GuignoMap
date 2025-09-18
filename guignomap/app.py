@@ -42,7 +42,7 @@ from streamlit_folium import st_folium
 from guignomap import database as db
 from guignomap.validators import validate_and_clean_input
 from guignomap.osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
-from src.utils.adapters import to_dataframe
+from guignomap.utils import to_dataframe
 
 # --- Utilitaire de compatibilité pandas Styler ---
 from typing import Callable, Any
@@ -1426,8 +1426,7 @@ def page_gestionnaire_v2(geo):
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
-        from src.config import settings
-        TECH_PIN = settings.TECH_PIN
+        TECH_PIN = st.secrets.get("TECH_PIN", "1234")  # Fallback pour dev
 
         if "tech_ok" not in st.session_state:
             st.session_state.tech_ok = False
@@ -1635,8 +1634,7 @@ def page_superviseur(conn, geo):
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")  
-        from src.config import settings
-        TECH_PIN = settings.TECH_PIN
+        TECH_PIN = st.secrets.get("TECH_PIN", "1234")  # Fallback pour dev
 
         if "tech_ok" not in st.session_state:
             st.session_state.tech_ok = False
