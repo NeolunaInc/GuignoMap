@@ -1,6 +1,6 @@
 """
 GuignoMap - Database operations (SQLite Pure)
-Single file database layer - consolidated from src/database/
+Unified database layer for GuignoMap
 """
 import sqlite3
 from pathlib import Path

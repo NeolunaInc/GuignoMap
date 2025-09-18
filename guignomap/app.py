@@ -19,7 +19,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-# Ajout du répertoire parent au path pour importer src
+# Configuration du path pour les imports
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
