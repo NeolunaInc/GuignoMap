@@ -1,20 +1,18 @@
 """
-Connexion PostgreSQL avec SQLAlchemy pour GuignoMap v5.0
-Engine + QueuePool + cache Streamlit + retry logic
+Connexion SQLite pure pour GuignoMap - Remplacement de l'ancien système PostgreSQL/SQLAlchemy
+Compatibilité avec l'API existante pour transition en douceur
 """
 import time
 import functools
-import streamlit as st
-from sqlalchemy import create_engine, text
-from sqlalchemy.pool import QueuePool
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import SQLAlchemyError
-from src.config import get_database_url, get_database_pool_config
-
+from pathlib import Path
+from .sqlite_pure import (
+    get_conn, get_cursor, execute_query, execute_single, 
+    execute_write, test_connection as sqlite_test_connection
+)
 
 def db_retry(max_retries=3, backoff_factor=1):
     """
-    Décorateur retry exponentiel pour opérations DB critiques
+    Décorateur retry pour compatibilité avec l'ancien code
     """
     def decorator(func):
         @functools.wraps(func)
@@ -23,7 +21,7 @@ def db_retry(max_retries=3, backoff_factor=1):
             for attempt in range(max_retries):
                 try:
                     return func(*args, **kwargs)
-                except SQLAlchemyError as e:
+                except Exception as e:
                     last_exception = e
                     if attempt < max_retries - 1:
                         wait_time = backoff_factor * (2 ** attempt)
@@ -33,102 +31,111 @@ def db_retry(max_retries=3, backoff_factor=1):
                         print(f"Max retries reached for {func.__name__}")
                         break
             
-            # Si aucune exception capturée, lever une erreur générique
             if last_exception is not None:
-                raise RuntimeError(f"Échec d'initialisation DB: {last_exception}") from last_exception
+                raise RuntimeError(f"Échec d'opération DB: {last_exception}") from last_exception
             else:
-                raise RuntimeError(f"Échec d'initialisation DB pour {func.__name__}: raison inconnue")
+                raise RuntimeError(f"Échec d'opération DB pour {func.__name__}: raison inconnue")
         return wrapper
     return decorator
 
-
-@st.cache_resource
+# Compatibilité API - ces fonctions remplacent les anciennes fonctions SQLAlchemy
 def get_engine():
     """
-    Engine PostgreSQL avec cache Streamlit et configuration pool
-    Conformément au plan v5.0
+    Compatibilité avec l'ancien code qui appelait get_engine()
+    Retourne un objet simple qui peut être utilisé pour la compatibilité
     """
-    database_url = get_database_url()
-    pool_config = get_database_pool_config()
+    class SQLiteEngine:
+        def connect(self):
+            return SQLiteConnection()
+        
+        @property
+        def url(self):
+            return f"sqlite:///{Path('guignomap/guigno_map.db').absolute()}"
     
-    # Configuration PostgreSQL avec QueuePool
-    engine = create_engine(
-        database_url,
-        poolclass=QueuePool,
-        pool_size=pool_config["pool_size"],
-        max_overflow=pool_config["max_overflow"],
-        pool_pre_ping=True,
-        pool_recycle=300,
-        echo=False  # Set to True for SQL debugging
-    )
-    
-    return engine
+    return SQLiteEngine()
 
+class SQLiteConnection:
+    """Wrapper de connexion pour compatibilité avec SQLAlchemy"""
+    def __enter__(self):
+        self.conn = get_conn()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            self.conn.rollback()
+        else:
+            self.conn.commit()
+    
+    def execute(self, query, params=None):
+        """Exécute une requête - compatibilité SQLAlchemy"""
+        cursor = self.conn.cursor()
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        return SQLiteResult(cursor)
+
+class SQLiteResult:
+    """Wrapper de résultats pour compatibilité SQLAlchemy"""
+    def __init__(self, cursor):
+        self.cursor = cursor
+        self._rows = None
+    
+    def fetchone(self):
+        return self.cursor.fetchone()
+    
+    def fetchall(self):
+        if self._rows is None:
+            self._rows = self.cursor.fetchall()
+        return self._rows
 
 def get_session():
-    """Fabrique de session SQLAlchemy"""
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    return Session()
-
+    """
+    Compatibilité avec l'ancien code SQLAlchemy
+    Retourne un context manager pour les sessions
+    """
+    class SQLiteSession:
+        def __enter__(self):
+            self.conn = get_conn()
+            return self
+        
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if exc_type:
+                self.conn.rollback()
+            else:
+                self.conn.commit()
+        
+        def execute(self, query, params=None):
+            cursor = self.conn.cursor()
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
+            return SQLiteResult(cursor)
+    
+    return SQLiteSession()
 
 @db_retry(max_retries=3)
 def test_connection():
-    """Test de connexion à la base PostgreSQL"""
-    try:
-        engine = get_engine()
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1 as test"))
-            row = result.fetchone()
-            return row is not None and row[0] == 1
-    except Exception as e:
-        print(f"Erreur test connexion DB: {e}")
-        return False
+    """Test de connexion à la base SQLite"""
+    return sqlite_test_connection()
 
+# Fonctions compatibles avec l'ancienne API
+def execute_query_compat(query, params=None):
+    """Compatibilité avec l'ancien execute_query SQLAlchemy"""
+    return execute_query(query, params)
 
-@db_retry(max_retries=3)
-def execute_query(query, params=None):
-    """
-    Exécution de requête avec retry automatique
-    Pour transition progressive vers SQLAlchemy
-    """
-    engine = get_engine()
-    with engine.connect() as conn:
-        if params:
-            return conn.execute(text(query), params)
-        else:
-            return conn.execute(text(query))
-
-
-@db_retry(max_retries=3)  
 def execute_transaction(queries_and_params):
     """
-    Exécution de transaction multi-requêtes avec retry
+    Exécution de transaction multi-requêtes
     queries_and_params: liste de tuples (query, params)
     """
-    engine = get_engine()
-    with engine.begin() as conn:
+    with get_cursor() as cursor:
         results = []
         for query, params in queries_and_params:
             if params:
-                result = conn.execute(text(query), params)
+                cursor.execute(query, params)
             else:
-                result = conn.execute(text(query))
-            results.append(result)
+                cursor.execute(query)
+            results.append(cursor.fetchall())
         return results
-
-
-# Wrapper facultatif pour compatibilité avec l'ancien code/patrons
-def get_session_factory():
-    """Retourne un callable qui ouvre une session (usage: with Session() as s: ...)."""
-    def _open():
-        return get_session().__enter__()  # pour compat avec 'with Session() as s'
-    # pour permettre 'with Session() as s', on expose un objet qui supporte __call__ et __enter__/__exit__
-    class _Factory:
-        def __call__(self):
-            return get_session().__enter__()
-        def __enter__(self):
-            return get_session().__enter__()
-        def __exit__(self, exc_type, exc, tb):
-            return get_session().__exit__(exc_type, exc, tb)
-    return _Factory()

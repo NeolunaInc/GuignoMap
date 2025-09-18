@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test simple de connexion base de données"""
+"""Test simple de connexion base de données SQLite"""
 
 import sys
 import os
@@ -13,7 +13,7 @@ def test_db_simple():
     try:
         from src.database.connection import get_engine, test_connection
         
-        print("=== Test de connexion base de données ===")
+        print("=== Test de connexion base de données SQLite ===")
         
         # Test avec la fonction dédiée
         print("1. Test avec test_connection():")
@@ -24,14 +24,13 @@ def test_db_simple():
         engine = get_engine()
         print(f"✅ Engine créé: {engine.url}")
         
-        # Tester la connexion
+        # Tester la connexion SQLite (sans text() wrapper)
         with engine.connect() as conn:
-            from sqlalchemy import text
-            result = conn.execute(text("SELECT 1 as test"))
+            result = conn.execute("SELECT 1 as test")
             test_value = result.fetchone()[0]
             print(f"✅ Connexion réussie! Test query result: {test_value}")
         
-        print("✅ Connexion base de données fonctionnelle!")
+        print("✅ Connexion base de données SQLite fonctionnelle!")
         assert True  # Connection successful
         
     except Exception as e:

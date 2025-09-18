@@ -7,13 +7,8 @@ plotly>=5.18.0
 xlsxwriter==3.2.8
 reportlab==4.4.3
 
-# Database - PostgreSQL
-psycopg2-binary
-sqlalchemy==2.0.43
-alembic==1.16.5
-
 # Authentication - Argon2
 passlib[argon2]==1.7.4
 
-# Storage - S3/Cloud
+# Storage - S3/Cloud (optionnel)
 boto3==1.34.*
