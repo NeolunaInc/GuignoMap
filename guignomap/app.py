@@ -23,11 +23,13 @@ import streamlit as st
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+import guignomap.config_ville as config_ville
+
 # Monkey-patch supprimé - utilisation de composants Streamlit natifs
 
 # Configuration Streamlit (doit être la première commande Streamlit)
 st.set_page_config(
-    page_title="Guigno-Map | Relais de Mascouche",
+    page_title=f"Guigno-Map | Relais de {config_ville.VILLE_NOM}",
     page_icon="🎁",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -457,7 +459,7 @@ def add_persistent_legend(m):
     m.get_root().html.add_child(folium.Element(legend_html))
 
 def create_map(df, geo):
-    """Crée la carte Folium centrée sur Mascouche avec toutes les rues"""
+    """Crée la carte Folium centrée sur la ville avec toutes les rues"""
     # 1) Coercition sûre en DataFrame
     if not isinstance(df, pd.DataFrame):
         try:
@@ -465,15 +467,9 @@ def create_map(df, geo):
         except Exception:
             df = pd.DataFrame([])
     
-    # Limites de Mascouche
-    bounds = {
-        "north": 45.78,
-        "south": 45.70,
-        "east": -73.55,
-        "west": -73.70
-    }
-    center = [(bounds["north"] + bounds["south"]) / 2, 
-              (bounds["east"] + bounds["west"]) / 2]
+    # Limites de la ville
+    bounds = config_ville.VILLE_BOUNDS
+    center = config_ville.VILLE_CENTRE
     
     # Créer la carte
     m = folium.Map(
@@ -518,7 +514,7 @@ def create_map(df, geo):
     # Ajouter le contrôle des couches
     folium.LayerControl().add_to(m)
     
-    # Définir les limites de la carte sur Mascouche
+    # Définir les limites de la carte sur la ville
     m.fit_bounds([[bounds["south"], bounds["west"]], 
                   [bounds["north"], bounds["east"]]])
     
@@ -604,8 +600,8 @@ def create_map(df, geo):
     
     # Ajouter un marqueur au centre-ville
     folium.Marker(
-        [45.7475, -73.6005],
-        popup="Centre-ville de Mascouche",
+        config_ville.VILLE_CENTRE,
+        popup=f"Centre-ville de {config_ville.VILLE_NOM}",
         tooltip="Centre-ville",
         icon=folium.Icon(color='red', icon='info-sign')
     ).add_to(m)
@@ -958,7 +954,7 @@ def page_accueil_v2(geo):
     st.progress(progress / 100)
     
     # Carte festive
-    st.markdown("### 🗺️ Vue d'ensemble de Mascouche")
+    st.markdown(f"### 🗺️ Vue d'ensemble de {config_ville.VILLE_NOM}")
     df_all = db.list_streets()
     if not df_all.empty:  # Liste non vide
         m = create_map(df_all, geo)
