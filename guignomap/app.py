@@ -2614,6 +2614,28 @@ def main():
         
         # Compteur temps réel
         st.markdown("---")
+        
+        # Affichage du mode
+        try:
+            from guignomap.config_mode import MODE, is_demo
+            mode_display = "Démo (Cloud)" if is_demo() else "Client"
+            mode_color = "#f59e0b" if is_demo() else "#22c55e"
+            st.markdown(f"""
+            <div style="
+                background: {mode_color};
+                color: white;
+                padding: 0.5rem;
+                border-radius: 8px;
+                text-align: center;
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            ">
+                <strong>Mode: {mode_display}</strong>
+            </div>
+            """, unsafe_allow_html=True)
+        except Exception:
+            pass
+        
         stats = db.extended_stats()
         st.markdown(f"""
         <div style="text-align: center;">

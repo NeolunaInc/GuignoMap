@@ -13,6 +13,7 @@ import functools
 
 from guignomap.auth import hash_password, verify_password
 from guignomap.backup import BackupManager
+from guignomap.config_mode import ensure_db_path
 
 # Flag d'initialisation globale
 _DB_INITIALIZED = False
@@ -53,7 +54,7 @@ def safe_cache(func):
 # CONNECTION MANAGEMENT
 # =============================================================================
 
-DB_PATH = Path("guignomap/guigno_map.db")
+DB_PATH = ensure_db_path()
 _local = threading.local()
 
 def vacuum_database():
