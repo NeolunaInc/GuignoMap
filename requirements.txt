@@ -10,5 +10,5 @@ reportlab==4.4.3
 # Authentication - Argon2
 passlib[argon2]==1.7.4
 
-# Storage - S3/Cloud (optionnel)
-boto3==1.34.*
+# Storage - S3/Cloud (optionnel pour exports)
+# boto3==1.34.*

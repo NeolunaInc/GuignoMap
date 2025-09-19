@@ -101,6 +101,112 @@ GuignoMap/
 - **Tests** : `python -m pytest`
 - **Logs** : Consultez `guignomap/logs/activity.log`
 
+## Troubleshooting
+
+- **Port 8501 occupé** : `streamlit run guignomap/app.py --server.port 8502`
+- **Erreur import** : Vérifier `.venv` activé et `pip install -r requirements.txt`
+- **DB corrompue** : Supprimer `guignomap/guigno_map.db` (sera recréée)
+
+## Déploiement Streamlit Cloud (Recommandé)
+
+### 1. Préparer le Repository
+
+1. **Fork** ce repository vers votre compte GitHub
+2. **Cloner** votre fork localement
+3. **Préparer la base de données** :
+   ```bash
+   # Utiliser la DB sample comme base
+   cp guignomap/guigno_map.sample.db guignomap/guigno_map.db
+   
+   # Ou importer vos données
+   python scripts/import_addresses.py votre_fichier.xlsx
+   
+   # Créer une nouvelle sample DB
+   cp guignomap/guigno_map.db guignomap/guigno_map.sample.db
+   ```
+
+### 2. Configurer Streamlit Cloud
+
+1. **Connecter** : Aller sur [share.streamlit.io](https://share.streamlit.io)
+2. **Nouveau app** : 
+   - Repository : `VotreCompte/GuignoMap`
+   - Branch : `main`
+   - Main file path : `guignomap/app.py`
+3. **Variables d'environnement** (optionnel) :
+   ```toml
+   # Dans .streamlit/secrets.toml
+   [general]
+   ALLOW_BCRYPT_FALLBACK = true
+   
+   [app]
+   CITY = "mascouche"
+   MAP_DEFAULT_LAT = 45.748
+   MAP_DEFAULT_LON = -73.600
+   MAP_DEFAULT_ZOOM = 12
+   
+   # PIN technique pour admin (optionnel)
+   TECH_PIN = "votre_pin_secret"
+   ```
+
+### 3. Base de Données pour Production
+
+**Option A : Sample DB (Rapide)**
+```bash
+# Utiliser la DB exemple avec données de test
+cp guignomap/guigno_map.sample.db guignomap/guigno_map.db
+git add guignomap/guigno_map.db
+git commit -m "feat: add production database"
+git push
+```
+
+**Option B : Import Custom (Recommandé)**
+```bash
+# 1. Importer vos données d'adresses
+python scripts/import_addresses.py vos_adresses.xlsx
+
+# 2. Vérifier l'import
+python scripts/verify_addresses.py
+
+# 3. Créer snapshot de production
+cp guignomap/guigno_map.db guigno_map_prod_$(date +%Y%m%d).db
+
+# 4. Committer la DB de production
+git add guignomap/guigno_map.db
+git commit -m "feat: add production database with $(python -c 'from guignomap.database import stats_addresses; print(stats_addresses()["total"])') addresses"
+git push
+```
+
+### 4. Avantages Streamlit Cloud
+
+✅ **Déploiement automatique** : Push → Redéploiement  
+✅ **HTTPS gratuit** : Certificat SSL automatique  
+✅ **Domaine personnalisé** : Possible avec plan payant  
+✅ **Monitoring** : Logs et métriques intégrés  
+✅ **Scaling automatique** : Gestion de la charge  
+✅ **SQLite intégré** : Aucune DB externe requise  
+
+### 5. Limitations à Considérer
+
+⚠️ **Persistance** : Les données SQLite peuvent être perdues lors des redéploiements  
+⚠️ **Taille** : Repository limité à ~1GB  
+⚠️ **Performance** : Limites CPU/RAM du plan gratuit  
+⚠️ **Backup** : Utiliser les exports CSV réguliers  
+
+### 6. Maintenance et Monitoring
+
+```bash
+# Export régulier des données
+python scripts/export_all.py
+
+# Vérification sanité
+python tools/quick_sanity.py
+
+# Tests complets
+python -m pytest tests/ -v
+```
+
+**Recommandation** : Configurer un cron job pour les exports automatiques des données critiques.
+
 ---
 
-*GuignoMap v4.1 - Template Multi-Villes*
+*GuignoMap v4.2 - Streamlit Cloud Ready*
