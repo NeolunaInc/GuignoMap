@@ -11,6 +11,12 @@ import pandas as pd
 from typing import Optional, List, Dict
 import functools
 
+try:
+    import streamlit as st
+except ImportError:
+    # Fallback pour tests sans Streamlit
+    st = None
+
 from guignomap.auth import hash_password, verify_password
 from guignomap.backup import BackupManager
 from guignomap.config_mode import ensure_db_path
@@ -65,8 +71,8 @@ def vacuum_database():
         conn.execute("PRAGMA analysis_limit=1000")
         conn.execute("PRAGMA optimize")
 
-def get_conn():
-    """Connexion SQLite thread-safe avec optimisations"""
+def _get_conn_uncached():
+    """Connexion SQLite thread-safe avec optimisations (version non-cachée)"""
     global _DB_INITIALIZED
     
     if not hasattr(_local, 'conn') or _local.conn is None:
@@ -93,6 +99,25 @@ def get_conn():
                 _DB_INITIALIZED = True
                 
     return _local.conn
+
+def get_conn():
+    """Connexion SQLite thread-safe avec cache Streamlit"""
+    if st is not None:
+        # En mode Streamlit: utilise cache_resource
+        return _get_conn_cached()
+    else:
+        # En mode tests/CLI: utilise version non-cachée
+        return _get_conn_uncached()
+
+if st is not None:
+    @st.cache_resource(show_spinner=False)
+    def _get_conn_cached():
+        """Version cachée pour Streamlit"""
+        return _get_conn_uncached()
+else:
+    def _get_conn_cached():
+        """Fallback quand Streamlit n'est pas disponible"""
+        return _get_conn_uncached()
 
 @contextmanager
 def get_cursor():
