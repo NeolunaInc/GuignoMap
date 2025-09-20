@@ -2088,6 +2088,19 @@ def page_superviseur(conn, geo):
                             st.error(f"Échec import Excel (code {res.returncode}). Détails : {(res.stderr or '')[-1000:]}")
         # [GM] END Import Excel (scripts/import_city_excel.py)
 
+        # [GM] BEGIN Enrichissement OSM (scripts/enrich_addresses_from_osm.py)
+        with st.expander("🗺️ Enrichir géolocalisation (OSM)", expanded=False):
+            if st.button("Lancer géocodage OSM", key="gm_btn_osm_enrich"):
+                with st.spinner("Géocodage en cours…"):
+                    res = subprocess.run([sys.executable, "scripts/enrich_addresses_from_osm.py"],
+                                         capture_output=True, text=True)
+                    st.code((res.stdout or "")[-2000:])
+                    if res.returncode == 0:
+                        st.success("Géocodage terminé.")
+                    else:
+                        st.error(f"Échec géocodage (code {res.returncode}). {(res.stderr or '')[-1000:]}")
+        # [GM] END Enrichissement OSM (scripts/enrich_addresses_from_osm.py)
+
 # ============================================
 # MAIN
 # ============================================
