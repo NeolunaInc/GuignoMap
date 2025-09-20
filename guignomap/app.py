@@ -2084,6 +2084,16 @@ def page_superviseur(conn, geo):
                         st.code((res.stdout or "")[-2000:])
                         if res.returncode == 0:
                             st.success("Import terminé avec succès.")
+                            # [GM] BEGIN Post-Import Verification (verify_addresses_exact.py)
+                            st.info("Vérification post-import…")
+                            ver = subprocess.run([sys.executable, "scripts/verify_addresses_exact.py"],
+                                                 capture_output=True, text=True)
+                            st.code((ver.stdout or "")[-2000:])
+                            if ver.returncode == 0:
+                                st.success("Vérification OK.")
+                            else:
+                                st.warning(f"Vérification terminée avec avertissements (code {ver.returncode}). {(ver.stderr or '')[-1000:]}")
+                            # [GM] END Post-Import Verification (verify_addresses_exact.py)
                         else:
                             st.error(f"Échec import Excel (code {res.returncode}). Détails : {(res.stderr or '')[-1000:]}")
         # [GM] END Import Excel (scripts/import_city_excel.py)
