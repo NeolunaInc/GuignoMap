@@ -1613,10 +1613,10 @@ def page_gestionnaire_v2(geo):
     
     # Tabs
     tabs = st.tabs([
-        "📊 Vue d'ensemble",
-        "👥 Équipes", 
-        "🗺️ Assignation",
-        "📍 Adresses",     # NOUVEAU TAB
+        "🧭 Accueil",
+        "🧑‍🤝‍🧑 Équipes", 
+        "🗺️ Carte",
+        "📍 Adresses",
         "📊 Export",
         "🛠️ Tech"
     ])
