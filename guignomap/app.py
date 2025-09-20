@@ -7,12 +7,15 @@ Version 3.0 - Production
 # pyright: reportCallIssue=false
 
 import os
+# [GM] BEGIN stdout reconfigure guard
 import sys
 os.environ.setdefault("PYTHONUTF8", "1")
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        getattr(sys.stdout, "reconfigure")(encoding="utf-8")
+    except Exception:
+        pass
+# [GM] END stdout reconfigure guard
 
 from pathlib import Path
 import time
@@ -1707,7 +1710,9 @@ def page_gestionnaire_v2(geo):
         # === Liste des équipes (sans doublon de titre) ===
         try:
             teams_df = db.get_all_teams()
-            if teams_df:  # Liste non vide
+            # [GM] BEGIN df truthiness → empty
+            if not teams_df.empty:  # Liste non vide
+            # [GM] END df truthiness → empty
                 st.dataframe(to_dataframe(teams_df), use_container_width=True)
             else:
                 st.info("Aucune équipe créée")
@@ -1968,7 +1973,9 @@ def page_superviseur(conn, geo):
         
         # Liste des équipes
         teams_df = db.get_all_teams()
-        if teams_df:  # Liste non vide
+        # [GM] BEGIN df truthiness → empty
+        if not teams_df.empty:  # Liste non vide
+        # [GM] END df truthiness → empty
             st.dataframe(to_dataframe(teams_df), use_container_width=True)
     
     with tabs[2]:
