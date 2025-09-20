@@ -44,3 +44,35 @@ backups/
 # ---- OS cruft
 *.swp
 *.tmp
+
+# [GM] BEGIN gitignore cleanup
+# Environnements & caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Bases & backups (ne versionner aucune DB locale)
+*.db
+backups/
+guignomap/guigno_map.sample.db
+
+# Exports volatils & rapports ponctuels
+exports/status_counts_*.csv
+exports/unassigned_*.csv
+exports/sanity_*.csv
+export*.txt
+GuignoMap_code_export_*.txt
+pylance_errors_report_*.txt
+# [GM] END gitignore cleanup
