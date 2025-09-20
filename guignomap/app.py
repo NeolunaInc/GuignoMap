@@ -1593,11 +1593,12 @@ def page_gestionnaire_v2(geo):
     
     # Tabs
     tabs = st.tabs([
-        "📊 Vue d'ensemble",
-        "👥 Équipes",
+        "📊 Vue d'ensemble",
+        "👥 Équipes", 
         "🗺️ Assignation",
-        "📊 Export",
-        "🛠️ Tech"
+        "📍 Adresses",     # NOUVEAU TAB
+        "📊 Export",
+        "🛠️ Tech"
     ])
     
     with tabs[0]:
@@ -1980,6 +1981,10 @@ def page_superviseur(conn, geo):
             )
     
     with tabs[3]:
+        # Assignation par adresses
+        ui_assign_addresses_admin()
+    
+    with tabs[4]:
         # Export
         st.markdown("### Export des données")
         
@@ -2003,7 +2008,7 @@ def page_superviseur(conn, geo):
                 
             )
 
-    with tabs[4]:
+    with tabs[5]:
         st.markdown("### 🛠 Opérations techniques (protégées)")
 
         # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")  
