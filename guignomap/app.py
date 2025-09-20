@@ -1868,6 +1868,16 @@ def page_gestionnaire_v2(geo):
                             
                             if result.returncode == 0:
                                 st.success("✅ Import Excel terminé avec succès.")
+                                # [GM] BEGIN Post-Import Verification (verify_addresses_exact.py)
+                                st.info("Vérification post-import…")
+                                ver = subprocess.run([sys.executable, "scripts/verify_addresses_exact.py"],
+                                                     capture_output=True, text=True)
+                                st.code((ver.stdout or "")[-2000:])
+                                if ver.returncode == 0:
+                                    st.success("Vérification OK.")
+                                else:
+                                    st.warning(f"Vérification terminée avec avertissements (code {ver.returncode}). {(ver.stderr or '')[-1000:]}")
+                                # [GM] END Post-Import Verification (verify_addresses_exact.py)
                                 if result.stdout:
                                     st.info(f"Sortie: {result.stdout}")
                             else:
