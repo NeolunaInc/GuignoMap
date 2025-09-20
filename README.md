@@ -536,6 +536,33 @@ Interface moderne aux couleurs du **Relais de Mascouche** :
 - **Fallback étendu** : 19 voies principales + autoroutes
 - **Gestion d'erreurs** : Messages informatifs + récupération automatique
 
+## 🧹 Nettoyage & maintenance
+
+> Ces actions **n'altèrent pas** le code de production. Elles suppriment seulement caches, exports volatils, rapports ponctuels et backups anciens.  
+> ⚠️ Ne supprime jamais `guignomap/guigno_map.db` (base active).
+
+### PowerShell
+```powershell
+# DRY-RUN
+pwsh -File .\scripts\cleanup_workspace.ps1
+# APPLY
+pwsh -File .\scripts\cleanup_workspace.ps1 -Apply
+```
+
+### Python
+```bash
+# DRY-RUN
+python scripts/cleanup_workspace.py
+# APPLY
+python scripts/cleanup_workspace.py --apply
+```
+
+### Gain d'espace attendu
+- **Caches** : `.pytest_cache/`, `.ruff_cache/`
+- **Exports volatils** : `status_counts_*.csv`, `unassigned_*.csv`, `sanity_*.csv`
+- **Rapports temporaires** : `export*.txt`, `GuignoMap_code_export_*.txt`
+- **Backups anciens** : `backups/` (configurable avec `--keep-days`)
+
 ## 🔧 Dépannage
 
 ### Problèmes de légende
