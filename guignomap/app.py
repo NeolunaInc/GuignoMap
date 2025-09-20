@@ -1759,8 +1759,9 @@ def page_gestionnaire_v2(geo):
         page_assignations_v41()
     
     with tabs[3]:
-        # Assignation par adresses
+        # [GM] BEGIN Tab Adresses
         ui_assign_addresses_admin()
+        # [GM] END Tab Adresses
     
     with tabs[4]:
         # Export amélioré v4.1
