@@ -68,6 +68,22 @@ def style_map_compat(df: pd.DataFrame, fn: Callable[[Any], str], subset: Any = N
 
 # --- Mapping des statuts pour l'affichage ---
 STATUS_TO_LABEL = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
+
+# [GM] BEGIN Helper street_names_from_any
+def _street_names_from_any(items) -> list[str]:
+    """Convertit divers types d'objets en liste de noms de rues."""
+    out: list[str] = []
+    for it in items or []:
+        if isinstance(it, str):
+            out.append(it.strip())
+        elif isinstance(it, dict) and "name" in it:
+            out.append(str(it["name"]).strip())
+        elif hasattr(it, "get"):  # pandas Series
+            v = it.get("name", "")
+            if v:
+                out.append(str(v).strip())
+    return [s for s in out if s]
+# [GM] END Helper street_names_from_any
 LABEL_TO_STATUS = {v: k for k, v in STATUS_TO_LABEL.items()}
 
 ASSETS = Path(__file__).parent / "assets"
@@ -1968,7 +1984,7 @@ def page_superviseur(conn, geo):
                 
                 if st.form_submit_button("Assigner"):
                     if team and streets:
-                        db.assign_streets_to_team(streets, team)
+                        db.assign_streets_to_team(_street_names_from_any(streets), team)
                         st.success("Rues assignées!")
                         st.rerun()
         else:
@@ -2261,7 +2277,7 @@ def page_assignations_v41():
                          disabled=not (team_id and selected)):
                 try:
                     if team_id:  # Vérification supplémentaire
-                        db.assign_streets_to_team(selected, team_id)
+                        db.assign_streets_to_team(_street_names_from_any(selected), team_id)
                         st.success(f"{len(selected)} rue(s) assignée(s) à {team_id}")
                         st.rerun()
                 except Exception as e:
@@ -2347,7 +2363,7 @@ def page_assignations_v41():
             if st.button("Assigner", use_container_width=True):
                 try:
                     # Appel à la fonction d'assignation
-                    db.assign_streets_to_team(selected_streets, team_id)
+                    db.assign_streets_to_team(_street_names_from_any(selected_streets), team_id)
                     st.toast(f"✅ {len(selected_streets)} rue(s) assignée(s) à {team_id}", icon="✅")
                     st.rerun()
                 except Exception as e:
