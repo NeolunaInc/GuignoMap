@@ -21,7 +21,7 @@ from pathlib import Path
 import time
 from datetime import datetime
 import subprocess
-import tempfile  # [GM] imports import_excel
+import sys, tempfile  # [GM] imports import_excel
 import pandas as pd
 import streamlit as st
 
