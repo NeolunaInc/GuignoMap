@@ -13,6 +13,9 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import guignomap.database as db
+# [GM] BEGIN tests imports
+from guignomap.database import get_conn
+# [GM] END tests imports
 
 
 class TestCriticalPaths:
@@ -26,7 +29,7 @@ class TestCriticalPaths:
     
     def test_create_team(self):
         """Test de création d'équipe"""
-        conn = db.get_conn()
+        conn = get_conn()
         
         # Nom d'équipe de test unique
         test_team_id = "TEST_P5_001"
@@ -47,13 +50,11 @@ class TestCriticalPaths:
         # Vérifier qu'elle apparaît dans la liste
         teams_data = db.list_teams()
         
-        # Tolérance: list vs DataFrame
-        if hasattr(teams_data, "to_dict"):
-            # DataFrame: convertir en list de dict
-            teams_list = teams_data.to_dict("records")
-        else:
-            # Déjà une list de dict
-            teams_list = teams_data
+        # [GM] BEGIN tests to_dict fix
+        import pandas as pd
+        # Convertir en DataFrame puis en list de dict pour standardiser
+        teams_list = pd.DataFrame(teams_data).to_dict("records")
+        # [GM] END tests to_dict fix
         
         # Vérifier la présence de l'équipe
         team_found = any(t.get("id") == test_team_id or t.get("name") == test_team_name for t in teams_list)
@@ -65,7 +66,7 @@ class TestCriticalPaths:
     
     def test_assign_streets(self):
         """Test d'assignation de rue"""
-        conn = db.get_conn()
+        conn = get_conn()
         
         # Trouver une rue en statut "a_faire"
         cursor = conn.execute("""
