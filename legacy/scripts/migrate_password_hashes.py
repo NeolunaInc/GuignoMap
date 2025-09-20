@@ -1,4 +1,7 @@
 ﻿#!/usr/bin/env python3
+# [GM] BEGIN pylance legacy ignore
+# pyright: reportMissingImports=false
+# [GM] END pylance legacy ignore
 """
 Script de migration manuelle des mots de passe vers Argon2
 Migration batch de tous les hashes legacy vers Argon2
