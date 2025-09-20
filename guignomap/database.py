@@ -875,13 +875,20 @@ def get_unassigned_addresses(limit=100, sector=None, street=None, search=None):
         where_clause = " AND ".join(where_conditions)
         params.append(str(limit))
         
-        return pd.read_sql_query(f"""
+        # [GM] BEGIN fix read_sql_query params
+        _params = params
+        if isinstance(_params, list):
+            _params = tuple(_params)
+        df = pd.read_sql_query(f"""
             SELECT id, street_name, house_number, sector
             FROM addresses
             WHERE {where_clause}
             ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
             LIMIT ?
-        """, conn, params=params)
+        """, conn, params=_params)
+        # [GM] END fix read_sql_query params
+        
+        return df
 
 def get_team_addresses(team_id: str, limit=500, search=None):
     """
@@ -907,13 +914,20 @@ def get_team_addresses(team_id: str, limit=500, search=None):
         where_clause = " AND ".join(where_conditions)
         params.append(str(limit))
         
-        return pd.read_sql_query(f"""
+        # [GM] BEGIN fix read_sql_query params
+        _params = params
+        if isinstance(_params, list):
+            _params = tuple(_params)
+        df = pd.read_sql_query(f"""
             SELECT id, street_name, house_number, postal_code, sector, assigned_to
             FROM addresses
             WHERE {where_clause}
             ORDER BY street_name ASC, CAST(house_number AS INTEGER) ASC NULLS LAST
             LIMIT ?
-        """, conn, params=params)
+        """, conn, params=_params)
+        # [GM] END fix read_sql_query params
+        
+        return df
 
 
 def search_addresses(query: str, limit: int = 500) -> pd.DataFrame:
