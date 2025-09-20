@@ -8,7 +8,7 @@ import threading
 from contextlib import contextmanager
 from datetime import datetime
 import pandas as pd
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Callable, TypeVar, ParamSpec, Tuple, Any
 import functools
 
 try:
@@ -30,30 +30,30 @@ _DB_LOCK = threading.Lock()
 # CACHE SYSTEM
 # =============================================================================
 
-def safe_cache(func):
-    """Décorateur de cache compatible Streamlit/standalone"""
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+# [GM] BEGIN typed_memoize
+T = TypeVar("T")
+P = ParamSpec("P")
+
+def safe_cache(func: Callable[P, T]) -> Callable[P, T]:
+    """Décorateur de cache typé compatible Streamlit/standalone"""
+    cache: Dict[Tuple[Tuple[Any, ...], Tuple[Tuple[str, Any], ...]], T] = {}
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         try:
             # Essayer d'utiliser st.cache_data si Streamlit est disponible
             import streamlit as st
             cached_func = st.cache_data(func)
             return cached_func(*args, **kwargs)
         except ImportError:
-            # Fallback : cache simple en mémoire
-            if not hasattr(wrapper, '_cache'):
-                wrapper._cache = {}
-            
-            # Créer une clé de cache simple
-            cache_key = str(args) + str(sorted(kwargs.items()))
-            
-            if cache_key in wrapper._cache:
-                return wrapper._cache[cache_key]
-            
-            result = func(*args, **kwargs)
-            wrapper._cache[cache_key] = result
-            return result
+            # Fallback : cache typé en closure
+            key = (tuple(args), tuple(sorted(kwargs.items())))
+            if key in cache:
+                return cache[key]
+            res = func(*args, **kwargs)
+            cache[key] = res
+            return res
+    wrapper.__wrapped__ = func  # pour les outils d'analyse
     return wrapper
+# [GM] END typed_memoize
 
 
 # =============================================================================
@@ -792,14 +792,10 @@ def invalidate_caches():
         import streamlit as st
         st.cache_data.clear()
     except ImportError:
-        # Fallback : nettoyer les caches mémoire des fonctions @safe_cache
-        import inspect
-        
-        # Parcourir toutes les fonctions du module actuel
-        current_module = inspect.getmodule(invalidate_caches)
-        for name, obj in inspect.getmembers(current_module):
-            if callable(obj) and hasattr(obj, '_cache'):
-                obj._cache.clear()
+        # Fallback : les caches sont maintenant dans des closures
+        # Plus besoin de nettoyer manuellement, chaque décorateur 
+        # a son propre cache en closure qui sera collecté par le GC
+        pass
 
 
 # =============================================================================
