@@ -319,25 +319,25 @@ def list_streets(team: Optional[str] = None) -> pd.DataFrame:
     with get_conn() as conn:
         if team:
             cur = conn.execute("""
-                SELECT s.id, s.name, s.sector, s.status, s.team_id,
-                       t.nom as team_name,
+                SELECT s.id, s.name, s.sector, s.status, s.team,
+                       t.name as team_name,
                        COUNT(n.id) as notes_count
                 FROM streets s
-                LEFT JOIN teams t ON s.team_id = t.id
+                LEFT JOIN teams t ON s.team = t.id
                 LEFT JOIN notes n ON s.id = n.street_id
-                WHERE s.team_id = ?
-                GROUP BY s.id, s.name, s.sector, s.status, s.team_id, t.nom
+                WHERE s.team = ?
+                GROUP BY s.id, s.name, s.sector, s.status, s.team, t.name
                 ORDER BY s.name
             """, (team,))
         else:
             cur = conn.execute("""
-                SELECT s.id, s.name, s.sector, s.status, s.team_id,
-                       t.nom as team_name,
+                SELECT s.id, s.name, s.sector, s.status, s.team,
+                       t.name as team_name,
                        COUNT(n.id) as notes_count
                 FROM streets s
-                LEFT JOIN teams t ON s.team_id = t.id
+                LEFT JOIN teams t ON s.team = t.id
                 LEFT JOIN notes n ON s.id = n.street_id
-                GROUP BY s.id, s.name, s.sector, s.status, s.team_id, t.nom
+                GROUP BY s.id, s.name, s.sector, s.status, s.team, t.name
                 ORDER BY s.name
             """)
         
@@ -348,9 +348,9 @@ def get_street_details(street_id: int) -> Optional[Dict]:
     """Récupère les détails d'une rue"""
     with get_conn() as conn:
         cur = conn.execute("""
-            SELECT s.*, t.nom as team_name
+            SELECT s.*, t.name as team_name
             FROM streets s
-            LEFT JOIN teams t ON s.team_id = t.id
+            LEFT JOIN teams t ON s.team = t.id
             WHERE s.id = ?
         """, (street_id,))
         
@@ -421,17 +421,17 @@ def stats_by_team() -> List[Dict]:
     """Statistiques par équipe"""
     with get_conn() as conn:
         cur = conn.execute("""
-            SELECT t.id, t.nom as team_name,
+            SELECT t.id, t.name as team_name,
                    COUNT(s.id) as total_streets,
                    SUM(CASE WHEN s.status = 'terminee' THEN 1 ELSE 0 END) as completed,
                    SUM(CASE WHEN s.status IN ('en_cours', 'partielle') THEN 1 ELSE 0 END) as in_progress,
                    COUNT(n.id) as total_notes
             FROM teams t
-            LEFT JOIN streets s ON t.id = s.team_id
+            LEFT JOIN streets s ON t.id = s.team
             LEFT JOIN notes n ON s.id = n.street_id
             WHERE t.id != 'ADMIN'
-            GROUP BY t.id, t.nom
-            ORDER BY completed DESC, t.nom
+            GROUP BY t.id, t.name
+            ORDER BY completed DESC, t.name
         """)
         return _row_dicts(cur)
 
@@ -477,7 +477,7 @@ def get_street_notes(street_id: int) -> List[Dict]:
     """Récupère les notes d'une rue"""
     with get_conn() as conn:
         cur = conn.execute("""
-            SELECT n.*, t.nom as team_name
+            SELECT n.*, t.name as team_name
             FROM notes n
             LEFT JOIN teams t ON n.team_id = t.id
             WHERE n.street_id = ?
@@ -700,7 +700,7 @@ def get_street_notes_for_team(street_name: str, team_id: str) -> List[Dict]:
     """Notes d'une rue pour une équipe"""
     with get_conn() as conn:
         cur = conn.execute("""
-            SELECT n.*, t.nom as team_name
+            SELECT n.*, t.name as team_name
             FROM notes n
             LEFT JOIN teams t ON n.team_id = t.id
             LEFT JOIN streets s ON n.street_id = s.id

@@ -77,7 +77,18 @@ def import_city_addresses(city: str, file_path: Path, verbose: bool = False) -> 
             delta_pct = (len(df_prepared) / len(df)) * 100
             logging.info(f"  • Delta (%): {delta_pct:.1f}%")
         
-        logging.info(f"🎯 Import de {city} terminé avec succès!")
+        logging.info(f"✅ Import de {city} terminé avec succès!")
+        
+        # Forcer l'affichage des logs
+        import sys
+        sys.stdout.flush()
+        sys.stderr.flush()
+        
+        # Confirmation finale
+        print(f"\n✅ IMPORT TERMINÉ")
+        print(f"   Total importé: {stats['total_imported']}")
+        print(f"   Assignations préservées: {stats['preserved_assignments']}")
+        
         return True
         
     except Exception as e:
