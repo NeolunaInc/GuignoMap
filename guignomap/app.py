@@ -1921,6 +1921,19 @@ def page_gestionnaire_v2(geo):
                         st.error(f"Échec géocodage (code {res.returncode}). {(res.stderr or '')[-1000:]}")
         # [GM] END Enrichissement OSM (scripts/enrich_addresses_from_osm.py)
 
+        # [GM] BEGIN Demo seed (scripts/seed_address_demo.py)
+        with st.expander("🎯 Démo Assignation (5 adresses)", expanded=False):
+            if st.button("Lancer démo (5 adresses)", key="gm_btn_seed_demo"):
+                with st.spinner("Génération démo…"):
+                    res = subprocess.run([sys.executable, "scripts/seed_address_demo.py"],
+                                         capture_output=True, text=True)
+                    st.code((res.stdout or "")[-2000:])
+                    if res.returncode == 0:
+                        st.success("Démo terminée.")
+                    else:
+                        st.error(f"Échec démo (code {res.returncode}). {(res.stderr or '')[-1000:]}")
+        # [GM] END Demo seed (scripts/seed_address_demo.py)
+
 def page_superviseur(conn, geo):
     """Interface superviseur"""
     st.header("🎯 Tableau de Bord Superviseur")
