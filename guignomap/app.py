@@ -18,6 +18,7 @@ from pathlib import Path
 import time
 from datetime import datetime
 import subprocess
+import tempfile  # [GM] imports import_excel
 import pandas as pd
 import streamlit as st
 
@@ -2067,36 +2068,24 @@ def page_superviseur(conn, geo):
                 else:
                     st.warning("Confirmation incomplète.")
 
-        # --- Importer depuis Excel
-        with st.expander("📊 Importer adresses Excel", expanded=False):
-            col1, col2 = st.columns([1,2])
-            with col1:
-                confirmE = st.checkbox("Je confirme", key="excel_confirm_tech")
-            with col2:
-                safetyE = st.text_input('Écrire "IMPORT" pour confirmer', key="excel_safety_tech")
-
-            if st.button("Importer Excel", key="excel_import_tech"):
-                if confirmE and safetyE.strip().upper() == "IMPORT":
-                    with st.spinner("Importation des adresses Excel en cours…"):
-                        try:
-                            result = subprocess.run([
-                                str(project_root / '.venv' / 'Scripts' / 'python.exe'), 
-                                'scripts/import_city_excel.py', 
-                                '--city', 'mascouche', 
-                                '--file', 'imports/mascouche_adresses.xlsx'
-                            ], capture_output=True, text=True, cwd=str(project_root))
-                            
-                            if result.returncode == 0:
-                                st.success("✅ Import Excel terminé avec succès.")
-                                if result.stdout:
-                                    st.info(f"Sortie: {result.stdout}")
-                            else:
-                                st.error(f"❌ Erreur lors de l'import Excel: {result.stderr}")
-                        except Exception as e:
-                            st.error(f"❌ Erreur lors de l'exécution: {str(e)}")
-                    st.rerun()
+        # [GM] BEGIN Import Excel (scripts/import_city_excel.py)
+        with st.expander("� Import Excel - Mascouche", expanded=False):
+            uploaded = st.file_uploader("Fichier Excel (.xlsx ou .xls)", type=["xlsx", "xls"], key="gm_import_xlsx")
+            if st.button("Importer Excel (script)", key="gm_btn_import_xlsx"):
+                if uploaded is None:
+                    st.warning("Choisissez un fichier Excel.")
                 else:
-                    st.warning("Confirmation incomplète.")
+                    with st.spinner("Import en cours…"):
+                        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
+                        tmp.write(uploaded.read()); tmp.close()
+                        cmd = [sys.executable, "scripts/import_city_excel.py", "--city", "mascouche", "--file", tmp.name, "--verbose"]
+                        res = subprocess.run(cmd, capture_output=True, text=True)
+                        st.code((res.stdout or "")[-2000:])
+                        if res.returncode == 0:
+                            st.success("Import terminé avec succès.")
+                        else:
+                            st.error(f"Échec import Excel (code {res.returncode}). Détails : {(res.stderr or '')[-1000:]}")
+        # [GM] END Import Excel (scripts/import_city_excel.py)
 
 # ============================================
 # MAIN
