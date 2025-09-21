@@ -1,0 +1,86 @@
+GuignoMap/
+├── audit_dataframe.ps1
+├── check_admin.py
+├── export_audit.txt
+├── PHASE1_COMMANDS.md
+├── pytest.ini
+├── README.md
+├── README_DEPLOIEMENT.md
+├── README_DEPLOIEMENT_CLOUD.md
+├── README_VENV.md
+├── requirements-dev.txt
+├── requirements.txt
+├── requirements_freeze.txt
+├── requirements_freeze_bom.txt
+├── requirements_freeze_old.txt
+├── runtime.txt
+├── streamlit_app.py
+├── .devcontainer/
+│   └── devcontainer.json
+├── .streamlit/
+│   ├── config.toml
+│   ├── secrets.toml.example
+│   └── SECRETS_SAMPLE.toml
+├── docs/
+│   ├── DATA_GOUVERNANCE.md
+│   ├── PHASE1_AUDIT_DATAFRAME.md
+│   └── project_tree_*.txt
+├── guignomap/
+│   ├── __init__.py
+│   ├── app.py
+│   ├── config.py
+│   ├── database.py
+│   ├── osm_service.py
+│   ├── assets/
+│   │   └── styles.css
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── importer.py
+│   │   ├── models.py
+│   │   ├── osm/
+│   │   │   ├── __init__.py
+│   │   │   ├── client.py
+│   │   │   └── geocoder.py
+│   │   └── excel/
+│   │       ├── __init__.py
+│   │       ├── parser.py
+│   │       └── validator.py
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── components.py
+│   │   ├── helpers.py
+│   │   └── pages/
+│   │       ├── __init__.py
+│   │       ├── admin.py
+│   │       ├── dashboard.py
+│   │       ├── import_data.py
+│   │       └── superviseur.py
+│   └── utils/
+│       ├── __init__.py
+│       ├── auth.py
+│       ├── cache.py
+│       ├── geocoding.py
+│       ├── logging.py
+│       └── validators.py
+├── imports/
+│   └── (fichiers d'import temporaires)
+├── legacy/
+│   └── (anciens fichiers de référence)
+├── scripts/
+│   ├── __init__.py
+│   ├── backup_db.py
+│   ├── build_addresses_cache.py
+│   ├── build_osm_cache.py
+│   ├── import_city_excel.py
+│   ├── import_from_excel.py
+│   ├── run_all_tests.py
+│   └── validate_structure.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_database.py
+│   ├── test_excel_parser.py
+│   ├── test_osm_client.py
+│   └── test_validators.py
+└── tools/
+    └── quick_sanity.py
