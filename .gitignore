@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# Backups et exports volumineux
+GuignoMap_Backup_*.zip
+export_for_audit.txt
