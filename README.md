@@ -99,10 +99,11 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 
 ### Backup complet du projet
 - **Fichier** : `GuignoMap_Backup_20250921_132414.zip`
-- **Emplacement** : Racine du projet
+- **Emplacement** : Racine du projet (local uniquement - non commité dans git)
 - **Taille** : ~130 MB
 - **Date de création** : 21 septembre 2025, 13:24:14
 - **Contenu** : Code source complet, dépendances, configuration, base de données, exports
+- **Note** : Ce fichier est trop volumineux pour GitHub et n'est pas versionné
 
 ### Export d'audit
 - **Fichier** : `export_for_audit.txt`
