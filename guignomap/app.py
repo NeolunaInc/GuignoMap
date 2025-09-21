@@ -2193,45 +2193,9 @@ def page_superviseur(conn, geo):
                         st.code((res.stdout or "")[-2000:])
                         if res.returncode == 0:
                             st.success("Import terminé avec succès.")
-                            # [GM] BEGIN Post-Import Verification (verify_addresses_exact.py)
-                            st.info("Vérification post-import…")
-                            ver = subprocess.run([sys.executable, "scripts/verify_addresses_exact.py"],
-                                                 capture_output=True, text=True)
-                            st.code((ver.stdout or "")[-2000:])
-                            if ver.returncode == 0:
-                                st.success("Vérification OK.")
-                            else:
-                                st.warning(f"Vérification terminée avec avertissements (code {ver.returncode}). {(ver.stderr or '')[-1000:]}")
-                            # [GM] END Post-Import Verification (verify_addresses_exact.py)
                         else:
                             st.error(f"Échec import Excel (code {res.returncode}). Détails : {(res.stderr or '')[-1000:]}")
         # [GM] END Import Excel (scripts/import_city_excel.py)
-
-        # [GM] BEGIN Enrichissement OSM (scripts/enrich_addresses_from_osm.py)
-        with st.expander("🗺️ Enrichir géolocalisation (OSM)", expanded=False):
-            if st.button("Lancer géocodage OSM", key="gm_btn_osm_enrich"):
-                with st.spinner("Géocodage en cours…"):
-                    res = subprocess.run([sys.executable, "scripts/enrich_addresses_from_osm.py"],
-                                         capture_output=True, text=True)
-                    st.code((res.stdout or "")[-2000:])
-                    if res.returncode == 0:
-                        st.success("Géocodage terminé.")
-                    else:
-                        st.error(f"Échec géocodage (code {res.returncode}). {(res.stderr or '')[-1000:]}")
-        # [GM] END Enrichissement OSM (scripts/enrich_addresses_from_osm.py)
-
-        # [GM] BEGIN Demo seed (scripts/seed_address_demo.py)
-        with st.expander("🎯 Démo Assignation (5 adresses)", expanded=False):
-            if st.button("Lancer démo (5 adresses)", key="gm_btn_seed_demo"):
-                with st.spinner("Génération démo…"):
-                    res = subprocess.run([sys.executable, "scripts/seed_address_demo.py"],
-                                         capture_output=True, text=True)
-                    st.code((res.stdout or "")[-2000:])
-                    if res.returncode == 0:
-                        st.success("Démo terminée.")
-                    else:
-                        st.error(f"Échec démo (code {res.returncode}). {(res.stderr or '')[-1000:]}")
-        # [GM] END Demo seed (scripts/seed_address_demo.py)
 
 # ============================================
 # MAIN
