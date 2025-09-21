@@ -1,4 +1,4 @@
-# GuignoMap - Système de gest## 📋 Table des matières
+# GuignoMap - Système de gestion pour la Guignolée 2025 🎄
 
 - [🎯 Vue d'ensemble](#-vue-densemble)
 - [📸 Captures d'écran](#-captures-décran)
@@ -57,7 +57,8 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
 - [🎯 Vue d'ensemble](#-vue-densemble)
 - [✨ Fonctionnalités principales](#-fonctionnalités-principales)
 - [🚀 Installation et configuration](#-installation-et-configuration)
-- [💻 Commandes pratiques](#-commandes-pratiques)
+- [� Sauvegarde et archivage](#-sauvegarde-et-archivage)
+- [�💻 Commandes pratiques](#-commandes-pratiques)
 - [📊 Structure du projet](#-structure-du-projet)
 - [🔧 Technologies et dépendances](#-technologies-et-dépendances)
 - [🎨 Interfaces utilisateur](#-interfaces-utilisateur)
@@ -93,6 +94,30 @@ Une application web moderne conçue spécialement pour optimiser la collecte de 
    ```
 
 > **💡 Conseil** : Utilisez les tâches VS Code prédéfinies pour une expérience optimale !
+
+## 💾 Sauvegarde et archivage
+
+### Backup complet du projet
+- **Fichier** : `GuignoMap_Backup_20250921_132414.zip`
+- **Emplacement** : Racine du projet
+- **Taille** : ~130 MB
+- **Date de création** : 21 septembre 2025, 13:24:14
+- **Contenu** : Code source complet, dépendances, configuration, base de données, exports
+
+### Export d'audit
+- **Fichier** : `export_for_audit.txt`
+- **Emplacement** : Racine du projet
+- **Encodage** : UTF-8 (corrigé)
+- **Contenu** : Tous les fichiers source principaux avec numérotation des lignes
+
+### Commandes de sauvegarde
+```powershell
+# Créer un nouveau backup
+Compress-Archive -Path * -DestinationPath "GuignoMap_Backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').zip" -Force
+
+# Générer un export d'audit
+Get-ChildItem -Recurse -Include *.py,*.md,*.txt,*.json,*.toml -Exclude *test* | ForEach-Object { "`n=== $($_.FullName) ==="; Get-Content $_.FullName -Encoding UTF8 } > export_for_audit.txt
+```
 
 ## 🎯 Vue d'ensemble
 
