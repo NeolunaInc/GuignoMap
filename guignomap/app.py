@@ -1661,15 +1661,9 @@ def page_gestionnaire_v2(geo):
     # Dashboard moderne
     render_dashboard_gestionnaire(geo)
     
-    # Tabs
-    tabs = st.tabs([
-        "🧭 Accueil",
-        "🧑‍🤝‍🧑 Équipes", 
-        "🗺️ Carte",
-        "📍 Adresses",
-        "📊 Export",
-        "🛠️ Tech"
-    ])
+    # [GM] BEGIN tabs explicit order
+    tabs = st.tabs(["🧭 Accueil", "🧑‍🤝‍🧑 Équipes", "🗺️ Carte", "📍 Adresses", "📊 Export", "🛠️ Tech"])
+    # [GM] END tabs explicit order
     
     with tabs[0]:
         # Carte générale
@@ -1830,9 +1824,10 @@ def page_gestionnaire_v2(geo):
         page_assignations_v41()
     
     with tabs[3]:
-        # [GM] BEGIN Tab Adresses
-        ui_assign_addresses_admin()
-        # [GM] END Tab Adresses
+        try:
+            ui_assign_addresses_admin()
+        except NameError:
+            st.error("ui_assign_addresses_admin() introuvable.")
     
     with tabs[4]:
         # Export amélioré v4.1
