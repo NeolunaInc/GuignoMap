@@ -25,6 +25,42 @@ import sys, tempfile  # [GM] imports import_excel
 import pandas as pd
 import streamlit as st
 
+# [GM] BEGIN safe page config + diag mode
+import os, sys
+st.set_page_config(
+    page_title="Guigno-Map | Relais de Mascouche",
+    page_icon="🎁",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Compat params (Streamlit ≥1.30 a st.query_params)
+try:
+    get_qs = st.query_params  # type: ignore[attr-defined]
+    qs = dict(get_qs) if hasattr(get_qs, "__iter__") else {}
+except Exception:
+    try:
+        qs = st.experimental_get_query_params()  # legacy
+    except Exception:
+        qs = {}
+
+gm_mode = (qs.get("gm_mode", [""])[0] if isinstance(qs.get("gm_mode"), list)
+           else qs.get("gm_mode", ""))
+
+with st.container():
+    st.markdown("### 🩺 GuignoMap — bootstrap")
+    st.write({
+        "python": sys.version.split()[0],
+        "exe": sys.executable,
+        "cwd": os.getcwd(),
+        "gm_mode": gm_mode or "<default>"
+    })
+
+if gm_mode == "diag":
+    st.info("Mode diagnostic actif — UI principale bypassée.")
+    st.stop()
+# [GM] END safe page config + diag mode
+
 # Configuration du path pour les imports
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -32,14 +68,6 @@ sys.path.insert(0, str(project_root))
 import guignomap.config_ville as config_ville
 
 # Monkey-patch supprimé - utilisation de composants Streamlit natifs
-
-# Configuration Streamlit (doit être la première commande Streamlit)
-st.set_page_config(
-    page_title=f"Guigno-Map | Relais de {config_ville.VILLE_NOM}",
-    page_icon="🎁",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 import folium
 from streamlit_folium import st_folium
