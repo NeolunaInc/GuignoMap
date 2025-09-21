@@ -1,8 +1,80 @@
-# GuignoMap - Système de gestion pour la Guignolée 2025 🎄
+# GuignoMap - Système de gesUne application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
+
+## 📸 Captures d'écran
+
+### Interface principale
+![Interface gestionnaire](https://via.placeholder.com/800x400/4CAF50/FFFFFF?text=Interface+Gestionnaire)
+*Tableau de bord avec assignations par secteur et statistiques temps réel*
+
+### Cartographie interactive
+![Carte interactive](https://via.placeholder.com/800x400/2196F3/FFFFFF?text=Carte+Interactive)
+*Visualisation des rues avec statuts colorés et légendes persistantes*
+
+### Interface bénévole
+![Interface bénévole](https://via.placeholder.com/800x400/FF9800/FFFFFF?text=Interface+Bénévole)
+*Vue filtrée "Mes rues" avec actions simplifiées*
+
+## 🚀 Démarrage rapiden pour la ## 📋 Table des matières
+
+- [🎯 Vue d'ensemble](#-vue-densemble)
+- [📸 Captures d'écran](#-captures-décran)
+- [✨ Fonctionnalités principales](#-fonctionnalités-principales)
+- [🔌 API et Intégrations](#-api-et-intégrations)
+- [🚀 Installation et configuration](#-installation-et-configuration)
+- [💻 Commandes pratiques](#-commandes-pratiques)
+- [🔧 Dépannage](#-dépannage)
+- [📊 Structure du projet](#-structure-du-projet)
+- [🔧 Technologies et dépendances](#-technologies-et-dépendances)
+- [🎨 Interfaces utilisateur](#-interfaces-utilisateur)
+- [🛡️ Sécurité et robustesse](#️-sécurité-et-robustesse)
+- [📈 Exports et rapports](#-exports-et-rapports)
+- [🔄 Historique des versions](#-historique-des-versions)
+- [🚀 Roadmap](#-roadmap)
+- [🤝 Contribution](#-contribution)
+- [👥 Crédits](#-crédits)
+- [📄 Licence](#-licence)
+- [📞 Support et contact](#-support-et-contact)25 🎄
+
+[![Version](https://img.shields.io/badge/version-4.1-blue.svg)](https://github.com/NeolunaInc/GuignoMap)
+[![Python](https://img.shields.io/badge/python-3.13.6-blue.svg)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.49.1-red.svg)](https://streamlit.io)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/NeolunaInc/GuignoMap/graphs/commit-activity)
+
+> **Application web moderne pour optimiser la collecte de dons lors de la Guignolée annuelle de Mascouche**
 
 Une application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
 
-## 📋 Table des matières
+## � Démarrage rapide
+
+### Prérequis
+- **Python 3.13.6+** installé
+- **Git** pour le clonage du repository
+- **Navigateur web** moderne (Chrome, Firefox, Edge)
+
+### Installation en 3 étapes
+
+1. **Clonez le repository**
+   ```bash
+   git clone https://github.com/NeolunaInc/GuignoMap.git
+   cd GuignoMap
+   ```
+
+2. **Configurez l'environnement**
+   ```bash
+   # Sur Windows (PowerShell)
+   .\lancer_guignomap.ps1
+   ```
+
+3. **Lancez l'application**
+   ```bash
+   # L'application s'ouvrira automatiquement dans votre navigateur
+   # URL par défaut : http://localhost:8501
+   ```
+
+> **💡 Conseil** : Utilisez les tâches VS Code prédéfinies pour une expérience optimale !
+
+## �📋 Table des matières
 
 - [🎯 Vue d'ensemble](#-vue-densemble)
 - [✨ Fonctionnalités principales](#-fonctionnalités-principales)
@@ -55,7 +127,25 @@ GuignoMap est une application web complète développée avec Streamlit pour gé
 - **Badges de motivation** : Débutants, Actifs, Champions, Légends
 - **Tableaux de progression** : Par équipe et secteur
 
-## 🚀 Installation et configuration
+## � API et Intégrations
+
+### Base de données
+- **SQLite/PostgreSQL** : Support flexible des bases de données
+- **Migrations automatiques** : Gestion des versions de schéma via Alembic
+- **Cache OSM** : Optimisation des requêtes géographiques
+
+### Services externes
+- **OpenStreetMap** : Géolocalisation et cartographie
+- **Supabase** (optionnel) : Synchronisation cloud
+- **Streamlit Cloud** : Déploiement en ligne
+
+### Modules Python clés
+- **Streamlit** : Framework web principal
+- **Pandas** : Manipulation des données
+- **Folium** : Cartographie interactive
+- **Plotly** : Graphiques et visualisations
+
+## �🚀 Installation et configuration
 
 ### Prérequis système
 - **Python** : 3.13.6 (recommandé)
@@ -181,7 +271,73 @@ pip install --upgrade -r requirements.txt
 # Automatique : conservation des 7 derniers jours
 ```
 
-## 📊 Structure du projet
+## � Dépannage
+
+### Problèmes courants et solutions
+
+#### Erreur "Module not found"
+```bash
+# Solution : Réinstaller les dépendances
+pip install --upgrade -r requirements.txt
+
+# Vérifier l'environnement virtuel
+python -c "import sys; print(sys.executable)"
+```
+
+#### Problème de base de données
+```bash
+# Régénérer la base de données
+rm guignomap/guigno_map.db
+python -c "from guignomap.db import init_db; init_db()"
+
+# Vérifier l'intégrité
+python tools/quick_sanity.py
+```
+
+#### Erreurs d'encodage
+```bash
+# Forcer l'encodage UTF-8 (Windows)
+chcp 65001
+python -c "import locale; print(locale.getpreferredencoding())"
+```
+
+#### Port déjà utilisé
+```bash
+# Changer le port
+streamlit run guignomap/app.py --server.port 8502
+
+# Tuer les processus Streamlit
+taskkill /f /im streamlit.exe
+```
+
+#### Problèmes de cache OSM
+```bash
+# Vider le cache
+rm guignomap/osm_cache.json
+rm guignomap/osm_addresses.json
+```
+
+### Logs et débogage
+```bash
+# Activer les logs détaillés
+set STREAMLIT_LOG_LEVEL=DEBUG
+streamlit run guignomap/app.py
+
+# Consulter les logs d'erreur
+# Windows : %APPDATA%\streamlit\logs\
+# Linux/macOS : ~/.streamlit/logs/
+```
+
+### Validation du système
+```bash
+# Test complet du système
+python tools/quick_sanity.py
+
+# Vérifier la syntaxe de tous les fichiers
+python -m compileall .
+```
+
+## �📊 Structure du projet
 
 ```
 GuignoMap/
@@ -386,6 +542,111 @@ xyzservices==2025.4.0
 - ✅ Gestion base de données
 - ✅ Interface de base Streamlit
 - ✅ Structure applicative initiale
+
+## 🚀 Roadmap
+
+### Fonctionnalités à venir
+- [ ] **Application mobile native** : iOS/Android pour bénévoles
+- [ ] **Synchronisation temps réel** : WebSockets pour mises à jour live
+- [ ] **API REST** : Intégration avec autres systèmes
+- [ ] **Dashboard analytics** : Métriques avancées et prédictions
+- [ ] **Notifications push** : Alertes SMS/email automatiques
+- [ ] **Mode hors ligne** : Fonctionnement déconnecté avec sync
+
+### Améliorations techniques
+- [ ] **Tests automatisés** : Suite complète unitaires/intégration
+- [ ] **CI/CD** : Déploiement automatisé GitHub Actions
+- [ ] **Monitoring** : Métriques performance et erreurs
+- [ ] **Cache Redis** : Accélération des requêtes répétées
+- [ ] **Migration cloud** : Support complet Supabase/PostgreSQL
+
+## 🤝 Contribution
+
+### Comment contribuer
+1. **Fork** le projet
+2. **Clone** votre fork : `git clone https://github.com/votre-username/GuignoMap.git`
+3. **Créez** une branche : `git checkout -b feature/amélioration`
+4. **Commitez** vos changements : `git commit -m "Ajout de [fonctionnalité]"`
+5. **Push** vers votre fork : `git push origin feature/amélioration`
+6. **Créez** une Pull Request
+
+### Guidelines de développement
+- **Code style** : PEP 8 pour Python
+- **Commits** : Messages clairs en français
+- **Tests** : Valider avant soumission
+- **Documentation** : Mettre à jour le README si nécessaire
+
+### Types de contributions
+- 🐛 **Bug fixes** : Corrections de problèmes
+- ✨ **Features** : Nouvelles fonctionnalités
+- 📚 **Documentation** : Améliorations de docs
+- 🎨 **UI/UX** : Améliorations d'interface
+- 🔧 **Maintenance** : Nettoyage et optimisation
+
+## 👥 Crédits
+
+### Équipe de développement
+- **Développeur principal** : Équipe technique Guignolée Mascouche
+- **Design UI/UX** : Inspiré des meilleures pratiques Streamlit
+- **Architecture** : Modulaire et maintenable
+
+### Technologies et bibliothèques
+- **Streamlit** : Framework web moderne
+- **Folium** : Cartographie interactive
+- **Pandas** : Analyse de données
+- **OpenStreetMap** : Données géographiques
+- **Plotly** : Visualisations interactives
+
+### Remerciements
+- **Communauté Streamlit** : Support et inspiration
+- **Open Source** : Bibliothèques utilisées
+- **Bénévoles Guignolée** : Tests et retours utilisateurs
+- **Municipalité Mascouche** : Partenariat et soutien
+
+## 📄 Licence
+
+Ce projet est sous licence **MIT**.
+
+```
+MIT License
+
+Copyright (c) 2025 Guignolée Mascouche
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## 📞 Support et contact
+
+### Signaler un problème
+- **GitHub Issues** : [Créer un ticket](https://github.com/NeolunaInc/GuignoMap/issues)
+- **Priorité** : Bugs critiques vs améliorations
+- **Template** : Description détaillée + étapes de reproduction
+
+### Demander de l'aide
+- **Documentation** : Ce README complet
+- **Code source** : Commentaires détaillés en français
+- **Communauté** : Discussions GitHub
+
+### Contact développeur
+- **Repository** : https://github.com/NeolunaInc/GuignoMap
+- **Organisation** : Guignolée Mascouche
+- **Support** : Issues GitHub uniquement
 
 ---
 
