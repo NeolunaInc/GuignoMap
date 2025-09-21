@@ -61,6 +61,28 @@ if gm_mode == "diag":
     st.stop()
 # [GM] END safe page config + diag mode
 
+# [GM] BEGIN safe_boot sqlite
+import sqlite3
+from guignomap import database as db
+
+def safe_boot():
+    try:
+        db.initialize_database()
+        path = os.path.join("guignomap", "guigno_map.db")
+        con = sqlite3.connect(path, timeout=2.0)
+        try:
+            con.execute("PRAGMA journal_mode=WAL;")
+            con.execute("PRAGMA busy_timeout=1500;")
+            cnt = con.execute("SELECT COUNT(*) FROM addresses").fetchone()[0]
+        finally:
+            con.close()
+        st.success(f"SQLite OK (addresses={cnt})")
+    except Exception as e:
+        st.exception(e)
+
+safe_boot()
+# [GM] END safe_boot sqlite
+
 # Configuration du path pour les imports
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
