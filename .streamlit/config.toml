@@ -21,4 +21,9 @@ magicEnabled = true
 headless = true
 runOnSave = true
 maxUploadSize = 10
+enableCORS = true
 enableXsrfProtection = true
+
+[browser]
+# Collecte des stats d'usage (désactivé pour confidentialité)
+gatherUsageStats = false

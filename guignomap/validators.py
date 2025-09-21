@@ -1,3 +1,4 @@
+
 """
 Validateurs et sanitizers pour GuignoMap
 Protection contre injections et validation des formats

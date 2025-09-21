@@ -1,153 +1,102 @@
-"""
-Système de backup automatique pour GuignoMap
-Sauvegarde la base de données et les caches
-"""
-
-import shutil
-import sqlite3
+"""Backup helpers for GuignoMap (Windows-friendly, silent by default)."""
+from __future__ import annotations
 from pathlib import Path
 from datetime import datetime
-import json
-import zipfile
+from typing import Callable, Any, Optional
+import os, shutil, logging
+
+# --- Logging (désactivé par défaut) -------------------------------------------------
+_LOG = logging.getLogger("guignomap.backup")
+if os.getenv("GUIGNOMAP_DEBUG"):
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    _LOG.addHandler(logging.NullHandler())
+
+# --- Chemins par défaut --------------------------------------------------------------
+DEFAULT_DB  = Path("guignomap/guigno_map.db")
+DEFAULT_DIR = Path("backups")
 
 class BackupManager:
-    def __init__(self, db_path):
-        self.db_path = Path(db_path)
-        self.backup_dir = self.db_path.parent / "backups"
-        self.backup_dir.mkdir(exist_ok=True)
-        self.max_backups = 7  # Garder 7 jours de backups
-        
-    def create_backup(self, reason="manual"):
-        """Crée un backup complet avec timestamp"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_name = f"backup_{timestamp}_{reason}"
-        backup_path = self.backup_dir / backup_name
-        backup_path.mkdir(exist_ok=True)
-        
-        try:
-            # Backup de la base de données
-            db_backup = backup_path / "guigno_map.db"
-            shutil.copy2(self.db_path, db_backup)
-            
-            # Backup des caches OSM
-            for cache_file in ["osm_cache.json", "osm_addresses.json"]:
-                cache_path = self.db_path.parent / cache_file
-                if cache_path.exists():
-                    shutil.copy2(cache_path, backup_path / cache_file)
-            
-            # Créer un ZIP
-            zip_path = self.backup_dir / f"{backup_name}.zip"
-            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for file in backup_path.iterdir():
-                    zipf.write(file, file.name)
-            
-            # Nettoyer le dossier temporaire
-            shutil.rmtree(backup_path)
-            
-            # Nettoyer les vieux backups
-            self._cleanup_old_backups()
-            
-            # Log le backup
-            self._log_backup(timestamp, reason)
-            
-            print(f"✅ Backup créé : {zip_path.name}")
-            return str(zip_path)
-            
-        except Exception as e:
-            print(f"❌ Erreur backup : {e}")
-            if backup_path.exists():
-                shutil.rmtree(backup_path)
-            return None
-    
-    def restore_backup(self, backup_file):
-        """Restaure un backup spécifique"""
-        backup_path = self.backup_dir / backup_file
-        if not backup_path.exists():
-            print(f"❌ Backup introuvable : {backup_file}")
-            return False
-            
-        try:
-            # Créer un backup de sécurité avant restauration
-            self.create_backup("pre_restore")
-            
-            # Extraire le ZIP
-            temp_dir = self.backup_dir / "temp_restore"
-            with zipfile.ZipFile(backup_path, 'r') as zipf:
-                zipf.extractall(temp_dir)
-            
-            # Restaurer les fichiers
-            for file in temp_dir.iterdir():
-                target = self.db_path.parent / file.name
-                shutil.copy2(file, target)
-            
-            # Nettoyer
-            shutil.rmtree(temp_dir)
-            
-            print(f"✅ Backup restauré : {backup_file}")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Erreur restauration : {e}")
-            return False
-    
-    def list_backups(self):
-        """Liste tous les backups disponibles"""
-        backups = []
-        for file in self.backup_dir.glob("backup_*.zip"):
-            stat = file.stat()
-            backups.append({
-                "name": file.name,
-                "size": f"{stat.st_size / 1024 / 1024:.2f} MB",
-                "date": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-            })
-        return sorted(backups, key=lambda x: x["date"], reverse=True)
-    
-    def _cleanup_old_backups(self):
-        """Supprime les backups de plus de 7 jours"""
-        backups = sorted(self.backup_dir.glob("backup_*.zip"), key=lambda x: x.stat().st_mtime)
-        while len(backups) > self.max_backups:
-            oldest = backups.pop(0)
-            oldest.unlink()
-            print(f"🗑️ Ancien backup supprimé : {oldest.name}")
-    
-    def _log_backup(self, timestamp, reason):
-        """Log les backups dans un fichier"""
-        log_file = self.backup_dir / "backup_log.json"
-        log = []
-        if log_file.exists():
-            with open(log_file, 'r') as f:
-                log = json.load(f)
-        
-        log.append({
-            "timestamp": timestamp,
-            "reason": reason,
-            "date": datetime.now().isoformat()
-        })
-        
-        # Garder seulement les 100 derniers logs
-        log = log[-100:]
-        
-        with open(log_file, 'w') as f:
-            json.dump(log, f, indent=2)
+    def __init__(self, db_path: Path = DEFAULT_DB, backup_dir: Path = DEFAULT_DIR, prefix: str = "db"):
+        self.db_path   = Path(db_path)
+        self.backup_dir= Path(backup_dir)
+        self.prefix    = prefix
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
 
-def auto_backup_before_critical(func):
-    """Décorateur pour backup automatique avant opérations critiques"""
-    def wrapper(*args, **kwargs):
-        # Trouver la connexion DB dans les arguments
-        conn = None
-        for arg in args:
-            if hasattr(arg, 'execute'):  # C'est une connexion SQLite
-                conn = arg
-                break
-        
-        if conn:
+    def backup_db(self, tag: Optional[str]=None) -> Optional[Path]:
+        """Copie la DB si elle existe. Retourne le chemin du backup (ou None)."""
+        if not self.db_path.exists():
+            _LOG.debug("no DB file yet: %s", self.db_path)
+            return None
+        ts   = datetime.now().strftime("%Y%m%d_%H%M%S")
+        name = f"{self.prefix}_{ts}{'_'+tag if tag else ''}.db"
+        dest = self.backup_dir / name
+        shutil.copy2(self.db_path, dest)
+        _LOG.debug("backup created: %s", dest)
+        return dest
+
+    def autorotate(self, keep: int = 10) -> None:
+        """Garde seulement les N derniers backups."""
+        files = sorted(self.backup_dir.glob(f"{self.prefix}_*.db"))
+        for f in files[:-keep]:
             try:
-                # Créer un backup avant l'opération
-                db_path = Path(__file__).parent / "guigno_map.db"
-                backup_mgr = BackupManager(db_path)
-                backup_mgr.create_backup(f"auto_{func.__name__}")
-            except:
-                pass  # Ne pas bloquer l'opération si le backup échoue
-        
-        return func(*args, **kwargs)
-    return wrapper
+                f.unlink()
+                _LOG.debug("backup pruned: %s", f)
+            except Exception:
+                pass
+
+    def create_backup(self, tag=None):
+        """Alias pour backup_db() - compatibilité avec l'ancien code."""
+        return self.backup_db(tag=tag)
+
+    def list_backups(self):
+        """Liste tous les backups triés par date décroissante."""
+        pats = f"{self.prefix}_*.db"
+        return sorted(self.backup_dir.glob(pats), key=lambda p: p.stat().st_mtime, reverse=True)
+
+_manager: Optional[BackupManager] = None
+def get_backup_manager() -> BackupManager:
+    global _manager
+    if _manager is None:
+        _manager = BackupManager()
+    return _manager
+
+def auto_backup_before_critical(func: Callable[..., Any] | None = None, *, tag: Optional[str]=None, rotate_keep: int=10):
+    """Décorateur: fait un backup avant d'exécuter la fonction (si DB présente)."""
+    def _decorator(f: Callable[..., Any]):
+        def _wrapped(*args, **kwargs):
+            try:
+                mgr = get_backup_manager()
+                mgr.backup_db(tag=tag)
+                mgr.autorotate(keep=rotate_keep)
+            except Exception:
+                # on ne bloque pas l'opération si le backup échoue
+                _LOG.debug("backup step failed (ignored)", exc_info=True)
+            return f(*args, **kwargs)
+        return _wrapped
+    return _decorator if func is None else _decorator(func)
+
+# --- Wrappers silencieux (délèguent à db.* si dispo, sinon no-op) -------------------
+def _call_db(name: str, *args, **kwargs):
+    """Appelle guignomap.db.<name> si présent; sinon no-op (retourne None)."""
+    try:
+        from guignomap import db  # import tardif pour éviter les cycles
+    except Exception:
+        _LOG.debug("db not importable yet; skipping %s", name)
+        return None
+    fn = getattr(db, name, None)
+    if callable(fn):
+        return fn(*args, **kwargs)
+    _LOG.debug("db.%s not found; skipping", name)
+    return None
+
+@auto_backup_before_critical(tag="auto_import_streets")
+def auto_import_streets(*args, **kwargs):
+    return _call_db("auto_import_streets", *args, **kwargs)
+
+@auto_backup_before_critical(tag="delete_team")
+def delete_team(*args, **kwargs):
+    return _call_db("delete_team", *args, **kwargs)
+
+# Fonctions wrapper supprimées pour éviter la confusion Pylance
+# Les fonctions db ont déjà le décorateur auto_backup_before_critical

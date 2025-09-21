@@ -1,23 +1,46 @@
-# GuignoMap - Script de lancement PowerShell
-# Relais de Mascouche
+﻿# Script de lancement Guigno-Map
+# Assure l'activation du venv et l'installation des dépendances
 
-Write-Host "========================================" -ForegroundColor Green
-Write-Host "       GuignoMap - Relais de Mascouche" -ForegroundColor Green  
-Write-Host "========================================" -ForegroundColor Green
-Write-Host ""
-Write-Host "Activation de l'environnement virtuel..." -ForegroundColor Yellow
-Write-Host ""
+Write-Host " Guigno-Map - Script de lancement" -ForegroundColor Green
+Write-Host "=====================================" -ForegroundColor Yellow
 
-# Change vers le répertoire de l'application
-Set-Location $PSScriptRoot
+# Vérifier si le venv existe
+if (!(Test-Path ".\.venv\Scripts\Activate.ps1")) {
+    Write-Host " Virtual environment non trouvé. Création..." -ForegroundColor Red
+    py -m venv .venv
+    if ($LASTEXITCODE -ne 0) { exit 1 }
+}
 
-# Active l'environnement virtuel
+# Activer le venv
+Write-Host " Activation du virtual environment..." -ForegroundColor Cyan
 & .\.venv\Scripts\Activate.ps1
 
-Write-Host "Lancement de l'application..." -ForegroundColor Yellow
-Write-Host ""
+# Mettre à jour pip
+Write-Host " Mise à jour de pip..." -ForegroundColor Cyan
+python -m pip install --upgrade pip
 
-# Lance Streamlit avec l'application
-& python -m streamlit run guignomap/app.py --server.port 8501 --server.headless true
+# Installer les dépendances si requirements.txt existe
+if (Test-Path ".\requirements.txt") {
+    Write-Host " Installation des dépendances..." -ForegroundColor Cyan
+    pip install -r requirements.txt
+    if ($LASTEXITCODE -ne 0) { 
+        Write-Host " Erreur lors de l'installation des dépendances" -ForegroundColor Red
+        exit 1
+    }
+} else {
+    Write-Host " requirements.txt non trouvé, installation basique..." -ForegroundColor Yellow
+    pip install streamlit pandas folium streamlit-folium
+}
 
-Read-Host "Appuyez sur Entrée pour fermer..."
+# Vérifier que l'app existe
+if (!(Test-Path ".\guignomap\app.py")) {
+    Write-Host " guignomap/app.py non trouvé" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host " Prêt à lancer Guigno-Map !" -ForegroundColor Green
+Write-Host " Lancement sur http://localhost:8502" -ForegroundColor Green
+Write-Host "=====================================" -ForegroundColor Yellow
+
+# Lancer l'application
+python -m streamlit run guignomap/app.py --server.port 8502 --server.headless true
