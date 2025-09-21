@@ -1,0 +1,20 @@
+streamlit>=1.33,<1.40
+pandas>=2.2.0
+folium==0.20.0
+streamlit-folium>=0.21.0
+overpy==0.7
+bcrypt>=4.0.0
+plotly>=5.18.0
+xlsxwriter==3.2.8
+reportlab==4.4.3
+
+# Database - PostgreSQL
+psycopg2-binary
+sqlalchemy==2.0.43
+alembic==1.16.5
+
+# Authentication - Argon2
+passlib[argon2]==1.7.4
+
+# Storage - S3/Cloud
+boto3==1.34.*

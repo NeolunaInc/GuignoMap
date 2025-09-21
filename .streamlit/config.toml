@@ -1,0 +1,24 @@
+[theme]
+# Thème sombre avec les couleurs du Relais
+base = "dark"
+primaryColor = "#A9CF3B"              # Vert du Relais
+backgroundColor = "#0F1318"           # Fond très sombre
+secondaryBackgroundColor = "#1A1F26"  # Fond secondaire
+textColor = "#F2F3F5"                 # Texte clair
+font = "sans serif"
+
+[client]
+# Configuration minimale de la toolbar
+toolbarMode = "minimal"
+showErrorDetails = false
+
+[runner]
+# Optimisations de performance
+magicEnabled = true
+
+[server]
+# Configuration serveur
+headless = true
+runOnSave = true
+maxUploadSize = 10
+enableXsrfProtection = true
