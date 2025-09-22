@@ -1,79 +1,274 @@
-# === Fonctions manquantes pour compatibilité app.py ===========================
-from datetime import datetime
+# --- Top-level robust public API ---------------------------------------------
+def list_streets(conn, team=None):
+    import pandas as pd
+    try:
+        base = """
+            SELECT
+                s.name,
+                COALESCE(c.name, 'Non assigné') AS sector,
+                COALESCE(s.team, '') AS team,
+                COALESCE(s.status, 'a_faire') AS status
+            FROM streets s
+            LEFT JOIN sectors c ON s.sector_id = c.id
+        """
+        if team:
+            q = base + " WHERE s.team = ? ORDER BY s.status, s.name"
+            return pd.read_sql_query(q, conn, params=(team,))
+        else:
+            q = base + " ORDER BY s.team, s.status, s.name"
+            return pd.read_sql_query(q, conn)
+    except Exception:
+        import pandas as pd
+        return pd.DataFrame(columns=["name","sector","team","status"])
 
-def update_street_status(conn, street_name, status, team_id=None):
+def get_unassigned_streets(conn):
+    import pandas as pd
+    try:
+        q = """
+            SELECT s.name, COALESCE(c.name,'Non assigné') AS sector
+            FROM streets s
+            LEFT JOIN sectors c ON s.sector_id = c.id
+            WHERE s.team IS NULL OR s.team = ''
+            ORDER BY sector, s.name
+        """
+        return pd.read_sql_query(q, conn)
+    except Exception:
+        return pd.DataFrame(columns=["name","sector"])
+
+def stats_by_team(conn):
+    import pandas as pd
+    try:
+        q = """
+          SELECT
+            s.team AS team,
+            COUNT(s.id) AS total,
+            SUM(CASE WHEN s.status='terminee' THEN 1 ELSE 0 END) AS done,
+            ROUND((SUM(CASE WHEN s.status='terminee' THEN 1.0 ELSE 0 END) / NULLIF(COUNT(s.id),0)) * 100, 1) AS progress
+          FROM streets s
+          WHERE s.team IS NOT NULL AND s.team <> ''
+          GROUP BY s.team
+          ORDER BY progress DESC
+        """
+        return pd.read_sql_query(q, conn)
+    except Exception:
+        return pd.DataFrame(columns=["team","total","done","progress"])
+
+def recent_activity(conn, limit=10):
+    import pandas as pd
+    try:
+        q = """
+            SELECT datetime(created_at, 'localtime') AS timestamp,
+                   COALESCE(team_id, 'SYSTEM') AS team,
+                   action, details
+            FROM activity_log
+            ORDER BY created_at DESC
+            LIMIT ?
+        """
+        return pd.read_sql_query(q, conn, params=(limit,))
+    except Exception:
+        return pd.DataFrame(columns=["timestamp","team","action","details"])
+# --- Top-level public API: extended_stats -------------------------------------
+def extended_stats(conn):
     """
-    Met à jour ou insère une ligne dans street_status pour la rue donnée.
-    Status ∈ {"a_faire","en_cours","terminee"}.
-    Si absent → INSERT avec statut fourni.
-    Si présent → UPDATE du statut et updated_at.
+    Retourne un dict: {'total': int, 'done': int, 'partial': int}
+    total = nombre de rues dans la table streets
+    done = status = 'terminee'
+    partial = status = 'en_cours'
+    Robustesse : si la table streets n'existe pas encore, retourner des zéros.
     """
-    assert status in {"a_faire", "en_cours", "terminee"}, "Statut invalide"
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM street_status WHERE street_name = ?", (street_name,))
-    row = cur.fetchone()
-    if row is None:
-        cur.execute(
-            "INSERT INTO street_status (street_name, team_id, status, updated_at) VALUES (?, ?, ?, ?)",
-            (street_name, team_id, status, datetime.now().isoformat(timespec="seconds"))
+    try:
+        cur = conn.execute("""
+            SELECT
+              (SELECT COUNT(*) FROM streets) AS total,
+              SUM(CASE WHEN status = 'terminee' THEN 1 ELSE 0 END) AS done,
+              SUM(CASE WHEN status = 'en_cours' THEN 1 ELSE 0 END) AS partial
+            FROM streets
+        """)
+        row = cur.fetchone()
+        total = (row[0] or 0) if row else 0
+        done = (row[1] or 0) if row else 0
+        partial = (row[2] or 0) if row else 0
+        return {"total": int(total), "done": int(done), "partial": int(partial)}
+    except Exception:
+        return {"total": 0, "done": 0, "partial": 0}
+# --- Adapters utilisés par app.py (append-only, safe) -------------------------
+def update_street_status(conn, street_name: str, status: str, team_id: str | None = None) -> bool:
+    """
+    Met à jour le statut d'une rue dans la table streets OU street_status si streets manquante.
+    Idempotent. Retourne True si succès.
+    """
+    try:
+        # chemin principal : table streets si présente
+        try:
+            conn.execute("UPDATE streets SET status = ? WHERE name = ?", (status, street_name))
+            conn.commit()
+            return True
+        except Exception:
+            pass
+        # fallback : table street_status (créée par init_street_status_schema)
+        if 'init_street_status_schema' in globals():
+            init_street_status_schema(conn)
+        if status == "terminee":
+            if 'mark_street_complete' in globals():
+                mark_street_complete(conn, street_name, team_id or "")
+        elif status == "en_cours":
+            if 'mark_street_in_progress' in globals():
+                mark_street_in_progress(conn, street_name, team_id or "", "")
+        else:
+            # 'a_faire' : on force l'upsert avec statut 'a_faire'
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO street_status (street_name, team_id, status)
+                VALUES (?, ?, 'a_faire')
+                ON CONFLICT(street_name) DO UPDATE SET
+                    team_id=COALESCE(excluded.team_id, street_status.team_id),
+                    status='a_faire',
+                    updated_at=CURRENT_TIMESTAMP;
+            """, (street_name, team_id or ""))
+            conn.commit()
+        return True
+    except Exception:
+        return False
+
+def add_street_note(conn, street_name: str, team_id: str, note: str) -> bool:
+    """
+    Ajoute une note horodatée :
+      1) insère une ligne dans `notes` (address_number = NULL),
+      2) appelle save_checkpoint(...) pour alimenter street_status.notes/last_checkpoint.
+    Retourne True si succès, False sinon.
+    """
+    try:
+        # S’assurer que la table `notes` existe (idempotent)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                street_name TEXT NOT NULL,
+                team_id TEXT NOT NULL,
+                address_number TEXT,
+                comment TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # 1) trace structurée dans `notes`
+        conn.execute(
+            "INSERT INTO notes (street_name, team_id, address_number, comment) VALUES (?, ?, NULL, ?)",
+            (street_name, team_id, note)
         )
-    else:
-        cur.execute(
-            "UPDATE street_status SET status = ?, team_id = ?, updated_at = ? WHERE street_name = ?",
-            (status, team_id, datetime.now().isoformat(timespec="seconds"), street_name)
-        )
-    conn.commit()
-    return True
 
-def get_street_notes_for_team(conn, street_name, team_id):
-    """
-    Retourne les notes de la table street_status pour la rue et l’équipe.
-    Retourne [] si aucune note.
-    """
-    cur = conn.cursor()
-    cur.execute("SELECT notes FROM street_status WHERE street_name = ? AND team_id = ?", (street_name, team_id))
-    row = cur.fetchone()
-    if row and row[0]:
-        return row[0].split('\n')
-    return []
+        # 2) checkpoint texte (historique cumulatif)
+        try:
+            save_checkpoint(conn, street_name, team_id, note)
+        except Exception:
+            pass
 
-def add_street_note(conn, street_name, team_id, note):
-    """
-    Ajoute une note à la colonne notes (concaténée avec horodatage ISO).
-    Met aussi last_checkpoint à note. Ne change pas le statut si déjà défini.
-    """
-    cur = conn.cursor()
-    ts = datetime.now().isoformat(timespec="seconds")
-    entry = f"[{ts}] {team_id}: {note}".strip()
-    cur.execute("SELECT notes FROM street_status WHERE street_name = ?", (street_name,))
-    row = cur.fetchone()
-    old_notes = row[0] if row and row[0] else None
-    combined = (old_notes + "\n" + entry) if old_notes else entry
-    cur.execute(
-        "UPDATE street_status SET notes = ?, last_checkpoint = ? WHERE street_name = ?",
-        (combined, note, street_name)
-    )
-    conn.commit()
-    return True
+        conn.commit()
+        return True
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        return False
 
-def get_visited_addresses_for_street(conn, street_name, team_id=None):
+def get_street_notes_for_team(conn, street_name: str, team_id: str):
     """
-    Retourne la liste des adresses (house_number + comment) marquées comme "Visitée" dans la table notes.
-    Si la table notes n’existe plus, retourne [] avec un TODO comment.
+    Retourne une liste de tuples (house_number, comment, created_at)
+    depuis la table 'notes' si elle existe, sinon [].
+    """
+    try:
+        q = """
+            SELECT COALESCE(address_number, '') as house_number,
+                   comment,
+                   created_at
+            FROM notes
+            WHERE street_name = ? AND team_id = ?
+            ORDER BY created_at DESC
+        """
+        import pandas as pd
+        df = pd.read_sql_query(q, conn, params=(street_name, team_id))
+        return [tuple(x) for x in df.to_records(index=False)]
+    except Exception:
+        return []
+
+def get_visited_addresses_for_street(conn, street_name: str, team_id: str | None = None):
+    """
+    Retourne la liste des address_number marquées 'Visitée' dans notes.
+    Si 'team_id' est fourni, filtre par équipe.
     """
     try:
         if team_id:
-            query = "SELECT address_number, comment FROM notes WHERE street_name = ? AND team_id = ? AND comment = 'Visitée'"
-            params = (street_name, team_id)
+            q = "SELECT address_number FROM notes WHERE street_name = ? AND team_id = ? AND comment = 'Visitée'"
+            rows = conn.execute(q, (street_name, team_id)).fetchall()
         else:
-            query = "SELECT address_number, comment FROM notes WHERE street_name = ? AND comment = 'Visitée'"
-            params = (street_name,)
-        cur = conn.cursor()
-        cur.execute(query, params)
-        return [(row[0], row[1]) for row in cur.fetchall()]
+            q = "SELECT address_number FROM notes WHERE street_name = ? AND comment = 'Visitée'"
+            rows = conn.execute(q, (street_name,)).fetchall()
+        return [r[0] for r in rows if r and r[0]]
     except Exception:
-        # TODO: Table notes absente, retourner []
         return []
+# --- fin adapters --------------------------------------------------------------
+# === Initialisation complète de la base =======================================
+def init_db(conn):
+    """
+    Initialise le schéma complet de la base (toutes tables nécessaires à l’application).
+    Idempotent, safe à rappeler plusieurs fois.
+    """
+    # Table street_status (API bénévole)
+    init_street_status_schema(conn)
+
+    # ensure one statement per execute
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS sectors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS streets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, sector_id INTEGER, team TEXT,
+            status TEXT NOT NULL DEFAULT 'a_faire' CHECK (status IN ('a_faire', 'en_cours', 'terminee')),
+            FOREIGN KEY (sector_id) REFERENCES sectors(id)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS teams (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL, password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, active BOOLEAN DEFAULT 1
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, street_name TEXT NOT NULL, team_id TEXT NOT NULL,
+            address_number TEXT, comment TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (street_name) REFERENCES streets(name), FOREIGN KEY (team_id) REFERENCES teams(id)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS activity_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, team_id TEXT, action TEXT NOT NULL, details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS addresses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, street_name TEXT NOT NULL, house_number TEXT NOT NULL,
+            code_postal TEXT, latitude REAL, longitude REAL, osm_type TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (street_name) REFERENCES streets(name)
+        )
+    """)
+
+    # Index principaux
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_streets_team ON streets(team);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_streets_status ON streets(status);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_notes_street ON notes(street_name);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at DESC);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_addresses_street ON addresses(street_name);")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_addresses_number ON addresses(house_number);")
+
+    conn.commit()
+# === end init_db ==============================================================
+# === Fonctions manquantes pour compatibilité app.py ===========================
+from datetime import datetime
+
 # === end fonctions manquantes =================================================
 # === basic DB connection helper ================================================
 import sqlite3

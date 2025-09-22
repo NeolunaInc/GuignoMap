@@ -1,3 +1,97 @@
+import sqlite3
+import streamlit as st
+from guignomap.db import (
+    init_street_status_schema,
+    get_team_streets_status,
+    mark_street_in_progress,
+    mark_street_complete,
+    save_checkpoint,
+)
+
+def _get_conn():
+    return sqlite3.connect("guignomap/guigno_map.db", check_same_thread=False)
+
+def page_benevole_simple(team_id: str) -> None:
+    st.title(f"Équipe {team_id}")
+    try:
+        conn = _get_conn()
+        init_street_status_schema(conn)
+        rows = get_team_streets_status(conn, team_id)
+    except Exception as e:
+        st.error(f"Erreur DB: {e}")
+        return
+
+    if not rows:
+        st.info(f"Aucune rue assignée pour {team_id}.")
+        return
+
+    st.markdown(
+        """
+        <style>
+        .gm-btn { padding: 16px 12px; font-size: 20px; }
+        .gm-badge { padding: 4px 8px; border-radius: 8px; font-weight: 600; }
+        .gm-green { background:#e7f8ec; color:#177245; }
+        .gm-yellow{ background:#fff7da; color:#8a6d00; }
+        .gm-red   { background:#ffe5e5; color:#b10000; }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    for r in rows:
+        street = r["street_name"]
+        status = r["status"] or "a_faire"
+        badge_cls = "gm-red" if status=="a_faire" else ("gm-yellow" if status=="en_cours" else "gm-green")
+
+        col1, col2 = st.columns([2,1])
+        with col1:
+            st.subheader(street)
+            st.markdown(f'<span class="gm-badge {badge_cls}">{status}</span>', unsafe_allow_html=True)
+        with col2:
+            if st.button("En cours", key=f"start-{street}", use_container_width=True):
+                try:
+                    conn = _get_conn()
+                    mark_street_in_progress(conn, street, team_id, "")
+                    st.success(f"{street} → en cours")
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Erreur: {e}")
+
+            if st.button("Terminée", key=f"done-{street}", use_container_width=True):
+                try:
+                    conn = _get_conn()
+                    mark_street_complete(conn, street, team_id)
+                    st.success(f"{street} → terminée")
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Erreur: {e}")
+
+        note = st.text_area("Note", key=f"note-{street}", height=80, placeholder="Observations…")
+        if st.button("Enregistrer la note", key=f"save-{street}", use_container_width=True):
+            if note.strip():
+                try:
+                    conn = _get_conn()
+                    save_checkpoint(conn, street, team_id, note.strip())
+                    st.success("Note enregistrée")
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Erreur: {e}")
+            else:
+                st.warning("Note vide.")
+        st.divider()
+
+# --- Sidebar rôle bénévole (append-only, non destructif) ---
+SHOW_ROLE_SELECT = False
+if SHOW_ROLE_SELECT:
+    role = st.sidebar.selectbox("Rôle", ["gestionnaire", "benevole"], index=0)
+    if role == "benevole":
+        team_id = st.sidebar.text_input("ID équipe", value=st.session_state.get("team_id", ""))
+        if st.sidebar.button("Entrer") and team_id.strip():
+            st.session_state["team_id"] = team_id.strip()
+        team_id = st.session_state.get("team_id")
+        if team_id:
+            page_benevole_simple(team_id)
+            st.stop()  # ne pas exécuter la suite de la page
 """GuignoMap — fichier réparé (UTF-8).
 Ce bloc contenait du texte libre/©/accents, il est désormais dans une docstring.
 """
@@ -47,10 +141,36 @@ import PIL.Image
 # Augmenter la limite d'images PIL pour éviter DecompressionBombError
 PIL.Image.MAX_IMAGE_PIXELS = 500000000
 
+
 # Import des modules locaux
 from guignomap import db
 from guignomap.validators import validate_and_clean_input
-from guignomap.osm import build_geometry_cache, load_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
+
+OSM_AVAILABLE = False
+try:
+    from guignomap.osm import (
+        build_geometry_cache,
+        load_geometry_cache,
+        build_addresses_cache,
+        load_addresses_cache,
+        CACHE_FILE,
+    )
+    OSM_AVAILABLE = True
+except Exception:
+    # Module OSM absent après cleanup : carte désactivée
+    pass
+
+# --- Fallback si OSM indisponible (post-cleanup) ---
+if not OSM_AVAILABLE:
+    CACHE_FILE = None
+    def load_geometry_cache(): 
+        return {}
+    def build_geometry_cache():
+        return None
+    def build_addresses_cache():
+        return None
+    def load_addresses_cache():
+        return {}
 
 # Configuration des chemins
 DB_PATH = Path(__file__).parent / "guigno_map.db"
@@ -159,7 +279,11 @@ def render_header():
     
     with col3:
         # Stats en temps réel
-        stats = db.extended_stats(st.session_state.get('conn'))
+        stats_fn = getattr(db, "extended_stats", None)
+        if callable(stats_fn):
+            stats = stats_fn(st.session_state.get('conn'))
+        else:
+            stats = {"total": 0, "done": 0, "partial": 0}
         progress = (stats['done'] / stats['total'] * 100) if stats['total'] > 0 else 0
         
         st.markdown(f"""
@@ -615,17 +739,27 @@ def create_map(df, geo):
     return m
 
 
+
 # ============================================
 # UTILITAIRES EXPORT
 # ============================================
 
+REPORTS_AVAILABLE = False
+try:
+    from guignomap.reports import ReportGenerator
+    REPORTS_AVAILABLE = True
+except Exception:
+    # Exports désactivés si module absent
+    class ReportGenerator:
+        def __init__(self, *a, **k):
+            raise RuntimeError("Reports module not available (cleanup).")
+
 def export_excel_professionnel(conn):
     """Export Excel avec mise en forme professionnelle"""
-    try:
-        from reports import ReportGenerator
+    if REPORTS_AVAILABLE:
         generator = ReportGenerator(conn)
         return generator.generate_excel()
-    except ImportError:
+    else:
         # Fallback si les dépendances ne sont pas installées
         return db.export_to_csv(conn)
 
@@ -958,7 +1092,9 @@ def page_accueil_v2(conn, geo):
     
     # Carte festive
     st.markdown("### ️ Vue d'ensemble de Mascouche")
-    df_all = db.list_streets(conn)
+    import pandas as pd
+    list_fn = getattr(db, "list_streets", None)
+    df_all = list_fn(conn) if callable(list_fn) else pd.DataFrame(columns=["name","sector","team","status"])
     if not df_all.empty:
         m = create_map(df_all, geo)
         st_folium(m, height=750, width=None, returned_objects=[])
@@ -1142,17 +1278,27 @@ def page_benevole(conn, geo):
                     for _, n in notes.iterrows():
                         st.markdown(f" **{n['address_number']}** : {n['comment']}")
     
-    with tab3:
-        st.markdown("###  Votre historique")
-        try:
-            notes = db.get_team_notes(conn, team_id)
-            if not notes.empty:
-                st.dataframe(notes, width="stretch")
-            else:
-                st.info("Aucune note encore")
-        except:
-            st.info("Historique non disponible")
-
+    with col3:
+        # Export PDF professionnel
+        if REPORTS_AVAILABLE:
+            try:
+                generator = ReportGenerator(conn)
+                if hasattr(generator, "generate_pdf"):
+                    pdf_data = generator.generate_pdf()
+                    st.download_button(
+                        " Export PDF Pro",
+                        pdf_data,
+                        "guignolee_2025_rapport.pdf",
+                        "application/pdf",
+                        width="stretch"
+                    )
+                else:
+                    st.button(" PDF (Fonction manquante)", disabled=True, width="stretch")
+            except Exception as e:
+                st.button(" PDF (Erreur)", disabled=True, width="stretch")
+                st.caption(f"Erreur: {e}")
+        else:
+            st.button(" PDF (Module reports manquant)", disabled=True, width="stretch")
 def page_benevole_v2(conn, geo):
     """Interface bénévole moderne v4.1 avec vue 'Mes rues'"""
     
@@ -1391,6 +1537,12 @@ def page_gestionnaire_v2(conn, geo):
                 else:
                     st.error("PIN invalide.")
             st.stop()
+
+
+        # --- Opérations techniques OSM ---
+        if not OSM_AVAILABLE:
+            st.info("Fonctions OSM désactivées (cleanup).")
+            return
 
         st.info("️ Ces actions sont lourdes et n'affectent pas les statuts/notes. Elles régénèrent les caches OSM.")
 
@@ -1730,41 +1882,41 @@ def page_export_gestionnaire_v41(conn):
     
     with col2:
         # Export Excel professionnel
-        try:
-            from reports import ReportGenerator
-            generator = ReportGenerator(conn)
-            excel_data = generator.generate_excel()
-            st.download_button(
-                " Export Excel Pro",
-                excel_data,
-                "guignolee_2025_rapport.xlsx",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                width="stretch"
-            )
-        except ImportError:
-            st.button(" Excel (Installer xlsxwriter)", disabled=True, width="stretch")
-        except Exception as e:
-            st.button(" Excel (Erreur)", disabled=True, width="stretch")
-            st.caption(f"Erreur: {e}")
-    
+        if REPORTS_AVAILABLE:
+            try:
+                generator = ReportGenerator(conn)
+                excel_data = generator.generate_excel()
+                st.download_button(
+                    " Export Excel Pro",
+                    excel_data,
+                    "guignolee_2025_rapport.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    width="stretch"
+                )
+            except Exception as e:
+                st.button(" Excel (Erreur)", disabled=True, width="stretch")
+                st.caption(f"Erreur: {e}")
+        else:
+            st.button(" Excel (Module reports manquant)", disabled=True, width="stretch")
+
     with col3:
         # Export PDF professionnel
-        try:
-            from reports import ReportGenerator
-            generator = ReportGenerator(conn)
-            pdf_data = generator.generate_pdf()
-            st.download_button(
-                " Export PDF Pro",
-                pdf_data,
-                "guignolee_2025_rapport.pdf",
-                "application/pdf",
-                width="stretch"
-            )
-        except ImportError:
-            st.button(" PDF (Installer reportlab)", disabled=True, width="stretch")
-        except Exception as e:
-            st.button(" PDF (Erreur)", disabled=True, width="stretch")
-            st.caption(f"Erreur: {e}")
+        if REPORTS_AVAILABLE:
+            try:
+                generator = ReportGenerator(conn)
+                pdf_data = generator.generate_pdf()
+                st.download_button(
+                    " Export PDF Pro",
+                    pdf_data,
+                    "guignolee_2025_rapport.pdf",
+                    "application/pdf",
+                    width="stretch"
+                )
+            except ImportError:
+                st.button(" PDF (Installer reportlab)", disabled=True, width="stretch")
+            except Exception as e:
+                import streamlit as st
+                st.error(f"Erreur: {e}")
     
     # Export CSV assignations (nouveau v4.1)
     st.markdown("---")
@@ -1789,6 +1941,7 @@ def page_export_gestionnaire_v41(conn):
             else:
                 st.button(" Assignations (Aucune donnée)", disabled=True, width="stretch")
         except Exception as e:
+            import streamlit as st
             st.button(" Assignations (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
     
@@ -1803,6 +1956,7 @@ def page_export_gestionnaire_v41(conn):
                 width="stretch"
             )
         except Exception as e:
+            import streamlit as st
             st.button(" Notes (Erreur)", disabled=True, width="stretch")
             st.caption(f"Erreur: {e}")
 
@@ -1897,13 +2051,11 @@ def page_benevole_mes_rues(conn):
                         width="stretch"
                     ):
                         if db.update_street_status(conn, street_name, 'en_cours', team_id):
-                            st.toast(f" {street_name} marquée en cours", icon="")
+                            st.toast(f" {street_name} en cours!", icon="")
                             st.rerun()
                         else:
                             st.error("Erreur lors de la mise à jour")
-                
-                with col3:
-                    # Bouton "Terminée"
+
                     if st.button(
                         " Terminée", 
                         key=f"done_{street_name}",
@@ -1970,13 +2122,16 @@ def main():
     st.session_state['conn'] = conn
     
     # Cache géométrique
-    @st.cache_data(ttl=None)
-    def get_geo(_sig):
-        data = load_geometry_cache()
-        return data if data else {}
-    
-    sig = int(CACHE_FILE.stat().st_mtime_ns) if CACHE_FILE.exists() else 0
-    geo = get_geo(sig)
+
+    # --- Initialisation conditionnelle de geo selon OSM_AVAILABLE ---
+    if OSM_AVAILABLE and CACHE_FILE:
+        @st.cache_data(ttl=None)
+        def get_geo(_sig):
+            return load_geometry_cache() or {}
+        sig = int(CACHE_FILE.stat().st_mtime_ns) if CACHE_FILE.exists() else 0
+        geo = get_geo(sig)
+    else:
+        geo = {}
     
     # Header festif
     render_header()
@@ -2085,5 +2240,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
