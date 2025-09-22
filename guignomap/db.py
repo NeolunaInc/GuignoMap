@@ -1,12 +1,24 @@
 def get_addresses_for_street(conn, street_name):
     """Récupère toutes les adresses d'une rue."""
-    try:
-        query = "SELECT house_number FROM addresses WHERE street_name = ?"
-        df = pd.read_sql_query(query, conn, params=(street_name,))
-        return df
-    except Exception as e:
-        print(f"Erreur get_addresses_for_street: {e}")
-        return pd.DataFrame()
+    query = "SELECT house_number FROM addresses WHERE street_name = ?"
+    df = pd.read_sql_query(query, conn, params=(street_name,))
+    return df
+    # except Exception as e:
+    #     print(f"Erreur get_addresses_for_street: {e}")
+    #     return pd.DataFrame()
+
+    # ...existing code...
+import sqlite3
+import pandas as pd
+import hashlib
+import bcrypt
+from datetime import datetime
+from pathlib import Path
+import os
+from typing import Any
+from guignomap.backup import auto_backup_before_critical, BackupManager
+from guignomap.validators import validate_and_clean_input
+
 def mark_address_visited(conn, street_name, house_number, team_id, note="Visitée"):
     """Ajoute une note pour marquer une adresse comme visitée."""
     try:
@@ -22,17 +34,8 @@ def mark_address_visited(conn, street_name, house_number, team_id, note="Visité
             )
             conn.commit()
         return True
-    import sqlite3
-    import pandas as pd
-    import hashlib
-    import bcrypt
-    from datetime import datetime
-    from pathlib import Path
-    import os
-    from typing import Any
-
-    from .backup import auto_backup_before_critical, BackupManager
-    from .validators import validate_and_clean_input
+    except Exception:
+        pass
 
     # --- Schéma de la base de données ---
     SCHEMA = """
@@ -244,4 +247,110 @@ def mark_address_visited(conn, street_name, house_number, team_id, note="Visité
 
     def import_addresses_from_cache(conn, cache):
         # Cette fonction est probablement obsolète mais conservée pour référence
-        return 0
+        return 0# === street_status API (append-only, safe) =====================================
+from datetime import datetime
+import sqlite3
+def init_street_status_schema(conn: sqlite3.Connection) -> None:
+    """
+    Crée la table de suivi si absente + index sur team_id.
+    Idempotent, safe à appeler plusieurs fois.
+    """
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS street_status (
+            id INTEGER PRIMARY KEY,
+            street_name TEXT UNIQUE,
+            team_id TEXT,
+            status TEXT DEFAULT 'a_faire',       -- 'a_faire' | 'en_cours' | 'terminee'
+            last_checkpoint TEXT,
+            notes TEXT,
+            completed_at TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_street_status_team ON street_status(team_id);")
+    conn.commit()
+def mark_street_complete(conn: sqlite3.Connection, street_name: str, team_id: str) -> None:
+    """
+    Marque une rue comme terminée, enregistrement/upsert par street_name.
+    """
+    init_street_status_schema(conn)
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO street_status (street_name, team_id, status, completed_at)
+        VALUES (?, ?, 'terminee', CURRENT_TIMESTAMP)
+        ON CONFLICT(street_name) DO UPDATE SET
+            team_id=excluded.team_id,
+            status='terminee',
+            completed_at=CURRENT_TIMESTAMP,
+            updated_at=CURRENT_TIMESTAMP;
+    """, (street_name, team_id))
+    conn.commit()
+def mark_street_in_progress(conn: sqlite3.Connection, street_name: str, team_id: str, checkpoint_note: str = "") -> None:
+    """
+    Marque une rue comme en cours. Si checkpoint_note est fourni, met à jour last_checkpoint.
+    """
+    init_street_status_schema(conn)
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO street_status (street_name, team_id, status, last_checkpoint)
+        VALUES (?, ?, 'en_cours', ?)
+        ON CONFLICT(street_name) DO UPDATE SET
+            team_id=excluded.team_id,
+            status='en_cours',
+            last_checkpoint=CASE
+                WHEN ? IS NOT NULL AND ? <> '' THEN ?
+                ELSE street_status.last_checkpoint
+            END,
+            updated_at=CURRENT_TIMESTAMP;
+    """, (street_name, team_id, checkpoint_note, checkpoint_note, checkpoint_note, checkpoint_note))
+    conn.commit()
+def save_checkpoint(conn: sqlite3.Connection, street_name: str, team_id: str, note: str) -> None:
+    """
+    Ajoute une note horodatée au champ notes, et met à jour last_checkpoint.
+    Conserve le status courant s'il existe, sinon le force à 'en_cours'.
+    """
+    init_street_status_schema(conn)
+    cur = conn.cursor()
+    cur.execute("SELECT notes FROM street_status WHERE street_name = ?;", (street_name,))
+    row = cur.fetchone()
+    old_notes = row[0] if row and row[0] else None
+    ts = datetime.now().isoformat(timespec="seconds")
+    entry = f"[{ts}] {team_id}: {note}".strip()
+    combined = (old_notes + "\n" + entry) if old_notes else entry
+    cur.execute("""
+        INSERT INTO street_status (street_name, team_id, status, last_checkpoint, notes)
+        VALUES (?, ?, COALESCE((SELECT status FROM street_status WHERE street_name=?), 'en_cours'), ?, ?)
+        ON CONFLICT(street_name) DO UPDATE SET
+            team_id=excluded.team_id,
+            notes=?,
+            last_checkpoint=?,
+            updated_at=CURRENT_TIMESTAMP;
+    """, (street_name, team_id, street_name, note, combined, combined, note))
+    conn.commit()
+def get_team_streets_status(conn: sqlite3.Connection, team_id: str) -> list[dict]:
+    """
+    Retourne la vue d'équipe : [{street_name, team_id, status, last_checkpoint, notes, completed_at, updated_at}]
+    Triée par nom de rue pour stabilité.
+    """
+    init_street_status_schema(conn)
+    cur = conn.cursor()
+    rows = cur.execute("""
+        SELECT street_name, team_id, status, last_checkpoint, notes, completed_at, updated_at
+        FROM street_status
+        WHERE team_id = ?
+        ORDER BY street_name ASC;
+    """, (team_id,)).fetchall()
+    result = []
+    for r in rows:
+        result.append({
+            "street_name": r[0],
+            "team_id": r[1],
+            "status": r[2],
+            "last_checkpoint": r[3],
+            "notes": r[4],
+            "completed_at": r[5],
+            "updated_at": r[6],
+        })
+    return result
+# === end street_status API =====================================================
