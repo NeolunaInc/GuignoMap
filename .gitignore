@@ -7,3 +7,12 @@ Thumbs.db
 # Backups et exports volumineux
 GuignoMap_Backup_*.zip
 export_for_audit.txt
+
+# Dossiers et fichiers sensibles
+backups/
+exports/
+*.db
+.streamlit/secrets.toml
+*.zip
+Documents/GuignoMap_Backups/
+**/GuignoMap_Backups/
