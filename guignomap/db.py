@@ -1,3 +1,92 @@
+# === Fonctions manquantes pour compatibilité app.py ===========================
+from datetime import datetime
+
+def update_street_status(conn, street_name, status, team_id=None):
+    """
+    Met à jour ou insère une ligne dans street_status pour la rue donnée.
+    Status ∈ {"a_faire","en_cours","terminee"}.
+    Si absent → INSERT avec statut fourni.
+    Si présent → UPDATE du statut et updated_at.
+    """
+    assert status in {"a_faire", "en_cours", "terminee"}, "Statut invalide"
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM street_status WHERE street_name = ?", (street_name,))
+    row = cur.fetchone()
+    if row is None:
+        cur.execute(
+            "INSERT INTO street_status (street_name, team_id, status, updated_at) VALUES (?, ?, ?, ?)",
+            (street_name, team_id, status, datetime.now().isoformat(timespec="seconds"))
+        )
+    else:
+        cur.execute(
+            "UPDATE street_status SET status = ?, team_id = ?, updated_at = ? WHERE street_name = ?",
+            (status, team_id, datetime.now().isoformat(timespec="seconds"), street_name)
+        )
+    conn.commit()
+    return True
+
+def get_street_notes_for_team(conn, street_name, team_id):
+    """
+    Retourne les notes de la table street_status pour la rue et l’équipe.
+    Retourne [] si aucune note.
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT notes FROM street_status WHERE street_name = ? AND team_id = ?", (street_name, team_id))
+    row = cur.fetchone()
+    if row and row[0]:
+        return row[0].split('\n')
+    return []
+
+def add_street_note(conn, street_name, team_id, note):
+    """
+    Ajoute une note à la colonne notes (concaténée avec horodatage ISO).
+    Met aussi last_checkpoint à note. Ne change pas le statut si déjà défini.
+    """
+    cur = conn.cursor()
+    ts = datetime.now().isoformat(timespec="seconds")
+    entry = f"[{ts}] {team_id}: {note}".strip()
+    cur.execute("SELECT notes FROM street_status WHERE street_name = ?", (street_name,))
+    row = cur.fetchone()
+    old_notes = row[0] if row and row[0] else None
+    combined = (old_notes + "\n" + entry) if old_notes else entry
+    cur.execute(
+        "UPDATE street_status SET notes = ?, last_checkpoint = ? WHERE street_name = ?",
+        (combined, note, street_name)
+    )
+    conn.commit()
+    return True
+
+def get_visited_addresses_for_street(conn, street_name, team_id=None):
+    """
+    Retourne la liste des adresses (house_number + comment) marquées comme "Visitée" dans la table notes.
+    Si la table notes n’existe plus, retourne [] avec un TODO comment.
+    """
+    try:
+        if team_id:
+            query = "SELECT address_number, comment FROM notes WHERE street_name = ? AND team_id = ? AND comment = 'Visitée'"
+            params = (street_name, team_id)
+        else:
+            query = "SELECT address_number, comment FROM notes WHERE street_name = ? AND comment = 'Visitée'"
+            params = (street_name,)
+        cur = conn.cursor()
+        cur.execute(query, params)
+        return [(row[0], row[1]) for row in cur.fetchall()]
+    except Exception:
+        # TODO: Table notes absente, retourner []
+        return []
+# === end fonctions manquantes =================================================
+# === basic DB connection helper ================================================
+import sqlite3
+from pathlib import Path
+
+DB_PATH_DEFAULT = Path(__file__).parent / "guigno_map.db"
+
+def get_conn(db_path: str | Path = DB_PATH_DEFAULT) -> sqlite3.Connection:
+    """Retourne une connexion SQLite vers la base guigno_map.db."""
+    conn = sqlite3.connect(str(db_path))
+    conn.row_factory = sqlite3.Row
+    return conn
+# === end helper ===============================================================
 def get_addresses_for_street(conn, street_name):
     """Récupère toutes les adresses d'une rue."""
     query = "SELECT house_number FROM addresses WHERE street_name = ?"
@@ -7,7 +96,6 @@ def get_addresses_for_street(conn, street_name):
     #     print(f"Erreur get_addresses_for_street: {e}")
     #     return pd.DataFrame()
 
-    # ...existing code...
 import sqlite3
 import pandas as pd
 import hashlib
