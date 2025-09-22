@@ -13,3 +13,6 @@ backups/
 exports/
 *.db
 .streamlit/secrets.toml
+*.zip
+Documents/GuignoMap_Backups/
+**/GuignoMap_Backups/
