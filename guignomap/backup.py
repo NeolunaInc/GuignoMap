@@ -78,7 +78,7 @@ def auto_backup_before_critical(func: Callable[..., Any] | None = None, *, tag: 
 
 # --- Wrappers silencieux (délèguent à db.* si dispo, sinon no-op) -------------------
 def _call_db(name: str, *args, **kwargs):
-    """Appelle guignomap.db.<name> si présent; sinon no-op (retourne None)."""
+    """Appelle guigno_map.db.<name> si présent; sinon no-op (retourne None)."""
     try:
         from guignomap import db  # import tardif pour éviter les cycles
     except Exception:

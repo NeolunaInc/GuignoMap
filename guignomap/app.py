@@ -1220,11 +1220,12 @@ def page_gestionnaire_v2(conn, geo):
     
     # Tabs
     tabs = st.tabs([
-        " Vue d'ensemble",
-        " quipes",
-        "️ Assignation",
-        " Export",
-        " Tech"
+        "📊 Vue d'ensemble",
+        "🗺️ Secteurs",
+        "👥 Équipes",
+        "✏️ Assignation",
+        "📤 Export",
+        "⚙️ Tech"
     ])
     
     with tabs[0]:
@@ -1246,19 +1247,56 @@ def page_gestionnaire_v2(conn, geo):
         except:
             st.info("Historique d'activité non disponible")
     
-    with tabs[1]:
-        # Gestion des équipes
-        st.subheader(" Gestion des équipes", anchor=False)
-        
-        # === Formulaire de création d'équipe (robuste) ===
-        with st.expander(" Créer une nouvelle équipe", expanded=False):
-            with st.form("create_team_form", clear_on_submit=True):
-                team_id_in = st.text_input(
-                    "Identifiant d'équipe", 
-                    key="new_team_id", 
-                    placeholder="Ex: EQUIPE1",
-                    help="Lettres et chiffres uniquement, max 20 caractères"
-                )
+    with tabs[1]: # Onglet "Secteurs"
+        st.subheader("🗺️ Gestion des Secteurs")
+
+        # --- Section de création de secteur ---
+        with st.expander("➕ Créer un nouveau secteur"):
+            with st.form("create_sector_form", clear_on_submit=True):
+                sector_name = st.text_input("Nom du nouveau secteur", placeholder="Ex: Domaine des Fleurs")
+                submitted = st.form_submit_button("Créer le secteur")
+                if submitted and sector_name:
+                    success, message = db.create_sector(conn, sector_name)
+                    if success:
+                        st.success(message)
+                    else:
+                        st.error(message)
+
+        # --- Section d'assignation des rues ---
+        st.markdown("---")
+        st.subheader("Assigner des rues à un secteur")
+
+        # Récupérer les rues non assignées et les secteurs existants
+        unassigned_streets_df = db.get_unassigned_streets_by_sector(conn) # Note: cette fonction doit être créée
+        sectors_df = db.get_all_sectors(conn)
+
+        if unassigned_streets_df.empty:
+            st.info("Toutes les rues sont déjà assignées à un secteur.")
+        elif sectors_df.empty:
+            st.warning("Veuillez d'abord créer au moins un secteur.")
+        else:
+            with st.form("assign_streets_to_sector_form"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    selected_sector_id = st.selectbox(
+                        "Choisir un secteur",
+                        options=sectors_df.to_records(index=False),
+                        format_func=lambda x: x[1] # Affiche le nom du secteur
+                    )[0] # Récupère l'ID
+
+                with col2:
+                    streets_to_assign = st.multiselect(
+                        "Choisir des rues à assigner",
+                        options=unassigned_streets_df['name'].tolist()
+                    )
+
+                assign_button = st.form_submit_button("Assigner les rues sélectionnées")
+
+                if assign_button and selected_sector_id and streets_to_assign:
+                    assigned_count = db.assign_streets_to_sector(conn, streets_to_assign, selected_sector_id)
+                    st.success(f"{assigned_count} rue(s) assignée(s) au secteur.")
+                    st.rerun()
                 team_name_in = st.text_input(
                     "Nom d'équipe", 
                     key="new_team_name", 
@@ -1769,36 +1807,60 @@ def page_export_gestionnaire_v41(conn):
             st.caption(f"Erreur: {e}")
 
 def page_benevole_mes_rues(conn):
-    """Vue 'Mes rues' pour bénévoles v4.1"""
-    
-    # Récupérer l'équipe du bénévole connecté
-    if not st.session_state.auth or st.session_state.auth.get("role") != "volunteer":
-        st.warning("Accès réservé aux bénévoles connectés")
+    """Vue 'Mes rues' pour bénévoles avec checklist des adresses v5.0."""
+    if not st.session_state.get('auth') or st.session_state.auth.get("role") != "volunteer":
+        st.warning("Accès réservé aux bénévoles connectés.")
         return
     
-    team_id = st.session_state.auth.get("team")
+    team_id = st.session_state.auth.get("team_id")
     if not team_id:
-        st.error("quipe non identifiée")
+        st.error("Équipe non identifiée.")
         return
-    
-    st.markdown(f"### ️ Mes rues assignées - quipe {team_id}")
-    
+
+    st.markdown(f"### 🗺️ Mes rues assignées - Équipe {team_id}")
+
     try:
-        # Récupérer les rues de l'équipe
-        team_streets = db.get_team_streets(conn, team_id)
+        team_streets = db.list_streets(conn, team=team_id)
         
         if team_streets.empty:
-            st.info("Aucune rue assignée à votre équipe pour le moment.")
+            st.info("Aucune rue n'est assignée à votre équipe pour le moment.")
             return
-        
-        # Afficher les statistiques de l'équipe
-        total_streets = len(team_streets)
-        done_streets = len(team_streets[team_streets['status'] == 'terminee'])
-        in_progress = len(team_streets[team_streets['status'] == 'en_cours'])
-        
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total rues", total_streets)
+
+        for _, street_row in team_streets.iterrows():
+            street_name = street_row['name']
+            
+            # Récupérer toutes les adresses de cette rue depuis la DB
+            addresses_df = db.get_addresses_for_street(conn, street_name)
+            # Récupérer les adresses déjà visitées
+            visited_addresses = db.get_visited_addresses_for_street(conn, street_name, team_id)
+
+            expander_title = f"📍 {street_name} ({len(visited_addresses)} / {len(addresses_df)} adresses visitées)"
+            
+            with st.expander(expander_title):
+                if addresses_df.empty:
+                    st.text("Aucune adresse civique trouvée pour cette rue.")
+                    continue
+
+                # Affichage en grille pour être compact
+                cols = st.columns(4)
+                
+                # Trier les numéros civiques (gère les numéros comme '123' et '123A')
+                sorted_addresses = sorted(addresses_df['house_number'].tolist(), key=lambda x: (int(str(x).rstrip('ABCD')), str(x)[-1]) if str(x)[-1].isalpha() else (int(str(x)), ''))
+
+                for idx, house_number in enumerate(sorted_addresses):
+                    col = cols[idx % 4]
+                    is_visited = str(house_number) in visited_addresses
+                    
+                    # La clé unique est cruciale pour que Streamlit gère chaque checkbox individuellement
+                    key = f"{team_id}_{street_name}_{house_number}"
+                    
+                    if col.checkbox(f"#{house_number}", value=is_visited, key=key):
+                        # Si la case est cochée et qu'elle ne l'était pas avant, on marque comme visitée
+                        if not is_visited:
+                            db.mark_address_visited(conn, street_name, str(house_number), team_id)
+                            st.rerun() # Rafraîchit l'interface pour mettre à jour les comptes
+    except Exception as e:
+        st.error(f"Une erreur est survenue lors du chargement de vos rues : {e}")
         with col2:
             st.metric("Terminées", done_streets)
         with col3:

@@ -133,6 +133,46 @@ GuignoMap est une application web complète développée avec Streamlit pour gé
 
 ## ✨ Fonctionnalités principales
 
+## 🆕 Nouveautés et scripts 2025
+
+### Fonctionnalités ajoutées
+- **Gestion avancée des adresses bénévoles** :
+   - Checklist interactive pour marquer chaque adresse comme visitée/non visitée
+   - Suivi individuel et par équipe, progression affichée en temps réel
+   - Ajout de notes par adresse (interface et base de données)
+   - Statistiques de visite par rue et par bénévole
+- **Refonte de la base de données** :
+   - Utilisation de `sector_id` comme clé étrangère pour toutes les assignations
+   - Tables normalisées pour rues, secteurs, équipes, notes, adresses
+   - Fonctions robustes pour bulk assignation, export, et gestion des visites
+- **Scripts de géocodage** :
+   - `geocode_offline.py` : Jointure automatique des adresses avec un fichier CSV/XLSX pour enrichir les codes postaux sans connexion internet
+   - `geocode_online.py` : Recherche des codes postaux manquants via l'API Nominatim (OpenStreetMap)
+   - Export des résultats enrichis pour audit et reporting
+- **Automatisation et audit** :
+   - Export complet des données pour audit (`export_for_audit.txt`)
+   - Sauvegarde ZIP automatisée avant toute opération critique
+- **Correction et nettoyage du code** :
+   - Suppression des doublons, gestion d'exceptions améliorée
+   - Alignement complet du code avec le schéma de la base
+   - Linting et validation continue
+
+### Nouveaux fichiers et modules
+- `guignomap/db.py` : Version entièrement refondue, toutes fonctions de gestion des équipes, rues, notes, visites, exports
+- `guignomap/import_civic.py` : Import des adresses avec sector_id
+- `guignomap/app.py` : Interface Streamlit, checklist bénévole, stats, notes
+- `geocode_offline.py` : Script de géocodage offline
+- `geocode_online.py` : Script de géocodage online
+- `export_for_audit.txt` : Export complet pour audit
+
+### Points techniques clés
+- Python 3.13.6, Streamlit 1.49.1, Pandas, SQLite, bcrypt, Folium, Plotly
+- Architecture modulaire, séparation logique/métier/interface
+- Sécurité renforcée (bcrypt, validation stricte, backup auto)
+- Documentation et code commenté en français
+
+---
+
 ### 👔 Interface Gestionnaire/Superviseur
 - **Assignations par secteur** : Sélection secteur + équipe et assignation en bloc
 - **Compteur rues non assignées** : Vue en temps réel des rues sans équipe

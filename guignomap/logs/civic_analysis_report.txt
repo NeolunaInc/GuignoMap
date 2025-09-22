@@ -1,0 +1,23 @@
+=== ANALYSE DU FICHIER OFFICIEL NOCIVIQUE.XLSX ===
+Fichier lu avec succès.
+Nombre total d'adresses: 18655
+Colonnes détectées: ['NoCiv', 'NoCivSuf', 'nomrue', 'OdoGener', 'OdoParti', 'OdoSpeci']
+
+=== Types de données des colonnes ===
+NoCiv        int64
+NoCivSuf    object
+nomrue      object
+OdoGener    object
+OdoParti    object
+OdoSpeci    object
+dtype: object
+
+=== ÉCHANTILLON (5 premières lignes) ===
+   NoCiv NoCivSuf              nomrue OdoGener OdoParti     OdoSpeci
+0   2690      NaN          Rue Cantin      Rue      NaN       Cantin
+1   1336      NaN       Avenue Dupuis   Avenue      NaN       Dupuis
+2    855      NaN     Rue des Érables      Rue      des      Érables
+3    974      NaN  Avenue Saint-Denis   Avenue      NaN  Saint-Denis
+4    453      NaN   Avenue de l'Étang   Avenue    de l'        Étang
+
+ATTENTION: Des colonnes clés semblent manquantes: ['rue', 'numero', 'code_postal', 'lat', 'lon']. Il faudra adapter le script d'import.
