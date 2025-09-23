@@ -1,18 +1,22 @@
-﻿.venv/
+﻿# Virtual env & Python artifacts
+.venv/
 __pycache__/
 *.pyc
+
+# OS junk
 .DS_Store
 Thumbs.db
 
-# Backups et exports volumineux
-GuignoMap_Backup_*.zip
-export_for_audit.txt
+# Local data (never commit)
+guignomap/guigno_map.db
+import/nocivique_cp_complement*.xlsx
 
-# Dossiers et fichiers sensibles
+# Backups / exports
 backups/
 exports/
-*.db
-.streamlit/secrets.toml
-*.zip
 Documents/GuignoMap_Backups/
 **/GuignoMap_Backups/
+GuignoMap_Backup_*.zip
+*.zip
+*.db
+export_for_audit.txt
