@@ -23,3 +23,5 @@ export_for_audit.txt
 
 # Local editor/temp
 *.bak
+guignomap/guigno_map.db
+import/nocivique_cp_complement*.xlsx
