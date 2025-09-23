@@ -41,9 +41,18 @@ Write-Info "Activation de l'environnement virtuel..."
 Write-Info "Installation des dépendances (requirements.txt)..."
 try {
 	.\.venv\Scripts\pip.exe install --upgrade pip
-	.\.venv\Scripts\pip.exe install -r requirements.txt
+	.\.venv\Scripts\pip.exe install -U -r requirements.txt --upgrade-strategy eager
 	Write-Ok "Dépendances installées."
 } catch { Write-Warn "Installation pip échouée (vérifiez requirements.txt)." }
+
+# Vérifications post-install
+try {
+	.\.venv\Scripts\pip.exe check
+	Write-Ok "Pip check passé."
+} catch { Write-Warn "Pip check échoué (conflits potentiels)." }
+try {
+	.\.venv\Scripts\python.exe -c "import plotly,sys; print('Plotly version:', plotly.__version__)"
+} catch { Write-Warn "Impossible de vérifier la version Plotly." }
 
 # 2. Set-Location racine et PYTHONPATH
 Set-Location "$PSScriptRoot"

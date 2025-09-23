@@ -31,6 +31,8 @@ pip install -r requirements.txt
 python -m streamlit run guignomap/app.py
 ```
 
+Plotly 6.x requis (nous utilisons 6.3.0). Si votre venv contient une 5.x, relancez le script: il mettra à niveau automatiquement.
+
 Vérifs rapides :
 
 Sidebar → “Carte” présent → carte s’affiche avec filtres.
@@ -127,6 +129,20 @@ python -c "from guignomap import db; import sqlite3; c=sqlite3.connect('guignoma
 ```
 
 ## Dépannage
+
+Pour installer les dépendances :
+
+```sh
+pip install -r requirements.txt
+```
+
+### Erreurs courantes
+
+- **StreamlitDuplicateElementId** :
+   - Solution : Ajoutez un argument `key="unique_key"` à chaque `st.button` ou composant interactif Streamlit.
+
+- **IndentationError** :
+   - Solution : Relancez le script en vous assurant que l’indentation est de 4 espaces (pas de tabulations).
 - Erreur `KeyError: 'guignomap'` :
    - Vérifiez que `$env:PYTHONPATH = $PWD` est bien exporté
    - Supprimez les dossiers `__pycache__` si besoin
