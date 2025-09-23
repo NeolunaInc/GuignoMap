@@ -1,3 +1,357 @@
+import streamlit as st
+import pandas as pd
+import folium
+from streamlit_folium import st_folium
+from folium.plugins import MarkerCluster
+# ================= Navigation unifiée (append-only, stable keys) =============
+def create_simple_map(conn):
+    """Carte basique avec marqueurs pour les rues géocodées"""
+    import folium
+    import pandas as pd
+    # Centre de Mascouche
+    m = folium.Map(location=[45.7475, -73.6005], zoom_start=12)
+    # Récupérer quelques rues avec GPS pour affichage
+    query = """
+        SELECT 
+            s.name as rue,
+            s.status,
+            AVG(a.latitude) as lat,
+            AVG(a.longitude) as lon,
+            COUNT(a.id) as nb_addr
+        FROM streets s
+        JOIN addresses a ON s.name = a.street_name
+        WHERE a.latitude IS NOT NULL
+        GROUP BY s.name
+        LIMIT 100
+    """
+    df = pd.read_sql_query(query, conn)
+    if not df.empty:
+        for _, row in df.iterrows():
+            color = 'green' if row['status'] == 'terminee' else 'red'
+            folium.Marker(
+                [row['lat'], row['lon']],
+                popup=f"{row['rue']} ({row['nb_addr']} adresses)",
+                icon=folium.Icon(color=color)
+            ).add_to(m)
+    else:
+        # Si pas de GPS, au moins un marqueur au centre
+        folium.Marker(
+            [45.7475, -73.6005],
+            popup="Centre de Mascouche - Géocodage en cours",
+            icon=folium.Icon(color='blue')
+        ).add_to(m)
+    return m
+def render_nav():
+    import streamlit as st
+    nav = {
+        "nav_accueil": "Accueil",
+        "nav_benevole": "Bénévole",
+        "nav_carte": "Carte",
+        "nav_gestion": "Gestionnaire"
+    }
+    for key, label in nav.items():
+        if st.button(f" {label}", key=key, use_container_width=True):
+            st.session_state.page = label.lower()
+            st.rerun()
+
+# ================= Correction des keys dans les boutons en boucle ============
+def safe_button(label, base_key, use_container_width=True):
+    import streamlit as st
+    return st.button(label, key=base_key, use_container_width=use_container_width)
+
+# ================= Remplacement navigation dans main_with_carte =============
+def main_with_carte():
+    # ...existing code...
+    conn = db.get_conn(DB_PATH)
+    db.init_db(conn)
+    st.session_state['conn'] = conn
+    geo = {}
+    render_header()
+    # Phase 2 — router unifié
+    with st.sidebar:
+        nav_choice = st.radio(
+            "Navigation",
+            options=["Accueil", "Carte", "Bénévole"],
+            key="nav_radio"
+        )
+        # Ancien groupe de boutons conservé mais commenté :
+        # render_nav()
+        # if st.button(" Accueil", width="stretch"):
+        #     st.session_state.page = "accueil"
+        #     st.rerun()
+        # if st.button(" Bénévole", width="stretch"):
+        #     st.session_state.page = "benevole"
+        #     st.rerun()
+        # if st.button(" Carte", width="stretch"):
+        #     st.session_state.page = "carte"
+        #     st.rerun()
+        # if st.button(" Gestionnaire", width="stretch"):
+        #     st.session_state.page = "gestionnaire"
+        #     st.rerun()
+    # Routing selon le choix radio
+    try:
+        if nav_choice == "Accueil":
+            page_accueil_v2(conn, geo)
+        elif nav_choice == "Carte":
+            page_carte(conn)
+        elif nav_choice == "Bénévole":
+            page_benevole_table(conn)
+    except Exception as e:
+        st.error(f"Erreur lors du routage : {e}")
+
+# --- Correction des keys pour les boutons générés en boucle (exemple) ---
+# Remplacez st.button(label, key=...) par safe_button(label, base_key, use_container_width=True)
+# Exemple dans page_carte(conn) ou page_benevole_simple :
+# for i, row in enumerate(df.iterrows()):
+#     safe_button("En cours", f"start-{row['id']}")
+def page_carte(conn):
+    # --- Append-only, robust ---
+    import pandas as pd
+    import folium
+    from streamlit_folium import st_folium
+    from folium.plugins import MarkerCluster
+    st.header("Carte des rues — Guignolée")
+    # Chargement points depuis DB
+    points = []
+    df = None
+    try:
+        if hasattr(conn, 'execute'):
+            try:
+                df = pd.read_sql_query("SELECT * FROM streets", conn)
+            except Exception:
+                df = None
+        if df is None or df.empty:
+            # Fallback Excel
+            try:
+                df = pd.read_excel("import/nocivique_cp_complement.xlsx")
+            except Exception:
+                df = pd.DataFrame()
+        # Construction des points
+        if not df.empty:
+            lat_col = next((c for c in df.columns if c.lower().startswith("lat")), None)
+            lon_col = next((c for c in df.columns if c.lower().startswith("lon")), None)
+            name_col = next((c for c in df.columns if "name" in c.lower() or "adresse" in c.lower()), None)
+            status_col = next((c for c in df.columns if "stat" in c.lower()), None)
+            team_col = next((c for c in df.columns if "team" in c.lower()), None)
+            sector_col = next((c for c in df.columns if "sector" in c.lower()), None)
+            for _, row in df.iterrows():
+                lat = row.get(lat_col, None)
+                lon = row.get(lon_col, None)
+                label = row.get(name_col, "")
+                statut = row.get(status_col, None) if status_col else None
+                equipe = row.get(team_col, None) if team_col else None
+                secteur = row.get(sector_col, None) if sector_col else None
+                if pd.notnull(lat) and pd.notnull(lon):
+                    points.append({
+                        "lat": lat,
+                        "lon": lon,
+                        "label": label,
+                        "statut": statut,
+                        "equipe": equipe,
+                        "secteur": secteur
+                    })
+    except Exception as e:
+        st.warning(f"Erreur chargement points: {e}")
+        points = []
+
+    # Filtres Streamlit
+    statuts = ["a_faire", "en_cours", "terminee"]
+    statut_labels = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
+    try:
+        statut_choices = st.multiselect("Statut", options=statuts, default=statuts, format_func=lambda x: statut_labels.get(x, x) or str(x))
+        equipes = sorted(set(p["equipe"] for p in points if p["equipe"]))
+        secteurs = sorted(set(p["secteur"] for p in points if p["secteur"]))
+        equipe_choices = st.multiselect("Équipe", options=equipes, default=equipes) if equipes else None
+        secteur_choices = st.multiselect("Secteur", options=secteurs, default=secteurs) if secteurs else None
+        # Filtrage
+        filtered = [p for p in points if (not p["statut"] or p["statut"] in statut_choices)
+                    and (not equipe_choices or not p["equipe"] or p["equipe"] in equipe_choices)
+                    and (not secteur_choices or not p["secteur"] or p["secteur"] in secteur_choices)]
+        with st.sidebar:
+            nav_choice = st.radio(
+                "Navigation",
+                options=["Accueil", "Carte", "Bénévole"],
+                key="nav_radio"
+            )
+            # Ancien groupe de boutons conservé mais commenté :
+            # render_nav()
+            # if st.button(" Accueil", width="stretch"):
+            #     st.session_state.page = "accueil"
+            #     st.rerun()
+            # --- Affichage DataFrame filtré (append-only) ---
+            import pandas as pd
+            df_affiche = pd.DataFrame(filtered)
+            st.dataframe(df_affiche)
+
+            # === EXPORTS: Excel + PDF (append-only) ======================================
+            try:
+                from guignomap.export_utils import df_to_excel_bytes, df_to_pdf_bytes
+                EXPORTS_OK = True
+            except Exception:
+                EXPORTS_OK = False
+
+            def _render_export_buttons(df_affiche: "pd.DataFrame", export_basename: str = "export_carte"):
+                import streamlit as st
+                if not EXPORTS_OK:
+                    st.info("Exports désactivés (module d’export manquant).")
+                    return
+
+                if df_affiche is None or df_affiche.empty:
+                    st.info("Rien à exporter (table vide).")
+                    return
+
+                # Limite les colonnes à celles qui ont du sens pour le partage
+                cols = [c for c in df_affiche.columns if c.lower() not in {"notes_raw", "internal_id"}]
+                df_export = df_affiche[cols].copy()
+
+                # Excel
+                try:
+                    xlsx_bytes = df_to_excel_bytes(df_export)
+                    st.download_button(
+                        "📥 Exporter Excel",
+                        data=xlsx_bytes,
+                        file_name=f"{export_basename}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key=f"dl_xlsx_{export_basename}"
+                    )
+                except Exception as e:
+                    st.warning(f"Export Excel indisponible : {e}")
+
+                # PDF
+                try:
+                    pdf_bytes = df_to_pdf_bytes(df_export, title="Export GuignoMap")
+                    if pdf_bytes:
+                        st.download_button(
+                            "📄 Exporter PDF",
+                            data=pdf_bytes,
+                            file_name=f"{export_basename}.pdf",
+                            mime="application/pdf",
+                            key=f"dl_pdf_{export_basename}"
+                        )
+                    else:
+                        st.info("Export PDF indisponible (ReportLab non installé).")
+                except Exception as e:
+                    st.warning(f"Export PDF indisponible : {e}")
+
+            # 👉 Appelle _render_export_buttons juste sous la table
+            _render_export_buttons(df_affiche, export_basename="carte_table")
+            # =============================================================================
+            # if st.button(" Bénévole", width="stretch"):
+            #     st.session_state.page = "benevole"
+            #     st.rerun()
+            # if st.button(" Carte", width="stretch"):
+            #     st.session_state.page = "carte"
+            #     st.rerun()
+            # if st.button(" Gestionnaire", width="stretch"):
+            #     st.session_state.page = "gestionnaire"
+            #     st.rerun()
+        # Routing selon le choix radio
+        try:
+            if nav_choice == "Accueil":
+                page_accueil_v2(conn, geo)
+            elif nav_choice == "Carte":
+                page_carte(conn)
+            elif nav_choice == "Bénévole":
+                # Fallback si page_benevole_table non définie
+                if 'page_benevole_table' in globals():
+                    page_benevole_table(conn)
+                elif 'page_benevole_v2' in globals():
+                    page_benevole_v2(conn, geo)
+                else:
+                    st.info("Vue bénévole non disponible.")
+        except Exception as e:
+            st.error(f"Erreur lors du routage : {e}")
+                    popup=p["label"],
+                    icon=folium.Icon(color=color)
+                ).add_to(m)
+        st_folium(m, height=600)
+    except Exception as e:
+        st.warning(f"Erreur carte: {e}")
+    import streamlit as st
+    import pandas as pd
+    st.header("Carte des rues — Guignolée")
+    if not FOLIUM_OK:
+        st.warning("Carte désactivée (folium manquant).")
+        return
+    # 1. Essayer de récupérer points depuis la DB
+    points = []
+    df = None
+    try:
+        try:
+            df = pd.DataFrame(conn.execute("SELECT * FROM streets").fetchall(), columns=[d[0] for d in conn.execute("PRAGMA table_info(streets)").fetchall()])
+        except Exception:
+            from guignomap.db import list_streets
+            df = list_streets(conn)
+        if df is not None and all(col in df.columns for col in ["latitude", "longitude", "street_name"]):
+            for _, row in df.iterrows():
+                lat, lon, label = row["latitude"], row["longitude"], row["street_name"]
+                if pd.notnull(lat) and pd.notnull(lon):
+                    points.append({
+                        "lat": lat,
+                        "lon": lon,
+                        "label": label,
+                        "statut": row["status"] if "status" in df.columns else None,
+                        "equipe": row["team"] if "team" in df.columns else None,
+                        "secteur": row["sector"] if "sector" in df.columns else None
+                    })
+    except Exception:
+        pass
+    # 2. Fallback: lire import/nocivique_cp_complement.xlsx
+    if not points:
+        try:
+            import os
+            xlsx_path = os.path.join("import", "nocivique_cp_complement.xlsx")
+            if os.path.exists(xlsx_path):
+                df_xl = pd.read_excel(xlsx_path)
+                if all(col in df_xl.columns for col in ["Latitude", "Longitude", "Adresse"]):
+                    for _, row in df_xl.iterrows():
+                        lat, lon, label = row["Latitude"], row["Longitude"], row["Adresse"]
+                        if pd.notnull(lat) and pd.notnull(lon):
+                            points.append({
+                                "lat": lat,
+                                "lon": lon,
+                                "label": label,
+                                "statut": None,
+                                "equipe": None,
+                                "secteur": None
+                            })
+        except Exception:
+            pass
+    # --- Filtres basiques (append-only) ---
+    if points:
+        statuts = ["a_faire", "en_cours", "terminee"]
+        statut_labels = {"a_faire": "À faire", "en_cours": "En cours", "terminee": "Terminée"}
+    statut_choices = st.multiselect("Statut", options=statuts, default=statuts, format_func=lambda x: statut_labels.get(x, x) or str(x))
+        equipes = sorted(set(p["equipe"] for p in points if p["equipe"]))
+        secteurs = sorted(set(p["secteur"] for p in points if p["secteur"]))
+        equipe_choices = st.multiselect("Équipe", options=equipes, default=equipes) if equipes else None
+        secteur_choices = st.multiselect("Secteur", options=secteurs, default=secteurs) if secteurs else None
+        # Filtrage
+        filtered = [p for p in points if (not p["statut"] or p["statut"] in statut_choices)
+                    and (not equipe_choices or not p["equipe"] or p["equipe"] in equipe_choices)
+                    and (not secteur_choices or not p["secteur"] or p["secteur"] in secteur_choices)]
+        if not filtered:
+            st.info("Aucun résultat avec les filtres actuels.")
+            return
+        points = filtered
+    # 3. Aucun point ?
+    if not points:
+        st.info("Aucune donnée géolocalisée pour le moment.")
+        return
+    # 4. Centre et zoom
+    lats = [float(p["lat"]) for p in points]
+    lons = [float(p["lon"]) for p in points]
+    center = [sum(lats)/len(lats), sum(lons)/len(lons)]
+    m = folium.Map(location=center, zoom_start=12)
+    # 5. MarkerCluster si dispo
+    try:
+        cluster = MarkerCluster().add_to(m)
+        for p in points:
+            folium.Marker([p["lat"], p["lon"]], popup=p["label"]).add_to(cluster)
+    except Exception:
+        for p in points:
+            folium.Marker([p["lat"], p["lon"]], popup=p["label"]).add_to(m)
+    st_folium(m, height=600)
 import sqlite3
 import streamlit as st
 from guignomap.db import (
@@ -26,17 +380,16 @@ def page_benevole_simple(team_id: str) -> None:
         return
 
     st.markdown(
-        """
-        <style>
-        .gm-btn { padding: 16px 12px; font-size: 20px; }
-        .gm-badge { padding: 4px 8px; border-radius: 8px; font-weight: 600; }
-        .gm-green { background:#e7f8ec; color:#177245; }
-        .gm-yellow{ background:#fff7da; color:#8a6d00; }
-        .gm-red   { background:#ffe5e5; color:#b10000; }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """
+    <style>
+    .gm-btn { padding: 16px 12px; font-size: 20px; }
+    .gm-badge { padding: 4px 8px; border-radius: 8px; font-weight: 600; }
+    .gm-green { background:#e7f8ec; color:#177245; }
+    .gm-yellow{ background:#fff7da; color:#8a6d00; }
+    .gm-red   { background:#ffe5e5; color:#b10000; }
+    </style>
+    """
+    , unsafe_allow_html=True)
 
     for r in rows:
         street = r["street_name"]
@@ -53,7 +406,7 @@ def page_benevole_simple(team_id: str) -> None:
                     conn = _get_conn()
                     mark_street_in_progress(conn, street, team_id, "")
                     st.success(f"{street} → en cours")
-                    st.experimental_rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Erreur: {e}")
 
@@ -62,7 +415,7 @@ def page_benevole_simple(team_id: str) -> None:
                     conn = _get_conn()
                     mark_street_complete(conn, street, team_id)
                     st.success(f"{street} → terminée")
-                    st.experimental_rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Erreur: {e}")
 
@@ -73,7 +426,7 @@ def page_benevole_simple(team_id: str) -> None:
                     conn = _get_conn()
                     save_checkpoint(conn, street, team_id, note.strip())
                     st.success("Note enregistrée")
-                    st.experimental_rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Erreur: {e}")
             else:
@@ -86,8 +439,8 @@ if SHOW_ROLE_SELECT:
     role = st.sidebar.selectbox("Rôle", ["gestionnaire", "benevole"], index=0)
     if role == "benevole":
         team_id = st.sidebar.text_input("ID équipe", value=st.session_state.get("team_id", ""))
-        if st.sidebar.button("Entrer") and team_id.strip():
-            st.session_state["team_id"] = team_id.strip()
+        if st.sidebar.button("Entrer") and (team_id.strip() if team_id else ""):
+            st.session_state["team_id"] = team_id.strip() if team_id else ""
         team_id = st.session_state.get("team_id")
         if team_id:
             page_benevole_simple(team_id)
@@ -166,6 +519,59 @@ def to_scalar(x: Any) -> Any:
 
         st.dataframe(df[["name", "sector", "status"]], use_container_width=True)
 
+            # === EXPORTS: Excel + PDF (append-only) ======================================
+            try:
+                import pandas as pd
+                from guignomap.export_utils import df_to_excel_bytes, df_to_pdf_bytes
+                EXPORTS_OK = True
+            except Exception:
+                EXPORTS_OK = False
+
+            def _render_export_buttons(df_affiche: "pd.DataFrame", export_basename: str = "export_benevoles"):
+                import streamlit as st
+                if not EXPORTS_OK:
+                    st.info("Exports désactivés (module d’export manquant).")
+                    return
+                if df_affiche is None or df_affiche.empty:
+                    st.info("Rien à exporter (table vide).")
+                    return
+
+                cols = [c for c in df_affiche.columns if c.lower() not in {"notes_raw", "internal_id"}]
+                df_export = df_affiche[cols].copy()
+
+                # Excel
+                try:
+                    xlsx_bytes = df_to_excel_bytes(df_export)
+                    st.download_button(
+                        "📥 Exporter Excel",
+                        data=xlsx_bytes,
+                        file_name=f"{export_basename}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key=f"dl_xlsx_{export_basename}"
+                    )
+                except Exception as e:
+                    st.warning(f"Export Excel indisponible : {e}")
+
+                # PDF
+                try:
+                    pdf_bytes = df_to_pdf_bytes(df_export, title="Export GuignoMap")
+                    if pdf_bytes:
+                        st.download_button(
+                            "📄 Exporter PDF",
+                            data=pdf_bytes,
+                            file_name=f"{export_basename}.pdf",
+                            mime="application/pdf",
+                            key=f"dl_pdf_{export_basename}"
+                        )
+                    else:
+                        st.info("Export PDF indisponible (ReportLab non installé).")
+                except Exception as e:
+                    st.warning(f"Export PDF indisponible : {e}")
+            # =============================================================================
+
+            # Appel juste sous la table bénévole
+            _render_export_buttons(df, "benevoles_table")
+
         for _, row in df.iterrows():
             street = row["name"]
             status = row["status"]
@@ -241,13 +647,7 @@ from guignomap.validators import validate_and_clean_input
 
 OSM_AVAILABLE = False
 try:
-    from guignomap.osm import (
-        build_geometry_cache,
-        load_geometry_cache,
-        build_addresses_cache,
-        load_addresses_cache,
-        CACHE_FILE,
-    )
+    from guignomap.osm import *
     OSM_AVAILABLE = True
 except Exception:
     # Module OSM absent après cleanup : carte désactivée
@@ -1756,16 +2156,21 @@ def page_superviseur(conn, geo):
     with tabs[2]:
         # Assignation
         st.markdown("### Assignation des rues")
-        
-        unassigned = db.get_unassigned_streets(conn)
-        
-        if not unassigned.empty:
-            with st.form("assign"):
-                team = st.selectbox("quipe", db.teams(conn))
-                streets = st.multiselect("Rues", unassigned['name'].tolist())
-                
-                if st.form_submit_button("Assigner"):
-                    if team and streets:
+        # --- Bloc navigation remplacé par render_sidebar_nav() ---
+    # render_sidebar_nav()
+# ================= Sidebar navigation unifiée (append-only) ===================
+def render_sidebar_nav():
+    import streamlit as st
+    nav_items = [
+        ("nav_accueil", "Accueil", "accueil"),
+        ("nav_benevole", "Bénévole", "benevole"),
+        ("nav_carte", "Carte", "carte"),
+        ("nav_gestionnaire", "Gestionnaire", "gestionnaire")
+    ]
+    for key, label, page in nav_items:
+        if st.button(f" {label}", key=key, use_container_width=True):
+            st.session_state.page = page
+            st.rerun()
                         db.assign_streets_to_team(conn, streets, team)
                         st.success("Rues assignées!")
                         st.rerun()
@@ -2268,24 +2673,21 @@ def main():
         # Navigation
         st.markdown("###  Navigation")
         
-        # Boutons de navigation stylisés
-        if st.button(" Accueil", width="stretch"):
-            st.session_state.page = "accueil"
-            st.rerun()
-        
-        if st.button(" Bénévole", width="stretch"):
-            st.session_state.page = "benevole"
-            st.rerun()
-            
-        if st.button(" Gestionnaire", width="stretch"):
-            st.session_state.page = "gestionnaire"  
-            st.rerun()
-        
+        # Boutons de navigation stylisés (désactivés, remplacés par radio sidebar)
+        # if st.button(" Accueil", width="stretch", key="nav_home_btn"):
+        #     st.session_state.page = "accueil"
+        #     st.rerun()
+        # if st.button(" Bénévole", width="stretch", key="nav_benevole_btn"):
+        #     st.session_state.page = "benevole"
+        #     st.rerun()
+        # if st.button(" Gestionnaire", width="stretch", key="nav_gestion_btn"):
+        #     st.session_state.page = "gestionnaire"  
+        #     st.rerun()
         # Déconnexion si connecté
-        if st.session_state.auth:
-            st.markdown("---")
-            if st.button(" Déconnexion", width="stretch"):
-                st.session_state.auth = None
+        # if st.session_state.auth:
+        #     st.markdown("---")
+        #     if st.button(" Déconnexion", width="stretch", key="nav_logout_btn"):
+        #         st.session_state.auth = None
                 st.rerun()
         
         # Compteur temps réel
@@ -2333,6 +2735,66 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ================= MVP Carte (append-only, robuste) ==========================
+# Imports protégés folium/streamlit-folium
+try:
+    import folium
+    from streamlit_folium import st_folium
+    from folium.plugins import MarkerCluster
+    FOLIUM_OK = True
+except Exception:
+    FOLIUM_OK = False
+
+def page_carte(conn):
+    import streamlit as st
+    import pandas as pd
+    st.header("Carte des rues — Guignolée")
+    if not FOLIUM_OK:
+        st.warning("Carte désactivée (folium manquant).")
+        return
+    m = create_simple_map(conn)
+    from streamlit_folium import st_folium
+    st_folium(m, height=600)
+
+# ================= Append-only : bouton Carte dans la sidebar =================
+def main_with_carte():
+    # ...existing code...
+    conn = db.get_conn(DB_PATH)
+    db.init_db(conn)
+    st.session_state['conn'] = conn
+    # ...existing code...
+    geo = {}
+    render_header()
+    with st.sidebar:
+        # ...existing code...
+        if st.button(" Accueil", width="stretch"):
+            st.session_state.page = "accueil"
+            st.rerun()
+        if st.button(" Bénévole", width="stretch"):
+            st.session_state.page = "benevole"
+            st.rerun()
+        if st.button(" Carte", width="stretch"):
+            st.session_state.page = "carte"
+            st.rerun()
+        if st.button(" Gestionnaire", width="stretch"):
+            st.session_state.page = "gestionnaire"
+            st.rerun()
+        # ...existing code...
+    page = st.session_state.get('page', 'accueil')
+    if page == "accueil":
+        page_accueil_v2(conn, geo)
+    elif page == "benevole":
+        page_benevole_v2(conn, geo)
+    elif page == "carte":
+        page_carte(conn)
+    elif page == "gestionnaire":
+        page_gestionnaire_v2(conn, geo)
+    # ...existing code...
+
+# --- Entrée principale avec carte ---
+if __name__ == "__main__":
+    main_with_carte()
 
 
 

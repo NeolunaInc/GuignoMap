@@ -1,3 +1,100 @@
+## Exports (Excel & PDF)
+- **Excel** : utilise `openpyxl` (inclus).  
+- **PDF** : utilise `reportlab`. Si absent, l’UI affiche un message informatif et masque le bouton PDF.
+
+Installation manuelle :
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install reportlab==4.1.0
+```
+
+Dans l’app, les boutons d’export apparaissent sous les tables (UI bénévole / Carte).
+
+Excel : .xlsx compatible Excel/Sheets
+
+PDF : A4 paysage via ReportLab
+
+> **Rappel:** n’efface rien. Tout est append-only. Commente au pire les doublons.
+
+---
+
+# 🧪 Commandes locales (après patch Copilot)
+
+```powershell
+# Activer venv
+.\.venv\Scripts\Activate.ps1
+
+# S’assurer des deps (ajout reportlab)
+pip install -r requirements.txt
+
+# Lancer l’app
+python -m streamlit run guignomap/app.py
+```
+
+Vérifs rapides :
+
+Sidebar → “Carte” présent → carte s’affiche avec filtres.
+
+Sous la table bénévole → boutons Exporter Excel / Exporter PDF → les deux téléchargent et s’ouvrent OK.
+
+Pas d’erreur StreamlitDuplicateElementId (sinon ajouter/ajuster key=).
+
+Pas d’IndentationError (un seul if __name__ == "__main__": main() en bas).
+
+💾 Git & PR (Phase 2)
+# Nouvelle branche Phase 2
+git switch -c phase2-carte-exports
+
+git add requirements.txt guignomap/export_utils.py guignomap/app.py README.md
+git commit -m "Phase 2: Carte + filtres + exports (Excel/PDF) + README; router unique & keys"
+git push -u origin phase2-carte-exports
+### Exports (Excel & PDF)
+
+- **Excel** : nécessite `openpyxl` (déjà listé dans `requirements.txt`).
+- **PDF** : nécessite `reportlab`. Si absent, l’UI affiche une info et masque le bouton PDF.
+
+Installation manuelle (si besoin) :
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install openpyxl==3.1.5 reportlab==4.1.0
+```
+
+Dans l’app, les exports apparaissent sous les tables (UI bénévole / Carte).
+
+Excel : .xlsx prêt pour Excel/Sheets.
+
+PDF : table formatée A4 paysage (ReportLab).
+
+Remarque : pour des caractères Unicode exotiques, si l’affichage PDF n’est pas parfait, on pourra ultérieurement intégrer une police TTF dédiée (ex. DejaVuSans) et l’enregistrer dans ReportLab.
+
+### 5) Lancement local (rappel)
+- Le script `lancer_guignomap.ps1` installe déjà via `pip install -r requirements.txt`.  
+- Rien d’autre à modifier ici.
+
+### 6) Validation manuelle à faire après patch (checklist)
+1. `.\.venv\Scripts\Activate.ps1`  
+2. `pip install -r requirements.txt`  
+3. `python -m streamlit run guignomap/app.py`  
+4. Ouvrir la table bénévole → vérifier présence des boutons **Exporter Excel** / **Exporter PDF**  
+5. Télécharger les deux fichiers ; ouvrir l’Excel et le PDF pour vérifier le contenu.
+
+**Ne supprime ni ne renomme aucun élément existant. Tous les ajouts sont append-only. Donne des `key=` uniques aux nouveaux widgets.**
+## Installation
+
+Installation standard (dépendances minimales et curatées) :
+
+```bash
+pip install -r requirements.txt
+```
+
+Reproduction exacte de l’environnement de développement (debug, compatibilité totale) :
+
+```bash
+pip install -r requirements-freeze.txt
+```
+
+> `requirements.txt` : liste curatée et minimale des dépendances nécessaires au projet.
+> `requirements-freeze.txt` : snapshot complet de l’environnement de la machine de développement (pour debug ou reproduction stricte).
 # GuignoMap — Quickstart Windows
 
 ## Prérequis
@@ -36,12 +133,25 @@ python -c "from guignomap import db; import sqlite3; c=sqlite3.connect('guignoma
 - OSM/Reports : modules facultatifs, l’app fonctionne sans eux (UI et exports désactivés)
 
 ## Règles Git (données locales)
-Ne jamais committer :
-- `guignomap/guigno_map.db`
-- `import/nocivique_cp_complement*.xlsx`
-- `backups/`, `exports/`
-- `Documents/GuignoMap_Backups/`, `**/GuignoMap_Backups/`
-- `*.zip`, `*.db`, `*.bak`
+
+### Exports (Excel & PDF)
+
+- **Excel** : nécessite `openpyxl` (déjà listé dans `requirements.txt`).
+- **PDF** : nécessite `reportlab`. Si absent, l’UI affiche une info et masque le bouton PDF.
+
+Installation manuelle (si besoin) :
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install openpyxl==3.1.5 reportlab==4.1.0
+```
+
+Dans l’app, les exports apparaissent sous les tables (UI bénévole / Carte).
+
+Excel : .xlsx prêt pour Excel/Sheets.
+
+PDF : table formatée A4 paysage (ReportLab).
+
+Remarque : pour des caractères Unicode exotiques, si l’affichage PDF n’est pas parfait, on pourra ultérieurement intégrer une police TTF dédiée (ex. DejaVuSans) et l’enregistrer dans ReportLab.
 
 ## Pour toute question :
 Contactez l’équipe NeolunaInc ou ouvrez une issue sur GitHub.
@@ -58,6 +168,28 @@ Contactez l’équipe NeolunaInc ou ouvrez une issue sur GitHub.
 
 ### Interface bénévole
 ![Interface bénévole](https://via.placeholder.com/800x400/FF9800/FFFFFF?text=Interface+Bénévole)
+
+---
+
+## Phase 2 — Carte interactive
+
+Pour activer la carte :
+
+1. Installez les dépendances :
+   ```powershell
+   pip install -r requirements.txt
+   ```
+2. Si la carte ne s’affiche pas :
+   - Vérifiez que `folium` et `streamlit-folium` sont bien installés (voir requirements.txt).
+   - Relancez l’app avec :
+     ```powershell
+     .\lancer_guignomap.ps1 -Port 8501
+     ```
+3. Si le bouton “Carte” affiche un message d’erreur, installez manuellement :
+   ```powershell
+   pip install folium streamlit-folium
+   ```
+4. Pour toute question, consultez la section Dépannage ou contactez l’équipe.
 *Vue filtrée "Mes rues" avec actions simplifiées*
 
 ## �📋 Table des matières
