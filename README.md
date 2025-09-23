@@ -1,42 +1,50 @@
-# GuignoMap - Système de gestion pour la Guignolée 2025 🎄
+# GuignoMap — Quickstart Windows
 
-- [🎯 Vue d'ensemble](#-vue-densemble)
-- [📸 Captures d'écran](#-captures-décran)
-- [✨ Fonctionnalités principales](#-fonctionnalités-principales)
-- [🏗️ Architecture](#️-architecture)
-- [🔌 API et Intégrations](#-api-et-intégrations)
-- [🚀 Installation et configuration](#-installation-et-configuration)
-- [💻 Commandes pratiques](#-commandes-pratiques)
-- [🔧 Dépannage](#-dépannage)
-- [📊 Structure du projet](#-structure-du-projet)
-- [🔧 Technologies et dépendances](#-technologies-et-dépendances)
-- [🎨 Interfaces utilisateur](#-interfaces-utilisateur)
-- [🛡️ Sécurité et robustesse](#️-sécurité-et-robustesse)
-- [📈 Exports et rapports](#-exports-et-rapports)
-- [⚡ Performance](#-performance)
-- [🧪 Tests](#-tests)
-- [🚀 Déploiement](#-déploiement)
-- [📊 Métriques](#-métriques)
-- [🔄 Historique des versions](#-historique-des-versions)
-- [🚀 Roadmap](#-roadmap)
-- [🤝 Contribution](#-contribution)
-- [👥 Crédits](#-crédits)
-- [📄 Licence](#-licence)
-- [❓ FAQ](#-faq)
-- [📞 Support et contact](#-support-et-contact)Guignolée 2025 🎄
+## Prérequis
+- Windows 10/11
+- Python 3.10+ (recommandé : https://www.python.org/downloads/)
+- Git (https://git-scm.com/download/win)
 
-[![Version](https://img.shields.io/badge/version-4.1-blue.svg)](https://github.com/NeolunaInc/GuignoMap)
-[![Python](https://img.shields.io/badge/python-3.13.6-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/streamlit-1.49.1-red.svg)](https://streamlit.io)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/NeolunaInc/GuignoMap/graphs/commit-activity)
-[![Stars](https://img.shields.io/github/stars/NeolunaInc/GuignoMap.svg)](https://github.com/NeolunaInc/GuignoMap/stargazers)
-[![Forks](https://img.shields.io/github/forks/NeolunaInc/GuignoMap.svg)](https://github.com/NeolunaInc/GuignoMap/network/members)
-[![Issues](https://img.shields.io/github/issues/NeolunaInc/GuignoMap.svg)](https://github.com/NeolunaInc/GuignoMap/issues)
+## Lancement rapide
 
-> **Application web moderne pour optimiser la collecte de dons lors de la Guignolée annuelle de Mascouche**
+Ouvrez PowerShell dans le dossier du projet, puis lancez :
 
-Une application web moderne conçue spécialement pour optimiser la collecte de dons lors de la Guignolée 2025 à Mascouche.
+```powershell
+.\lancer_guignomap.ps1
+```
+
+### Options disponibles
+- `-InitDb` : initialise la base SQLite (guignomap/guigno_map.db)
+- `-Backup` : sauvegarde la DB et l’Excel dans Documents\GuignoMap_Backups (zip + SHA256)
+- `-Port <num>` : lance sur le port choisi (défaut 8501)
+- `-SkipTests` : saute les tests rapides
+
+## Tests rapides
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+$env:PYTHONPATH = $PWD
+python -m tests.smoke_db_status_api
+python -m tests.smoke_db_missing_api
+python -c "from guignomap import db; import sqlite3; c=sqlite3.connect('guignomap/guigno_map.db'); print(db.extended_stats(c))"
+```
+
+## Dépannage
+- Erreur `KeyError: 'guignomap'` :
+   - Vérifiez que `$env:PYTHONPATH = $PWD` est bien exporté
+   - Supprimez les dossiers `__pycache__` si besoin
+- OSM/Reports : modules facultatifs, l’app fonctionne sans eux (UI et exports désactivés)
+
+## Règles Git (données locales)
+Ne jamais committer :
+- `guignomap/guigno_map.db`
+- `import/nocivique_cp_complement*.xlsx`
+- `backups/`, `exports/`
+- `Documents/GuignoMap_Backups/`, `**/GuignoMap_Backups/`
+- `*.zip`, `*.db`, `*.bak`
+
+## Pour toute question :
+Contactez l’équipe NeolunaInc ou ouvrez une issue sur GitHub.
 
 ## � Captures d'écran
 

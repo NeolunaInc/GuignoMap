@@ -125,6 +125,99 @@ def to_scalar(x: Any) -> Any:
     except Exception:
         return x
 
+    ################################################################################
+    # --- Minimal Volunteer UI (append-only, robust, deduplicated) ------------------
+    ################################################################################
+
+    def volunteer_ui():
+        """
+        Minimal, robust volunteer UI: displays assigned streets for current team,
+        allows status updates (a_faire, en_cours, terminee), and note entry per street.
+        All DB/API calls are protected against missing tables or errors.
+        """
+        import streamlit as st
+        from guignomap.db import (
+            list_streets,
+            update_street_status,
+            add_street_note,
+            get_street_notes_for_team,
+        )
+        import sqlite3
+
+        st.header("Bénévole — Suivi des rues")
+        team_id = st.sidebar.text_input("ID équipe", value=st.session_state.get("team_id", ""))
+        if st.sidebar.button("Entrer") and team_id.strip():
+            st.session_state["team_id"] = team_id.strip()
+        team_id = st.session_state.get("team_id")
+        if not team_id:
+            st.info("Veuillez entrer l'ID de votre équipe.")
+            return
+
+        try:
+            conn = sqlite3.connect("guignomap/guigno_map.db", check_same_thread=False)
+            df = list_streets(conn, team=team_id)
+        except Exception as e:
+            st.error(f"Erreur DB: {e}")
+            return
+
+        if df.empty:
+            st.info(f"Aucune rue assignée pour {team_id}.")
+            return
+
+        st.dataframe(df[["name", "sector", "status"]], use_container_width=True)
+
+        for _, row in df.iterrows():
+            street = row["name"]
+            status = row["status"]
+            st.subheader(f"{street} — Statut: {status}")
+            col1, col2, col3 = st.columns([1,1,2])
+            with col1:
+                if st.button("À faire", key=f"afaire-{street}"):
+                    try:
+                        update_street_status(conn, street, team_id, "a_faire")
+                        st.toast(f"{street} → à faire", icon="🟥")
+                        st.experimental_rerun()
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
+                if st.button("En cours", key=f"encours-{street}"):
+                    try:
+                        update_street_status(conn, street, team_id, "en_cours")
+                        st.toast(f"{street} → en cours", icon="🟨")
+                        st.experimental_rerun()
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
+                if st.button("Terminée", key=f"terminee-{street}"):
+                    try:
+                        update_street_status(conn, street, team_id, "terminee")
+                        st.toast(f"{street} → terminée", icon="🟩")
+                        st.experimental_rerun()
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
+            with col2:
+                notes = ""
+                try:
+                    notes = get_street_notes_for_team(conn, street, team_id)
+                except Exception:
+                    notes = ""
+                st.caption(f"Notes existantes: {notes if notes else 'Aucune'}")
+            with col3:
+                note = st.text_area(f"Note pour {street}", key=f"note-{street}", height=60)
+                if st.button("Enregistrer la note", key=f"save-{street}"):
+                    if note.strip():
+                        try:
+                            add_street_note(conn, street, team_id, note.strip())
+                            st.success("Note enregistrée")
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(f"Erreur: {e}")
+                    else:
+                        st.warning("Note vide.")
+            st.divider()
+
+    # --- Entry point for minimal volunteer UI (append-only) ---
+    if __name__ == "__main__":
+        volunteer_ui()
+
 def gt_zero(x: Any) -> bool:
     v = to_scalar(x)
     try:
