@@ -20,3 +20,6 @@ GuignoMap_Backup_*.zip
 *.zip
 *.db
 export_for_audit.txt
+
+# Local editor/temp
+*.bak
