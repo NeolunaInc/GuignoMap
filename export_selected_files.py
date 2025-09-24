@@ -20,6 +20,7 @@ FILES = [
     "guignomap/app.py",
     "guignomap/backup.py",
     "guignomap/db.py",
+    "guignomap/db.py.bak",
     "guignomap/import_civic.py",
     "guignomap/osm.py",
     "guignomap/reports.py",

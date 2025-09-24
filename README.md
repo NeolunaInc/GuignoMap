@@ -1,53 +1,97 @@
-## Exports (Excel & PDF)
-- **Excel** : utilise `openpyxl` (inclus).  
-- **PDF** : utilise `reportlab`. Si absent, l’UI affiche un message informatif et masque le bouton PDF.
+# GuignoMap
 
-Installation manuelle :
-```powershell
-.\.venv\Scripts\Activate.ps1
-pip install reportlab==4.1.0
+Application Streamlit pour la gestion des rues et adresses de Mascouche, avec cartographie, exports Excel/PDF, et interface bénévole/superviseur.
+
+## Fonctionnalités
+
+- **Cartographie** : Affichage des rues avec Folium, filtres dynamiques.
+- **Exports** : Excel (openpyxl) et PDF (reportlab).
+- **UI bénévole** : Suivi des statuts des rues (à faire, en cours, terminée).
+- **UI superviseur** : Dashboard, gestion des équipes, backups, OSM.
+- **Navigation** : Sidebar avec radio pour Accueil, Bénévole, Carte.
+
+## Prérequis
+
+- **Python 3.11+**
+- **Windows** (développement via VSCode, pas WSL)
+- **Plotly 6.3.0** (automatiquement installé via requirements.txt)
+
+## Installation & Lancement
+
+1. **Cloner le repo** :
+   ```bash
+   git clone https://github.com/NeolunaInc/GuignoMap.git
+   cd GuignoMap
+   ```
+
+2. **Lancer le script d'initialisation** :
+   ```powershell
+   .\lancer_guignomap.ps1 -InitDb
+   ```
+   - Crée `.venv`, installe les dépendances, initialise la DB, lance les tests.
+
+3. **Lancement normal** :
+   ```powershell
+   .\lancer_guignomap.ps1 -Port 8501
+   ```
+   - Active venv, vérifie pip, affiche version Plotly, lance Streamlit.
+
+Options du script :
+- `-InitDb` : Initialise la DB SQLite.
+- `-Backup` : Effectue un backup DB+Excel.
+- `-SkipTests` : Saute les tests rapides.
+- `-Port <int>` : Port Streamlit (défaut 8501).
+
+
+## Configuration API Google (géocodage)
+
+Si tu utilises l'API Google Maps pour le géocodage, configure la clé API pour autoriser l'adresse IP publique suivante :
+
+**IP publique à autoriser : 173.206.55.65**
+
+Cela permet d'utiliser l'API Google depuis cette machine sans restriction.
+
+## Structure du projet
+
+```
+GuignoMap/
+├── guignomap/          # Code principal
+│   ├── app.py         # App principale avec navigation
+│   ├── db.py          # Gestion DB SQLite
+│   ├── osm.py         # Intégration OSM
+│   ├── helpers_gm.py  # Helpers extraits
+│   └── ...
+├── .streamlit/        # Config Streamlit
+├── .vscode/           # Config VSCode
+├── exports/           # Exports générés
+├── import/            # Données d'import
+├── tests/             # Tests smoke
+└── scripts/           # Scripts utilitaires
 ```
 
-Dans l’app, les boutons d’export apparaissent sous les tables (UI bénévole / Carte).
+## Développement
 
-Excel : .xlsx compatible Excel/Sheets
+- **IDE** : VSCode (settings/tasks dans `.vscode/`).
+- **Linting** : Pylance, ruff.
+- **Tests** : `python -m tests.smoke_db_status_api` et `smoke_db_missing_api`.
+- **GIT** :
+  - Branche principale : `main`
+  - Commits : `feat:`, `fix:`, `chore:`, `refactor:`
+  - Push : `git push origin main`
+  - Pull : `git pull origin main`
+  - Branches features : `git switch -c feature/nom`
 
-PDF : A4 paysage via ReportLab
+## Exports
 
-> **Rappel:** n’efface rien. Tout est append-only. Commente au pire les doublons.
+- **Excel** : `.xlsx` via openpyxl.
+- **PDF** : A4 paysage via reportlab.
+- Boutons dans UI bénévole/carte.
 
----
+## Notes
 
-# 🧪 Commandes locales (après patch Copilot)
-
-```powershell
-# Activer venv
-.\.venv\Scripts\Activate.ps1
-
-# S’assurer des deps (ajout reportlab)
-pip install -r requirements.txt
-
-# Lancer l’app
-python -m streamlit run guignomap/app.py
-```
-
-Plotly 6.x requis (nous utilisons 6.3.0). Si votre venv contient une 5.x, relancez le script: il mettra à niveau automatiquement.
-
-Vérifs rapides :
-
-Sidebar → “Carte” présent → carte s’affiche avec filtres.
-
-Sous la table bénévole → boutons Exporter Excel / Exporter PDF → les deux téléchargent et s’ouvrent OK.
-
-Pas d’erreur StreamlitDuplicateElementId (sinon ajouter/ajuster key=).
-
-Pas d’IndentationError (un seul if __name__ == "__main__": main() en bas).
-
-💾 Git & PR (Phase 2)
-# Nouvelle branche Phase 2
-git switch -c phase2-carte-exports
-
-git add requirements.txt guignomap/export_utils.py guignomap/app.py README.md
+- Tout est append-only : ne pas effacer de code.
+- Clés uniques dans Streamlit pour éviter DuplicateElementId.
+- Plotly 6.x requis ; script met à niveau automatiquement.
 git commit -m "Phase 2: Carte + filtres + exports (Excel/PDF) + README; router unique & keys"
 git push -u origin phase2-carte-exports
 ### Exports (Excel & PDF)

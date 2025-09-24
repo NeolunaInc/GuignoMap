@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 from pathlib import Path
 from datetime import datetime
 from fnmatch import fnmatch
@@ -47,17 +47,15 @@ def build_tree_lines(root: Path):
                 lines.append(f"{prefix}{branch}.venv/  (contents skipped)")
                 stats["dirs"] += 1
                 continue
-
-            p = entry
+            
+            p: Path = entry  # type: ignore
             if p.is_dir():
                 lines.append(f"{prefix}{branch}{p.name}/")
                 stats["dirs"] += 1
                 rec(p, prefix + cont, False)
             else:
                 lines.append(f"{prefix}{branch}{p.name}")
-                stats["files"] += 1
-
-    # En-tête
+                stats["files"] += 1    # En-tête
     lines.append("# ===================== TREE (clean) =====================")
     lines.append(f"# Racine : {root}")
     lines.append(f"# Généré : {datetime.now().isoformat(timespec='seconds')}")

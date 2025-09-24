@@ -1,0 +1,62 @@
+# Rapport complet des erreurs Pylance
+
+Fichier : guignomap/app.py
+
+---
+
+1. Indentation et syntaxe
+- Lignes 220-224 : Unexpected indentation, Expected expression, Unindent amount does not match previous indent, Statements must be separated by newlines or semicolons.
+- Ligne 225 : Expected expression
+- Ligne 226 : Unexpected indentation
+- Ligne 232 : Try statement must have at least one except or finally clause
+- Ligne 354, 552, 2650 : Unexpected indentation
+- Ligne 2654 : Expected expression
+
+2. Typage et accès attributs
+- Ligne 3, 1271, 1274 : Type mismatch sur ReportGenerator (import/type).
+- Ligne 82 : Argument of type "object | list[Unknown]" cannot be assigned to parameter "data" of type DataFrame.
+- Ligne 809 : "__getitem__" method not defined on type "object" (stats['done'], stats['total']).
+- Ligne 1431 : Argument of type "Literal[''] | None" cannot be assigned to parameter "data" of type "DownloadButtonDataType".
+- Ligne 1620 : Cannot access attribute "empty" for class "object".
+- Ligne 1798, 2027, 2191 : Cannot access attribute "empty" for class "list[Unknown]".
+- Ligne 1800 : Cannot access attribute "iterrows" for class "list[Unknown]".
+- Ligne 1943, 1945 : Cannot access attribute "empty" for class "list[Unknown]".
+- Ligne 1954 : Cannot access attribute "to_records" for class "list[Unknown]".
+- Ligne 1961 : No overloads for "__getitem__" match the provided arguments (list['name']).
+- Ligne 2485, 2486 : Cannot access attribute "empty" or "to_csv" for class "list[Unknown]".
+
+3. Variables non définies
+- Ligne 2000 : "team_id_in" is not defined
+- Ligne 2214, 2230, 2239, 2301 : "conn" is not defined
+- Ligne 2582, 2584, 2586 : "col2", "col3", "col4" are not defined
+- Ligne 2583 : "done_streets" is not defined
+- Ligne 2657, 2658, 2659 : "address_number", "comment" are not defined
+- Ligne 2819 : "main_with_carte" is not defined
+
+4. Portée et logique
+- Ligne 2666 : Except clause is unreachable because exception is already handled
+- Ligne 2221, 2245 : "tabs" is not defined
+- Ligne 2130 : "__getitem__" method not defined on type "object" (backups[:5])
+
+5. Erreurs sur Path
+- Ligne 2119 : Argument of type "object" cannot be assigned to parameter "args" of type "StrPath" in function "__new__" ou "__init__"
+
+---
+
+Aucune erreur détectée dans :
+- guignomap/db.py
+- guignomap/osm.py
+- guignomap/backup.py
+- guignomap/import_civic.py
+- guignomap/reports.py
+- guignomap/validators.py
+- guignomap/__init__.py
+- export_selected_files.py
+- geocode_offline.py
+- geocode_online.py
+- tree_clean.py
+- guignomap/export_utils.py
+
+---
+
+Ce rapport liste toutes les erreurs Pylance détectées dans le projet au 23/09/2025. Pour chaque erreur, la ligne et le type de problème sont précisés. Pour corriger, se référer à la section, corriger l’indentation, le typage, ou la logique selon le cas.

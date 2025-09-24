@@ -1,0 +1,42 @@
+============================================================
+DIAGNOSTIC GUIGNOMAP - 2025-09-24 07:28:49
+============================================================
+
+📊 TABLES DANS LA BASE:
+  ✓ sqlite_sequence
+  ✓ teams
+  ✓ sectors
+  ✓ notes
+  ✓ activity_log
+  ✓ street_status
+  ✓ streets
+  ✓ addresses
+
+🛤️ RUES (table streets):
+  Total: 3352
+  - a_faire: 3352
+  Équipes assignées: 0
+
+📍 ADRESSES (table addresses):
+  Total: 18655
+  Avec code postal: 99 (0.5%)
+  Avec GPS: 0 (0.0%)
+  Prêtes pour géocodage (CP sans GPS): 99
+
+👥 ÉQUIPES (table teams):
+  Total: 1
+  - ADMIN: Superviseur
+
+📁 FICHIERS EXCEL DISPONIBLES:
+  - nocivique.xlsx (0.5 MB)
+  - nocivique_avec_cp.xlsx (0.9 MB)
+  - nocivique_cp_complement.xlsx (1.0 MB)
+  - nocivique_sans_cp.xlsx (0.9 MB)
+
+✅ nocivique_cp_complement.xlsx trouvé!
+  Colonnes: ['NoCiv', 'NoCivSuf', 'nomrue', 'OdoGener', 'OdoParti', 'OdoSpeci', 'join_key', 'code_postal', 'code_postal_trouve']
+
+🎯 ACTIONS RECOMMANDÉES:
+  1. Importer les codes postaux (18556 manquants)
+  2. Géocoder les adresses (18655 sans GPS)
+  3. 99 adresses prêtes pour géocodage GPS

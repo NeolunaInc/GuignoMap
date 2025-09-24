@@ -6,6 +6,11 @@ import guignomap.db as db
 
 from guignomap.helpers_gm import DB_PATH, get_conn, _safe_stats, _ensure_df, _load_points_df
 
+import re
+def ui_key(label: str) -> str:
+    s = re.sub(r'[^a-z0-9]+', '_', label.strip().lower())
+    return f"k_{s}"
+
 # --- Optional imports with stubs ---
 try:
     from guignomap.osm import load_geometry_cache, build_geometry_cache, build_addresses_cache, load_addresses_cache, CACHE_FILE
@@ -194,7 +199,7 @@ def to_scalar(x: Any) -> Any:
         team_id = st.sidebar.text_input(
             "ID équipe", value=st.session_state.get("team_id", "")
         )
-        if st.sidebar.button("Entrer") and team_id and team_id.strip():
+        if st.sidebar.button("Entrer", key=ui_key("Entrer bénévole")) and team_id and team_id.strip():
             st.session_state["team_id"] = team_id.strip()
         team_id = st.session_state.get("team_id")
         if not team_id:
@@ -692,7 +697,7 @@ def render_dashboard_gestionnaire(conn, geo):
                 paper_bgcolor="rgba(0,0,0,0)",
                 font_color="white",
             )
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Aucune statistique d'équipe disponible")
     except Exception as e:
@@ -1049,7 +1054,7 @@ def page_export_gestionnaire(conn):
                 width="stretch",
             )
         except ImportError:
-            st.button("PDF (Installer reportlab)", disabled=True, width="stretch")
+            st.button("PDF (Installer reportlab)", key=ui_key("PDF installer reportlab"), disabled=True, width="stretch")
 
     with col2:
         st.markdown(
@@ -1515,10 +1520,10 @@ def page_benevole(conn, geo):
                         " PDF (Fonction manquante)", disabled=True, width="stretch"
                     )
             except Exception as e:
-                st.button(" PDF (Erreur)", disabled=True, width="stretch")
+                st.button(" PDF (Erreur)", key=ui_key("PDF erreur"), disabled=True, width="stretch")
                 st.caption(f"Erreur: {e}")
         else:
-            st.button(" PDF (Module reports manquant)", disabled=True, width="stretch")
+            st.button(" PDF (Module reports manquant)", key=ui_key("PDF module manquant"), disabled=True, width="stretch")
 
 
 def page_benevole_v2(conn, geo):
@@ -1763,7 +1768,7 @@ def page_gestionnaire_v2(conn, geo):
 
         if not st.session_state.tech_ok:
             pin = st.text_input("Entrer le PIN technique", type="password")
-            if st.button("Déverrouiller"):
+            if st.button("Déverrouiller", key=ui_key("Déverrouiller superviseur")):
                 if TECH_PIN and pin == TECH_PIN:
                     st.session_state.tech_ok = True
                     st.success("Accès technique déverrouillé.")
@@ -1824,13 +1829,13 @@ def page_gestionnaire_v2(conn, geo):
 
             col1, col2 = st.columns([2, 1])
             with col1:
-                if st.button(" Créer un backup manuel", width="stretch"):
+                if st.button(" Créer un backup manuel", key=ui_key("Créer backup manuel"), width="stretch"):
                     backup_file = backup_mgr.create_backup("manual")
                     if backup_file:
                         st.success(f"Backup créé : {Path(backup_file).name}")
 
             with col2:
-                if st.button(" Voir les backups", width="stretch"):
+                if st.button(" Voir les backups", key=ui_key("Voir les backups"), width="stretch"):
                     backups = backup_mgr.list_backups()
                     if backups:
                         for backup in backups[:5]:  # Montrer les 5 derniers
@@ -1952,7 +1957,7 @@ def page_superviseur(conn, geo):
 
         if not st.session_state.tech_ok:
             pin = st.text_input("Entrer le PIN technique", type="password")
-            if st.button("Déverrouiller"):
+            if st.button("Déverrouiller", key=ui_key("Déverrouiller tech")):
                 if TECH_PIN and pin == TECH_PIN:
                     st.session_state.tech_ok = True
                     st.success("Accès technique déverrouillé.")
@@ -2001,3 +2006,195 @@ def page_superviseur(conn, geo):
                     st.rerun()
                 else:
                     st.warning("Confirmation incomplète.")
+
+        # --- Gestion des backups
+        with st.expander(" Gestion des backups", expanded=False):
+            backup_mgr = db.get_backup_manager(DB_PATH)
+
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                if st.button(" Créer un backup manuel", key=ui_key("Créer backup manuel"), width="stretch"):
+                    backup_file = backup_mgr.create_backup("manual")
+                    if backup_file:
+                        st.success(f"Backup créé : {Path(backup_file).name}")
+
+            with col2:
+                if st.button(" Voir les backups", key=ui_key("Voir les backups"), width="stretch"):
+                    backups = backup_mgr.list_backups()
+                    if backups:
+                        for backup in backups[:5]:  # Montrer les 5 derniers
+                            size_mb = backup.stat().st_size / (1024 * 1024)
+                            st.text(f" {backup.name} ({size_mb:.1f} MB)")
+                    else:
+                        st.info("Aucun backup disponible")
+
+
+def page_superviseur(conn, geo):
+    """Interface superviseur"""
+    st.header(" Tableau de Bord Superviseur")
+
+    # Vérifier l'authentification
+    if not st.session_state.auth or st.session_state.auth.get("role") != "supervisor":
+        render_login_card("superviseur", conn)
+        return
+
+    # Dashboard moderne
+    render_dashboard_gestionnaire(conn, geo)
+
+    # Tabs
+    tabs = st.tabs([" Vue d'ensemble", " quipes", "️ Assignation", " Export", " Tech"])
+
+    with tabs[0]:
+        # Carte générale
+        st.markdown("### Carte générale")
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            m = create_map(df_all, geo)
+            st_folium(m, height=800, width=None, returned_objects=[])
+
+        # Activité récente
+        st.markdown("### Activité récente")
+        recent = db.recent_activity(conn, limit=10)
+        if not recent.empty:
+            st.dataframe(recent, width="stretch")
+
+    with tabs[1]:
+        # Gestion des équipes
+        st.markdown("### Gestion des équipes")
+
+        with st.expander("Créer une équipe"):
+            with st.form("new_team", clear_on_submit=True):
+                new_id = st.text_input("Identifiant")
+                new_name = st.text_input("quipe")
+                new_pass = st.text_input("Mot de passe", type="password")
+
+                if st.form_submit_button("Créer"):
+                    if all([new_id, new_name, new_pass]):
+                        if db.create_team(conn, new_id, new_name, new_pass):
+                            st.success(f"quipe {new_id} créée")
+                            st.rerun()
+
+        # Liste des équipes
+        teams_df = db.get_all_teams(conn)
+        if not teams_df.empty:
+            st.dataframe(teams_df, width="stretch")
+
+    with tabs[2]:
+        # Assignation
+        st.markdown("### Assignation des rues")
+
+        unassigned = db.get_unassigned_streets(conn)
+
+        if not unassigned.empty:
+            with st.form("assign"):
+                team = st.selectbox("quipe", db.teams(conn))
+                streets = st.multiselect("Rues", unassigned["name"].tolist())
+
+                if st.form_submit_button("Assigner"):
+                    if team and streets:
+                        db.assign_streets_to_team(conn, streets, team)
+                        st.success("Rues assignées!")
+                        st.rerun()
+        else:
+            st.success("Toutes les rues sont assignées!")
+
+        # Tableau des assignations
+        df_all = db.list_streets(conn)
+        if not df_all.empty:
+            st.dataframe(df_all[["name", "sector", "team", "status"]], width="stretch")
+
+    with tabs[3]:
+        # Export
+        st.markdown("### Export des données")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.download_button(
+                " Export rues (CSV)",
+                db.export_to_csv(conn),
+                "rapport_rues.csv",
+                "text/csv",
+                width="stretch",
+            )
+
+        with col2:
+            st.download_button(
+                " Export notes (CSV)",
+                db.export_notes_csv(conn),
+                "rapport_notes.csv",
+                "text/csv",
+                width="stretch",
+            )
+
+    with tabs[4]:
+        st.markdown("###  Opérations techniques (protégées)")
+
+        # -- PIN stocké dans secrets (config.toml -> [secrets] TECH_PIN="xxxx")
+        try:
+            TECH_PIN = st.secrets.get("TECH_PIN", "")
+        except:
+            TECH_PIN = ""  # Pas de fichier secrets.toml
+
+        if "tech_ok" not in st.session_state:
+            st.session_state.tech_ok = False
+
+        if not st.session_state.tech_ok:
+            pin = st.text_input("Entrer le PIN technique", type="password")
+            if st.button("Déverrouiller", key=ui_key("Déverrouiller tech")):
+                if TECH_PIN and pin == TECH_PIN:
+                    st.session_state.tech_ok = True
+                    st.success("Accès technique déverrouillé.")
+                    st.rerun()
+                else:
+                    st.error("PIN invalide.")
+            st.stop()
+
+        st.info(
+            "️ Ces actions sont lourdes et n'affectent pas les statuts/notes. Elles régénèrent les caches OSM."
+        )
+
+        # --- Reconstruire le cache géométrique (lourd)
+        with st.expander(" Reconstruire cache OSM (géométries)", expanded=False):
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                confirm = st.checkbox("Je comprends les implications")
+            with col2:
+                safety = st.text_input('crire "REBUILD" pour confirmer')
+
+            if st.button("Lancer la reconstruction"):
+                if confirm and safety.strip().upper() == "REBUILD":
+                    with st.spinner("Construction du cache"):
+                        build_geometry_cache()  # reconstruit le fichier osm_cache.json
+                        st.cache_data.clear()  # purge cache Streamlit
+                    st.success(" Cache OSM mis à jour (géométries).")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+        # --- Reconstruire/Importer le cache des adresses
+        with st.expander(" Mettre à jour les adresses (OSM)", expanded=False):
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                confirmA = st.checkbox("Je confirme")
+            with col2:
+                safetyA = st.text_input('crire "IMPORT" pour confirmer')
+
+            if st.button("Lancer la mise à jour des adresses"):
+                if confirmA and safetyA.strip().upper() == "IMPORT":
+                    with st.spinner("Téléchargement des adresses OSM"):
+                        build_addresses_cache()
+                        addr_cache = load_addresses_cache()
+                        count = db.import_addresses_from_cache(conn, addr_cache)
+                    st.success(f" {count} adresses importées depuis OSM.")
+                    st.rerun()
+                else:
+                    st.warning("Confirmation incomplète.")
+
+
+# --- Entrypoint unifié (append-only) ---
+try:
+    _run_app_entrypoint()
+except NameError:
+    # Si le fichier n’a pas encore les pages/fonctions, on affiche un message au lieu de crasher
+    st.warning("Entrypoint partiel : certaines pages ne sont pas chargées.")

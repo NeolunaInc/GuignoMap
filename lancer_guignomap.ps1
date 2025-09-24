@@ -1,4 +1,4 @@
-﻿# Active l'environnement virtuel en utilisant le chemin correct
+# Active l'environnement virtuel en utilisant le chemin correct
 <#
 .SYNOPSIS
 Lance GuignoMap avec options d'initialisation, backup, port et tests.

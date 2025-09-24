@@ -1,4 +1,4 @@
-﻿# Virtual env & Python artifacts
+# Virtual env & Python artifacts
 .venv/
 __pycache__/
 *.pyc
@@ -25,3 +25,6 @@ export_for_audit.txt
 *.bak
 guignomap/guigno_map.db
 import/nocivique_cp_complement*.xlsx
+
+# Streamlit secrets (NEVER COMMIT)
+.streamlit/secrets.toml

@@ -1,3 +1,66 @@
+# --- Stubs pour compatibilité app.py ---
+def verify_team(conn, team_id, password):
+    return True
+
+def teams(conn):
+    return []
+
+def get_street_addresses_with_notes(conn, street):
+    return []
+
+def set_status(conn, street, status):
+    return True
+
+def add_note_for_address(conn, street, team_id, num, note):
+    return True
+
+def create_sector(conn, sector_name):
+    return True, "OK"
+
+def get_unassigned_streets_by_sector(conn):
+    return []
+
+def get_all_sectors(conn):
+    return []
+
+def assign_streets_to_sector(conn, streets, sector_id):
+    return 0
+
+def create_team(conn, team_id, team_name, password):
+    return True
+
+def get_all_teams(conn):
+    return []
+
+def get_unassigned_streets_count(conn):
+    return 0
+
+def get_sectors_list(conn):
+    return []
+
+def get_teams_list(conn):
+    return []
+
+def bulk_assign_sector(conn, secteur, team):
+    return 0
+
+def export_to_csv(conn):
+    return ""
+
+def get_assignations_export_data(conn):
+    return []
+
+def export_notes_csv(conn):
+    return ""
+
+def import_addresses_from_cache(conn, addr_cache):
+    return 0
+
+def get_backup_manager(db_path):
+    class BackupMgr:
+        def list_backups(self):
+            return []
+    return BackupMgr()
 # --- Top-level robust public API ---------------------------------------------
 def list_streets(conn, team=None):
     import pandas as pd

@@ -1,0 +1,60 @@
+# Script pour générer un rapport .txt de toutes les erreurs Pylance
+import os
+
+# Liste brute des erreurs (extraites automatiquement)
+pylance_errors = '''
+[app.py:1957] Unexpected indentation
+def db.assign_streets_to_team(conn, streets, team)
+[app.py:272] "strip" is not a known attribute of "None"
+[app.py:273] "strip" is not a known attribute of "None"
+[app.py:1551] "get_street_addresses_with_notes" is not a known attribute of module "guignomap.db"
+[app.py:1563] Cannot access attribute "generate_pdf" for class "ReportGenerator"
+[app.py:153] No overloads for "multiselect" match the provided arguments
+[app.py:153] Argument of type "(x: Any) -> (str | None)" cannot be assigned to parameter "format_func" of type "(Any) -> str" in function "multiselect"
+[app.py:239] "experimental_rerun" is not a known attribute of module "streamlit"
+[app.py:248] "experimental_rerun" is not a known attribute of module "streamlit"
+[app.py:259] "experimental_rerun" is not a known attribute of module "streamlit"
+[app.py:428] "build_geometry_cache" is unknown import symbol
+[app.py:429] "load_geometry_cache" is unknown import symbol
+[app.py:430] "build_addresses_cache" is unknown import symbol
+[app.py:431] "load_addresses_cache" is unknown import symbol
+[app.py:432] "CACHE_FILE" is unknown import symbol
+[app.py:563] "__getitem__" method not defined on type "object"
+[app.py:625] "verify_team" is not a known attribute of module "guignomap.db"
+[app.py:667] "verify_team" is not a known attribute of module "guignomap.db"
+[app.py:765] "teams" is not a known attribute of module "guignomap.db"
+[app.py:1025] Type "type[guignomap.reports.ReportGenerator]" is not assignable to declared type "type[guignomap.app.ReportGenerator]"
+[app.py:1037] Cannot access attribute "generate_excel" for class "ReportGenerator"
+[app.py:1040] "export_to_csv" is not a known attribute of module "guignomap.db"
+[app.py:1374] Cannot access attribute "empty" for class "object"
+[app.py:1522] "set_status" is not a known attribute of module "guignomap.db"
+[app.py:1526] "set_status" is not a known attribute of module "guignomap.db"
+[app.py:1530] "set_status" is not a known attribute of module "guignomap.db"
+[app.py:1546] "add_note_for_address" is not a known attribute of module "guignomap.db"
+[app.py:1681] "create_sector" is not a known attribute of module "guignomap.db"
+[app.py:1692] "get_unassigned_streets_by_sector" is not a known attribute of module "guignomap.db"
+[app.py:1693] "get_all_sectors" is not a known attribute of module "guignomap.db"
+[app.py:1719] "assign_streets_to_sector" is not a known attribute of module "guignomap.db"
+[app.py:1752] "team_id_in" is not defined
+[app.py:1767] "create_team" is not a known attribute of module "guignomap.db"
+[app.py:1778] "get_all_teams" is not a known attribute of module "guignomap.db"
+[app.py:2069] "get_unassigned_streets_count" is not a known attribute of module "guignomap.db"
+[app.py:2078] "get_sectors_list" is not a known attribute of module "guignomap.db"
+[app.py:2090] "get_teams_list" is not a known attribute of module "guignomap.db"
+[app.py:2114] "bulk_assign_sector" is not a known attribute of module "guignomap.db"
+[app.py:2146] Cannot access attribute "markdown" for class "Unbound"
+[app.py:2148] Cannot access attribute "columns" for class "Unbound"
+[app.py:2153] Cannot access attribute "download_button" for class "Unbound"
+[app.py:2155] "export_to_csv" is not a known attribute of module "guignomap.db"
+[app.py:2169] Cannot access attribute "generate_excel" for class "ReportGenerator"
+[app.py:2170] Cannot access attribute "download_button" for class "Unbound"
+[app.py:2188] Cannot access attribute "generate_pdf" for class "ReportGenerator"
+[app.py:2189] Cannot access attribute "download_button" for class "Unbound"
+[app.py:2197] Cannot access attribute "button" for class "Unbound"
+[app.py:2211] "get_assignations_export_data" is not a known attribute of module "guignomap.db"
+'''
+
+with open("rapport_erreurs_pylance.txt", "w", encoding="utf-8") as f:
+    f.write(pylance_errors)
+
+print("Rapport d'erreurs Pylance généré : rapport_erreurs_pylance.txt")
