@@ -26,6 +26,25 @@ FILES = [
     "guignomap/reports.py",
     "guignomap/validators.py",
     "guignomap/assets/styles.css",
+    # --- Nouveaux scripts ajoutés ---
+    "verify_final.py",
+    "verify_postal_codes.py",
+    "verify_reimport.py",
+    "reimport_complete.py",
+    "fix_database_structure.py",
+    "geocode_remaining.py",
+    "geocode_with_postal.py",
+    "geocode_sample.py",
+    "import_cp_complement_to_db.py",
+    "inspect_db_structure.py",
+    "app_carte.py",
+    "add_secteur_column.py",
+    "add_team_column.py",
+    "analyse_matching.py",
+    "backup_complet.py",
+    "check_original_files.py",
+    "debug_matching.py",
+    "diagnostic.py",
 ]
 
 def sha256_bytes(b: bytes) -> str:

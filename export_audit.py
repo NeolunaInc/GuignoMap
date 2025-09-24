@@ -42,6 +42,23 @@ FILES_TO_INCLUDE = [
     "requirements-freeze.txt",
     "requirements.txt",
     ".gitignore"
+    ,"app_carte.py"
+    ,"add_secteur_column.py"
+    ,"add_team_column.py"
+    ,"analyse_matching.py"
+    ,"backup_complet.py"
+    ,"check_original_files.py"
+    ,"debug_matching.py"
+    ,"diagnostic.py"
+    ,"fix_database_structure.py"
+    ,"geocode_remaining.py"
+    ,"geocode_with_postal.py"
+    ,"import_cp_complement_to_db.py"
+    ,"inspect_db_structure.py"
+    ,"reimport_complete.py"
+    ,"verify_final.py"
+    ,"verify_postal_codes.py"
+    ,"verify_reimport.py"
 ]
 
 def get_python_version():
@@ -56,8 +73,21 @@ def get_installed_packages():
 
 def get_tree():
     try:
-        result = subprocess.run([sys.executable, "tree_clean.py"], capture_output=True, text=True, cwd=Path(__file__).parent)
-        return result.stdout
+        # Exécute tree_clean.py pour générer le fichier
+        result = subprocess.run([
+            sys.executable, "tree_clean.py"
+        ], capture_output=True, text=True, cwd=Path(__file__).parent)
+        # Cherche le dernier fichier tree_clean_*.txt dans exports
+        exports_dir = Path(__file__).parent / "exports"
+        tree_files = sorted(exports_dir.glob("tree_clean_*.txt"), reverse=True)
+        if tree_files:
+            tree_path = tree_files[0]
+            try:
+                return tree_path.read_text(encoding="utf-8")
+            except Exception as e:
+                return f"Erreur lecture fichier tree: {e}"
+        else:
+            return "Aucun fichier tree_clean_*.txt trouvé dans exports."
     except Exception as e:
         return f"Erreur génération tree: {e}"
 

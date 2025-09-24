@@ -78,10 +78,12 @@ def main():
 
     lines = build_tree_lines(root)
     text = "\n".join(lines)
-
     print(text)
-    out_file.write_text(text, encoding="utf-8")
-    print(f"\nOK -> {out_file}")
+    try:
+        out_file.write_text(text, encoding="utf-8")
+        print(f"\nOK -> {out_file}")
+    except Exception as e:
+        print(f"Erreur écriture fichier tree: {e}")
 
 if __name__ == "__main__":
     main()

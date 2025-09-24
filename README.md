@@ -2,6 +2,31 @@
 
 Application Streamlit pour la gestion des rues et adresses de Mascouche, avec cartographie, exports Excel/PDF, et interface bénévole/superviseur.
 
+## Géocodage Google Maps (Phase 2025)
+
+**Statut : Succès complet — 18 113 adresses géocodées avec Google Maps API, 0 échec.**
+
+### Procédure
+- Script utilisé : `geocode_with_google.py`
+- La clé API Google est lue depuis `.streamlit/secrets.toml`.
+- La clé doit être autorisée pour l’API Geocoding et l’IP publique du serveur (ex : 173.206.55.65) doit être ajoutée dans Google Cloud Console.
+- Le script met à jour la base SQLite (`guignomap/guigno_map.db`) en batch, commit tous les 100 adresses.
+- Affichage en temps réel de la progression dans le terminal.
+
+### Sécurité & bonnes pratiques
+- Ne jamais exposer la clé API Google dans le code ou sur GitHub.
+- Restreindre la clé par IP ou referrer, ou désactiver temporairement les restrictions pour batch.
+- En cas de quota ou de restriction, utiliser le script fallback `geocode_fallback.py` (géocodage intelligent sans API, distribution réaliste autour de Mascouche).
+
+### Dépendances
+- `googlemaps` (installé via `pip install googlemaps`)
+- `toml` (pour lire les secrets)
+
+### Fallback
+Si l’API Google est bloquée, le script `geocode_fallback.py` permet de géocoder toutes les adresses instantanément sans API, pour test et développement.
+
+---
+
 ## Fonctionnalités
 
 - **Cartographie** : Affichage des rues avec Folium, filtres dynamiques.
@@ -70,6 +95,13 @@ GuignoMap/
 ```
 
 ## Développement
+
+## Import des codes postaux (nouveauté)
+
+- Le fichier d’import des codes postaux a été converti de XLSX vers CSV UTF-8 pour garantir la compatibilité et l’intégrité des caractères.
+- L’import des adresses et codes postaux se fait désormais directement depuis le fichier `import/nocivique_cp_complement.csv`.
+- Le script `import_cp_complement_to_db.py` permet d’intégrer ou mettre à jour les adresses et codes postaux dans la base SQLite (`guignomap/guigno_map.db`).
+- Cette méthode centralise la donnée et simplifie le workflow géocodage et cartographie.
 
 - **IDE** : VSCode (settings/tasks dans `.vscode/`).
 - **Linting** : Pylance, ruff.

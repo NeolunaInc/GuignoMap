@@ -213,3 +213,212 @@
 2025-09-24 08:14:27,041 INFO OK: 1485 Chemin de la Côte-Georges, J7L 1A7, Canada -> 45.7893776, -73.6498291
 2025-09-24 08:14:28,459 INFO OK: 544 Rue du Grand-Héron, J7K 2L5, Canada -> 45.739026, -73.622866
 2025-09-24 08:14:30,175 INFO OK: 1350 Rue Barott, J7L 1V7, Canada -> 45.7489234, -73.6428491
+2025-09-24 11:14:28,935 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=3700+Chemin+Saint-Henri%2C+J0K+3H0%2C+Canada&format=json&limit=1
+2025-09-24 11:14:30,076 INFO OK: 3700 Chemin Saint-Henri, J0K 3H0, Canada -> 45.8092115, -73.5702751
+2025-09-24 11:14:31,827 INFO OK: 2294 Rue Bélanger, J7L 1A7, Canada -> 45.7845199, -73.6281147
+2025-09-24 11:14:33,734 INFO OK: 1318 Chemin Sainte-Marie, J7L 1V7, Canada -> 45.7661162, -73.6623716
+2025-09-24 11:14:35,117 INFO OK: 3031 Chemin Sainte-Marie, J7K 1P2, Canada -> 45.745366, -73.601007
+2025-09-24 11:14:36,676 INFO OK: 1611 Rue Barott, J7L 1V7, Canada -> 45.7489234, -73.6428491
+2025-09-24 11:14:38,020 INFO OK: 1082 Avenue de Châteaubriant, J7L 1A7, Canada -> 45.751362, -73.620175
+2025-09-24 11:14:39,744 INFO OK: 354 Place Sullivan, J7L 1V7, Canada -> 45.733508, -73.653375
+2025-09-24 11:14:41,142 INFO OK: 1158 Avenue de Châteaubriant, J7L 1A7, Canada -> 45.753511, -73.620393
+2025-09-24 11:14:42,628 INFO OK: 1136 Chemin Pincourt, J7L 1V7, Canada -> 45.7546138, -73.6482046
+2025-09-24 11:14:44,198 INFO OK: 604 Rue Chauveau, J7K 2L5, Canada -> 45.7341891, -73.6119608
+2025-09-24 11:14:45,840 INFO OK: 2706 Croissant des Grives, J7K 3B6, Canada -> 45.7395188, -73.617052
+2025-09-24 11:14:47,246 INFO OK: 2709 Rue des Chardonnerets, J7K 2L5, Canada -> 45.739081, -73.622907
+2025-09-24 11:14:48,899 INFO OK: 370 Rue des Parterres, J7K 0T4, Canada -> 45.73041, -73.6260922
+2025-09-24 11:14:50,302 INFO OK: 2625 Rue Cantin, J7K 2L8, Canada -> 45.754505, -73.612833
+2025-09-24 11:14:52,014 INFO OK: 2833 Chemin Saint-Philippe, J7K 2L8, Canada -> 45.790026, -73.598504
+2025-09-24 11:14:54,119 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=2121+Avenue+Pierre%2C+J7L+1A7%2C+Canada&format=json&limit=1
+2025-09-24 11:14:54,967 INFO OK: 2121 Avenue Pierre, J7L 1A7, Canada -> 45.7801479, -73.626198
+2025-09-24 11:14:56,335 INFO OK: 556 Rue des Martins-Pêcheurs, J7K 2L5, Canada -> 45.7338158, -73.6180099
+2025-09-24 11:14:58,219 INFO OK: 1445 Avenue Louise, J6X 4J4, Canada -> 45.728593, -73.6684421
+2025-09-24 11:14:59,604 INFO OK: 1294 Rue Lionel-Groulx, J7K 2L8, Canada -> 45.7538233, -73.5993
+2025-09-24 11:15:01,194 INFO OK: 1288 Rue Lionel-Groulx, J7K 2L8, Canada -> 45.753575, -73.599401
+2025-09-24 11:15:02,575 INFO OK: 1448 Croissant Lemelin, J7K 1P2, Canada -> 45.7576124, -73.5945996
+2025-09-24 11:15:04,149 INFO OK: 698 Rue Turenne, J7K 1Y4, Canada -> 45.7360736, -73.6020979
+2025-09-24 11:15:05,467 INFO OK: 2239 Rue de Davignac, J7K 0T4, Canada -> 45.7232623, -73.625302
+2025-09-24 11:15:06,953 INFO OK: 1571 Rue Barott, J7L 1V7, Canada -> 45.7489234, -73.6428491
+2025-09-24 11:15:08,608 INFO OK: 1169 Chemin Sainte-Marie, J7L 1V7, Canada -> 45.7684945, -73.6671733
+2025-09-24 11:15:10,272 INFO OK: 1157 Chemin des Anglais, J7L 1V7, Canada -> 45.7476427, -73.6399453
+2025-09-24 11:15:11,681 INFO OK: 1890 Rue Barott, J7L 1V7, Canada -> 45.7489234, -73.6428491
+2025-09-24 11:15:13,316 INFO OK: 837 Rue Beaudoin, J7K 1Y4, Canada -> 45.740683, -73.600924
+2025-09-24 11:15:14,618 INFO OK: 527 Rue Andrassy, J6X 4J8, Canada -> 45.7513635, -73.6784586
+2025-09-24 11:15:16,297 INFO OK: 1995 Rue Pigeon, J6X 2Z8, Canada -> 45.7271026, -73.6431318
+2025-09-24 11:15:17,618 INFO OK: 1001 Avenue de Charny, J7K 3T7, Canada -> 45.7475882, -73.61372
+2025-09-24 11:15:19,283 INFO OK: 2784 Rue Gouin, J7K 3G1, Canada -> 45.7405887, -73.6074491
+2025-09-24 11:15:20,649 INFO OK: 332 Place Corbeil, J7K 0K9, Canada -> 45.729167, -73.6127487
+2025-09-24 11:15:22,921 INFO OK: 2051 4e Avenue, J7L 1A7, Canada -> 45.7810824, -73.6280496
+2025-09-24 11:15:24,645 INFO OK: 360 Rue Martel, J7L 1V7, Canada -> 45.7524309, -73.6441042
+2025-09-24 11:15:26,140 INFO OK: 1646 Avenue Rawlinson, J7L 1V7, Canada -> 45.734038, -73.650042
+2025-09-24 11:15:28,245 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=665+Avenue+Cr%C3%A9peau%2C+J7K+1Y4%2C+Canada&format=json&limit=1
+2025-09-24 11:15:28,679 INFO OK: 665 Avenue Crépeau, J7K 1Y4, Canada -> 45.7353704, -73.6038584
+2025-09-24 11:15:30,131 INFO OK: 1313 Rue d'Orléans, J7L 1A7, Canada -> 45.7573634, -73.6158256
+2025-09-24 11:15:31,595 INFO OK: 459 Place des Pluviers, J7K 2L6, Canada -> 45.7306411, -73.6178488
+2025-09-24 11:15:32,962 INFO OK: 2532 Avenue de Maussac, J7K 0T4, Canada -> 45.7250056, -73.6280738
+2025-09-24 11:15:35,008 INFO OK: 1918 Avenue de la Gare, J7K 0Y4, Canada -> 45.7198895, -73.5858582
+2025-09-24 11:15:36,460 INFO OK: 3307 Rue de Gaspé, J7K 1P2, Canada -> 45.7460106, -73.5894091
+2025-09-24 11:15:38,031 INFO OK: 2586 Rue Cantin, J7K 2L8, Canada -> 45.754763, -73.6146704
+2025-09-24 11:15:39,382 INFO OK: 2418 Croissant d'Auteuil, J7L 1A7, Canada -> 45.7543251, -73.6184148
+2025-09-24 11:15:41,162 INFO OK: 933 Rue des Épinettes, J7L 1V7, Canada -> 45.7504209, -73.6522505
+2025-09-24 11:15:42,585 INFO OK: 2987 Avenue Bourque, J7K 3B6, Canada -> 45.735369, -73.60929
+2025-09-24 11:15:44,293 INFO OK: 200 Rue des Bosquets, J7K 0T4, Canada -> 45.7316722, -73.6308531
+2025-09-24 11:15:45,974 INFO OK: 943 Rue Sauvé, J7K 1P2, Canada -> 45.743682, -73.5954823
+2025-09-24 11:15:47,592 INFO OK: 2613 Rue Daudet, J7K 3T7, Canada -> 45.7503567, -73.6161528
+2025-09-24 11:15:49,506 INFO OK: 2200 Avenue de la Gare, J7K 0Y4, Canada -> 45.7198895, -73.5858582
+2025-09-24 11:15:51,159 INFO OK: 2595 Chemin Sainte-Marie, J7K 2L8, Canada -> 45.7522305, -73.6141489
+2025-09-24 11:15:52,749 INFO OK: 3051 Rue Lévesque, J7K 1P2, Canada -> 45.754874, -73.5963769
+2025-09-24 11:15:54,340 INFO OK: 4575 Chemin Gascon, J6X 4J8, Canada -> 45.7445975, -73.6956168
+2025-09-24 11:15:55,720 INFO OK: 635 Croissant de Landreville, J7K 0T4, Canada -> 45.7248383, -73.6345449
+2025-09-24 11:15:57,450 INFO OK: 943 Rue des Cerisiers, J7L 1V7, Canada -> 45.7543932, -73.6635247
+2025-09-24 11:15:58,830 INFO OK: 966 Rue des Glaïeuls, J7L 1V7, Canada -> 45.7557619, -73.6586254
+2025-09-24 11:16:00,546 INFO OK: 997 Rue Lapointe, J7K 3T7, Canada -> 45.746592, -73.612025
+2025-09-24 11:16:01,846 INFO OK: 360 Croissant du Trianon, J7K 0T4, Canada -> 45.725482, -73.631535
+2025-09-24 11:16:03,329 INFO OK: 422 Rue des Busards, J7K 0T4, Canada -> 45.7328593, -73.6227887
+2025-09-24 11:16:04,826 INFO OK: 1138 Rue d'Auvergne, J7L 1V7, Canada -> 45.7435724, -73.6682293
+2025-09-24 11:16:06,574 INFO OK: 796 Rue Mercier, J7K 3G1, Canada -> 45.740641, -73.606101
+2025-09-24 11:16:07,996 INFO OK: 1538 Rue Center, J6X 4H3, Canada -> 45.731647, -73.661382
+2025-09-24 11:16:09,482 INFO OK: 436 Rue Andrassy, J6X 4J8, Canada -> 45.7517837, -73.6788532
+2025-09-24 11:16:11,591 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=2179+Avenue+de+la+Gare%2C+J7K+0Y4%2C+Canada&format=json&limit=1
+2025-09-24 11:16:12,228 INFO OK: 2179 Avenue de la Gare, J7K 0Y4, Canada -> 45.7198895, -73.5858582
+2025-09-24 11:16:13,653 INFO OK: 1510 Rue Grignon, J7K 1P2, Canada -> 45.7594151, -73.5949018
+2025-09-24 11:16:15,298 INFO OK: 2343 Boulevard de Mascouche, J7L 1A7, Canada -> 45.745355, -73.6223423
+2025-09-24 11:16:16,664 INFO OK: 733 Chemin des Anglais, J7L 1V7, Canada -> 45.7400419, -73.6492402
+2025-09-24 11:16:18,243 INFO OK: 385 Croissant du Trianon, J7K 0T4, Canada -> 45.7253253, -73.6312834
+2025-09-24 11:16:19,585 INFO OK: 4587 Chemin Gascon, J6X 4J8, Canada -> 45.7448446, -73.6959857
+2025-09-24 11:16:21,076 INFO OK: 2550 Rue des Faucons, J7K 0T4, Canada -> 45.732854, -73.621753
+2025-09-24 11:16:22,449 INFO OK: 1380 Avenue de Chambéry, J7K 2L8, Canada -> 45.759439, -73.612934
+2025-09-24 11:16:23,924 INFO OK: 661 Avenue Crépeau, J7K 1Y4, Canada -> 45.7352279, -73.6039363
+2025-09-24 11:16:25,473 INFO OK: 1160 Avenue Louise, J6X 4J4, Canada -> 45.735301, -73.6774336
+2025-09-24 11:16:27,075 INFO OK: 2210 Rue de Davignac, J7K 0T4, Canada -> 45.723906, -73.6249833
+2025-09-24 11:16:28,446 INFO OK: 1414 Rue de Cherbourg, J7K 2L8, Canada -> 45.757786, -73.605273
+2025-09-24 11:16:30,007 INFO OK: 321 Place des Pluviers, J7K 2L6, Canada -> 45.7318123, -73.6173613
+2025-09-24 11:16:31,280 INFO OK: 304 Croissant de Castelnaud, J7K 0T4, Canada -> 45.7263133, -73.6300379
+2025-09-24 11:16:32,805 INFO OK: 263 Place des Pluviers, J7K 2L6, Canada -> 45.7323029, -73.6170867
+2025-09-24 11:16:34,345 INFO OK: 27 Avenue Napoléon, J6X 4J8, Canada -> 45.7330516, -73.676953
+2025-09-24 11:16:35,875 INFO OK: 2680 Croissant des Grives, J7K 3B6, Canada -> 45.7392939, -73.6161568
+2025-09-24 11:16:37,172 INFO OK: 2700 Place des Sittelles, J7K 0T4, Canada -> 45.7344707, -73.6230091
+2025-09-24 11:16:38,626 INFO OK: 2766 Croissant des Roitelets, J7K 2L5, Canada -> 45.7361726, -73.6210523
+2025-09-24 11:16:40,257 INFO OK: 2785 Rue de Bordeaux, J7K 2L8, Canada -> 45.75643, -73.606039
+2025-09-24 11:16:42,507 INFO OK: 2078 6e Avenue, J7L 1A7, Canada -> 45.7822773, -73.6267794
+2025-09-24 11:16:44,191 INFO OK: 915 Rue des Saules, J7L 1V7, Canada -> 45.7490505, -73.6497927
+2025-09-24 11:16:45,908 INFO OK: 1378 Avenue Louise, J6X 4J4, Canada -> 45.7308703, -73.670547
+2025-09-24 11:16:47,312 INFO OK: 454 Chemin des Anglais, J7L 1V7, Canada -> 45.734147, -73.6494316
+2025-09-24 11:16:48,801 INFO OK: 2820 Rue Françoise-Giroud, J7K 3T7, Canada -> 45.7463109, -73.6091507
+2025-09-24 11:16:50,264 INFO OK: 1408 Rue Pine, J6X 4H3, Canada -> 45.7335066, -73.6661256
+2025-09-24 11:16:51,824 INFO OK: 1472 Avenue de Châteaubriant, J7L 1A7, Canada -> 45.7577973, -73.6085222
+2025-09-24 11:16:53,191 INFO OK: 2449 Croissant d'Auteuil, J7L 1A7, Canada -> 45.755123, -73.6181749
+2025-09-24 11:16:55,107 INFO OK: 949 Rue Sauvé, J7K 1P2, Canada -> 45.743682, -73.5954823
+2025-09-24 11:16:56,797 INFO OK: 2994 Avenue de la Gare, J7K 0Y4, Canada -> 45.7198895, -73.5858582
+2025-09-24 11:16:58,436 INFO OK: 1013 Rue Lapointe, J7K 3T7, Canada -> 45.7469096, -73.6113279
+2025-09-24 11:17:00,328 INFO OK: 2830 Place Félix-Leclerc, J7K 3T7, Canada -> 45.744728, -73.615858
+2025-09-24 11:17:01,948 INFO OK: 115 Croissant de Galles, J6X 4J4, Canada -> 45.7335167, -73.6724221
+2025-09-24 11:17:03,266 INFO OK: 951 Rue des Glaïeuls, J7L 1V7, Canada -> 45.756502, -73.65857
+2025-09-24 11:17:04,745 INFO OK: 399 Place des Pluviers, J7K 2L6, Canada -> 45.7311554, -73.6177368
+2025-09-24 11:17:06,182 INFO OK: 1443 Rue de Côte-d'Ivoire, J6X 4H3, Canada -> 45.7286772, -73.6674319
+2025-09-24 11:17:08,022 INFO OK: 2933 Chemin Sainte-Marie, J7K 2L8, Canada -> 45.748514, -73.6033649
+2025-09-24 11:17:09,523 INFO OK: 236 Rue de Boissy, J7K 0T4, Canada -> 45.72467, -73.6279062
+2025-09-24 11:17:11,132 INFO OK: 2826 Rue de Sancerre, J7K 2L8, Canada -> 45.7525883, -73.6061267
+2025-09-24 11:17:12,576 INFO OK: 1299 Rue du Havre, J7L 1A7, Canada -> 45.7557325, -73.6201512
+2025-09-24 11:17:14,353 INFO OK: 1424 Rue Joy, J6X 4H3, Canada -> 45.734313, -73.663268
+2025-09-24 11:17:15,811 INFO OK: 1688 Rue Pine Brook, J7L 1V7, Canada -> 45.730228, -73.655194
+2025-09-24 11:17:17,353 INFO OK: 2853 Avenue Marie-Victorin, J7K 2L8, Canada -> 45.7555612, -73.6000706
+2025-09-24 11:17:18,818 INFO OK: 560 Rue de Pompadour, J7K 0T4, Canada -> 45.7238352, -73.6360012
+2025-09-24 11:17:21,093 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=1920+Rue+Comtois%2C+J7L+1A7%2C+Canada&format=json&limit=1
+2025-09-24 11:17:21,492 INFO OK: 1920 Rue Comtois, J7L 1A7, Canada -> 45.7766547, -73.6445491
+2025-09-24 11:17:22,806 INFO OK: 2075 Avenue du Suroît, J7L 1A7, Canada -> 45.751238, -73.631628
+2025-09-24 11:17:24,520 INFO OK: 1566 Rue Pine, J6X 4H3, Canada -> 45.730366, -73.661554
+2025-09-24 11:17:25,992 INFO OK: 405 Rue Parent, J7K 2L6, Canada -> 45.7310573, -73.6109778
+2025-09-24 11:17:27,515 INFO OK: 2121 Rue Comtois, J7L 1A7, Canada -> 45.7824082, -73.6406867
+2025-09-24 11:17:28,995 INFO OK: 2109 Rue de Fontainebleau, J7K 0T4, Canada -> 45.7248043, -73.6309107
+2025-09-24 11:17:30,515 INFO OK: 2687 Croissant des Geais-Bleus, J7K 2L5, Canada -> 45.7369475, -73.6170934
+2025-09-24 11:17:31,838 INFO OK: 484 Rue Deslongchamps, J7K 2L6, Canada -> 45.7322827, -73.6106941
+2025-09-24 11:17:33,578 INFO OK: 2789 Rue Dumont, J7K 2L8, Canada -> 45.750132, -73.609029
+2025-09-24 11:17:34,989 INFO OK: 1545 Rue de Côte-d'Ivoire, J6X 4H3, Canada -> 45.7275785, -73.66368
+2025-09-24 11:17:36,965 INFO OK: 398 Rue de Saint-Gabriel, J7L 1A7, Canada -> 45.7530657, -73.6429928
+2025-09-24 11:17:38,468 INFO OK: 1327 Avenue du Mistral, J7L 1A7, Canada -> 45.7467337, -73.6275877
+2025-09-24 11:17:40,176 INFO OK: 2556 Rue de Saint-Étienne, J7K 2L8, Canada -> 45.7598807, -73.6071663
+2025-09-24 11:17:42,285 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=315+Avenue+de+l%27%C3%89tang%2C+J7K+0T4%2C+Canada&format=json&limit=1
+2025-09-24 11:17:43,126 INFO OK: 315 Avenue de l'Étang, J7K 0T4, Canada -> 45.7321002, -73.6200361
+2025-09-24 11:17:44,475 INFO OK: 357 Croissant de Castelnaud, J7K 0T4, Canada -> 45.7255129, -73.6298966
+2025-09-24 11:17:46,120 INFO OK: 2492 Chemin Sainte-Marie, J7K 2L8, Canada -> 45.7526906, -73.616907
+2025-09-24 11:17:47,553 INFO OK: 2590 Rue Landry, J7K 2L8, Canada -> 45.7876527, -73.5962552
+2025-09-24 11:17:49,432 INFO OK: 440 Montée Masson, J7K 3B4, Canada -> 45.6957658, -73.6349296
+2025-09-24 11:17:50,757 INFO OK: 2886 Rue Desportes, J7K 2L8, Canada -> 45.7472285, -73.6077827
+2025-09-24 11:17:52,410 INFO OK: 3066 Avenue Bourque, J7K 3B6, Canada -> 45.734268, -73.605281
+2025-09-24 11:17:53,845 INFO OK: 65 Chemin Pincourt, J6X 4J8, Canada -> 45.7379406, -73.6800646
+2025-09-24 11:17:55,693 INFO OK: 1220 Rue des Fontaines, J7K 0T4, Canada -> 45.7319885, -73.6331857
+2025-09-24 11:17:57,081 INFO OK: 673 Rue de Pompadour, J7K 0T4, Canada -> 45.7238352, -73.6360012
+2025-09-24 11:17:59,012 INFO OK: 1896 Avenue de la Gare, J7K 0Y4, Canada -> 45.7198895, -73.5858582
+2025-09-24 11:18:00,314 INFO OK: 204 Rue Mactier, J7L 1A7, Canada -> 45.752709, -73.6341014
+2025-09-24 11:18:01,844 INFO OK: 3042 Place Daveluy, J7K 1P2, Canada -> 45.7477655, -73.5983092
+2025-09-24 11:18:03,169 INFO OK: 90 Chemin Pincourt, J6X 4J8, Canada -> 45.7378223, -73.6799972
+2025-09-24 11:18:04,674 INFO OK: 1307 Rue Moorecrest, J7L 1A7, Canada -> 45.7557691, -73.6375671
+2025-09-24 11:18:06,785 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=2772+Rue+Principale%2C+J7K+2L8%2C+Canada&format=json&limit=1
+2025-09-24 11:18:07,964 WARNING Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=2772+Rue+Principale%2C+J7K+2L8%2C+Canada&format=json&limit=1
+2025-09-24 11:18:09,140 ERROR ERROR: 2772 Rue Principale, J7K 2L8, Canada -> HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Max retries exceeded with url: /search?q=2772+Rue+Principale%2C+J7K+2L8%2C+Canada&format=json&limit=1 (Caused by ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)"))
+2025-09-24 11:18:10,613 INFO OK: 350 Place des Pluviers, J7K 2L6, Canada -> 45.7319374, -73.6170172
+2025-09-24 11:18:12,019 INFO OK: 2829 Rue d'Antibes, J7K 2L8, Canada -> 45.757735, -73.602897
+2025-09-24 11:18:13,652 INFO OK: 840 Rue Brien, J7K 1Y4, Canada -> 45.739634, -73.599432
+2025-09-24 11:18:15,065 INFO OK: 473 Rue Terry-Fox, J7K 0K9, Canada -> 45.7298677, -73.6084004
+2025-09-24 11:18:16,944 INFO OK: 1861 Rue Maple, J6X 4E3, Canada -> 45.726085, -73.651717
+2025-09-24 11:18:18,368 INFO OK: 3605 Chemin Gascon, J6X 4J8, Canada -> 45.735862, -73.6823252
+2025-09-24 11:18:19,872 INFO OK: 755 Place des Taillis, J7K 3B6, Canada -> 45.7410028, -73.6181493
+2025-09-24 11:18:21,612 INFO OK: 2035 5e Avenue, J7L 1A7, Canada -> 45.7816613, -73.6287637
+2025-09-24 11:18:23,214 INFO OK: 1457 Rue de l'Aigle, J7L 1V7, Canada -> 45.7469497, -73.6471124
+2025-09-24 11:18:24,725 INFO OK: 1382 Avenue Louise, J6X 4J4, Canada -> 45.7307607, -73.6703825
+2025-09-24 11:18:26,183 INFO OK: 2854 Avenue Bourque, J7K 2L5, Canada -> 45.735479, -73.615207
+2025-09-24 11:18:27,493 INFO OK: 3056 Rue Perrier, J7K 2L5, Canada -> 45.7324072, -73.6069315
+2025-09-24 11:18:29,072 INFO OK: 910 Chemin des Anglais, J7L 1V7, Canada -> 45.7442133, -73.6452595
+2025-09-24 11:18:30,463 INFO OK: 907 Avenue De Maupassant, J7K 3T7, Canada -> 45.7444535, -73.6101064
+2025-09-24 11:18:32,043 INFO OK: 3164 Chemin Saint-Philippe, J7K 2L8, Canada -> 45.7815801, -73.5867169
+2025-09-24 11:18:33,756 INFO OK: 1474 Chemin Saint-Henri, J7K 1P2, Canada -> 45.7584406, -73.5960063
+2025-09-24 11:18:35,311 INFO OK: 1064 Rue Lamartine, J7K 3T7, Canada -> 45.749385, -73.613741
+2025-09-24 11:18:36,672 INFO OK: 1079 Avenue Dupuis, J7K 1P2, Canada -> 45.746733, -73.598102
+2025-09-24 11:18:38,193 INFO OK: 1630 Rue Barott, J7L 1V7, Canada -> 45.7489234, -73.6428491
+2025-09-24 11:18:39,967 INFO OK: 2361 Avenue de la Gare, J7K 0Y4, Canada -> 45.7198895, -73.5858582
+2025-09-24 11:18:41,758 INFO OK: 1013 Chemin Sainte-Marie, J7L 1V7, Canada -> 45.770567, -73.6725089
+2025-09-24 11:18:43,170 INFO OK: 2054 Rue Rochon, J7L 1A7, Canada -> 45.779237, -73.6322365
+2025-09-24 11:18:44,720 INFO OK: 523 Rue Terry-Fox, J7K 0K9, Canada -> 45.7303179, -73.6059003
+2025-09-24 11:18:46,114 INFO OK: 726 Place de la Brise, J7L 1A7, Canada -> 45.7550053, -73.6295605
+2025-09-24 11:18:47,599 INFO OK: 791 Place de la Brise, J7L 1A7, Canada -> 45.755323, -73.6300551
+2025-09-24 11:18:49,050 INFO OK: 243 Place Christie, J7L 1A7, Canada -> 45.7521841, -73.6408546
+2025-09-24 11:18:50,547 INFO OK: 473 Chemin des Anglais, J7L 1V7, Canada -> 45.735276, -73.648868
+2025-09-24 11:18:51,875 INFO OK: 2311 Rue de Chenonceau, J7K 0T4, Canada -> 45.7291114, -73.6256059
+2025-09-24 11:18:53,423 INFO OK: 976 Rue de Lévis, J7K 1P2, Canada -> 45.743048, -73.5860859
+2025-09-24 11:18:54,751 INFO OK: 3550 Rue de Jean-Talon, J7K 1P2, Canada -> 45.74883, -73.578209
+2025-09-24 11:18:56,348 INFO OK: 109 Montée Masson, J7K 3B4, Canada -> 45.7226949, -73.6201384
+2025-09-24 11:18:57,634 INFO OK: 433 Rue Andrassy, J6X 4J8, Canada -> 45.7524039, -73.678777
+2025-09-24 11:18:59,209 INFO OK: 749 Rue Duhamel, J7K 3B6, Canada -> 45.7371354, -73.609053
+2025-09-24 11:19:00,504 INFO OK: 1492 Rue Boissonneault, J7L 1V7, Canada -> 45.7395, -73.652907
+2025-09-24 11:19:02,135 INFO OK: 435 Rue Louis-Hébert, J7K 1P2, Canada -> 45.7202559, -73.5827427
+2025-09-24 11:19:04,245 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=381+Croissant+du+Trianon%2C+J7K+0T4%2C+Canada&format=json&limit=1
+2025-09-24 11:19:04,596 INFO OK: 381 Croissant du Trianon, J7K 0T4, Canada -> 45.7253202, -73.6313387
+2025-09-24 11:19:05,936 INFO OK: 1389 Avenue Dupuis, J7K 1P2, Canada -> 45.75535, -73.594351
+2025-09-24 11:19:07,495 INFO OK: 2293 Rue de Fontainebleau, J7K 0T4, Canada -> 45.7248043, -73.6309107
+2025-09-24 11:19:08,865 INFO OK: 1317 Rue Lionel-Groulx, J7K 2L8, Canada -> 45.7543003, -73.5986379
+2025-09-24 11:19:10,415 INFO OK: 502 Avenue Crépeau, J7K 2L6, Canada -> 45.7313695, -73.6094455
+2025-09-24 11:19:11,783 INFO OK: 516 Rue des Martins-Pêcheurs, J7K 2L5, Canada -> 45.7340506, -73.620065
+2025-09-24 11:19:13,427 INFO OK: 1351 Avenue de Normandie, J7L 1V7, Canada -> 45.7396518, -73.6606283
+2025-09-24 11:19:14,863 INFO OK: 2910 Chemin Sainte-Marie, J7K 2L8, Canada -> 45.748921, -73.6043224
+2025-09-24 11:19:16,389 INFO OK: 576 Place des Colibris, J7K 2L5, Canada -> 45.7352908, -73.6149553
+2025-09-24 11:19:18,010 INFO OK: 533 Rue du Grand-Héron, J7K 2L5, Canada -> 45.7396829, -73.6219676
+2025-09-24 11:19:19,532 INFO OK: 1551 Rue Grignon, J7K 1P2, Canada -> 45.7588954, -73.5940192
+2025-09-24 11:19:20,847 INFO OK: 497 Croissant du Trianon, J7K 0T4, Canada -> 45.7266708, -73.6310032
+2025-09-24 11:19:22,383 INFO OK: 2603 Avenue de Maussac, J7K 0T4, Canada -> 45.7250056, -73.6280738
+2025-09-24 11:19:24,232 INFO OK: 472 Avenue de l'Étang, J7K 2L5, Canada -> 45.7371595, -73.6227552
+2025-09-24 11:19:25,720 INFO OK: 2500 Boulevard de Mascouche, J7L 1A7, Canada -> 45.744929, -73.621816
+2025-09-24 11:19:27,028 INFO OK: 2759 Rue d'Angers, J7K 2L8, Canada -> 45.7555292, -73.608079
+2025-09-24 11:19:28,694 INFO OK: 2679 Rue du Verger, J7K 2L8, Canada -> 45.7549588, -73.6112225
+2025-09-24 11:19:30,131 INFO OK: 736 Rue de Pompadour, J7K 0T4, Canada -> 45.7238352, -73.6360012
+2025-09-24 11:19:32,039 INFO OK: 996 Rue des Épinettes, J7L 1V7, Canada -> 45.7502368, -73.6501084
+2025-09-24 11:19:33,588 INFO OK: 1275 Rue Circle, J7L 1V7, Canada -> 45.750374, -73.648091
+2025-09-24 11:19:35,540 INFO OK: 1912 Chemin Saint-Henri, J7K 2L8, Canada -> 45.7698287, -73.5946815
+2025-09-24 11:19:36,891 INFO OK: 3113 Boulevard de Mascouche, J7K 3B7, Canada -> 45.7429808, -73.5998747
+2025-09-24 11:19:38,657 INFO OK: 460 Rue Jordan, J7L 1A7, Canada -> 45.7506401, -73.6411102
+2025-09-24 11:19:39,943 INFO OK: 3061 Avenue Bourque, J7K 3B6, Canada -> 45.734499, -73.605427
+2025-09-24 11:19:41,588 INFO OK: 3095 Rue Patenaude, J7K 1Y4, Canada -> 45.7382553, -73.6010642
+2025-09-24 11:19:42,994 INFO OK: 2678 Croissant des Grives, J7K 3B6, Canada -> 45.7392766, -73.616088
+2025-09-24 11:19:44,573 INFO OK: 2061 Rue Rochon, J7L 1A7, Canada -> 45.779237, -73.6322365
+2025-09-24 11:19:46,004 INFO OK: 2149 Boulevard de Mascouche, J7L 1A7, Canada -> 45.745355, -73.6223423
+2025-09-24 11:19:47,569 INFO OK: 640 Rue Brien, J7K 1Y4, Canada -> 45.7340598, -73.6026298

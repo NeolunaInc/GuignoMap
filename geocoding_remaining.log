@@ -103,3 +103,105 @@
 2025-09-24 08:19:53,451 INFO OK: 3501 Rue Contant, Mascouche, Quebec, Canada -> 45.794158, -73.571911
 2025-09-24 08:19:55,387 WARNING NOT FOUND: 720 Rue de Montmartre, Mascouche, Quebec, Canada
 2025-09-24 08:19:56,910 INFO OK: 3307 Rue Charbonneau, Mascouche, Quebec, Canada -> 45.8043494, -73.5769366
+2025-09-24 09:13:27,707 WARNING NOT FOUND: 682 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:29,356 WARNING NOT FOUND: 2880 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:13:31,268 WARNING NOT FOUND: 640 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:32,927 WARNING NOT FOUND: 622 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:34,804 WARNING NOT FOUND: 685 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:36,217 WARNING NOT FOUND: 1819 Rue McCune, Mascouche, Quebec, Canada
+2025-09-24 09:13:37,990 WARNING NOT FOUND: 672 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:39,640 WARNING NOT FOUND: 390 Place des Ardennes, Mascouche, Quebec, Canada
+2025-09-24 09:13:41,396 WARNING NOT FOUND: 2858 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:13:42,867 WARNING NOT FOUND: 1825 Rue McCune, Mascouche, Quebec, Canada
+2025-09-24 09:13:44,655 WARNING NOT FOUND: 654 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:46,362 WARNING NOT FOUND: 785 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:48,067 WARNING NOT FOUND: 2876 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:13:49,583 WARNING NOT FOUND: 2886 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:13:51,405 WARNING NOT FOUND: 700 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:53,029 WARNING NOT FOUND: 632 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:13:54,611 WARNING NOT FOUND: 1813 Rue McCune, Mascouche, Quebec, Canada
+2025-09-24 09:13:56,148 WARNING NOT FOUND: 2864 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:13:57,917 WARNING NOT FOUND: 395 Place des Ardennes, Mascouche, Quebec, Canada
+2025-09-24 09:14:00,024 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=705+Rue+de+Montmartre%2C+Mascouche%2C+Quebec%2C+Canada&format=json&limit=1
+2025-09-24 09:14:00,785 WARNING NOT FOUND: 705 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:02,385 WARNING NOT FOUND: 684 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:04,300 WARNING NOT FOUND: 680 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:06,017 WARNING NOT FOUND: 514 Rue de Champagne, Mascouche, Quebec, Canada
+2025-09-24 09:14:08,022 WARNING NOT FOUND: 800 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:09,807 WARNING NOT FOUND: 710 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:11,792 WARNING NOT FOUND: 501 Rue de Champagne, Mascouche, Quebec, Canada
+2025-09-24 09:14:13,417 WARNING NOT FOUND: 400 Place des Ardennes, Mascouche, Quebec, Canada
+2025-09-24 09:14:15,168 WARNING NOT FOUND: 2881 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:16,786 WARNING NOT FOUND: 770 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:18,634 WARNING NOT FOUND: 604 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:20,261 WARNING NOT FOUND: 602 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:21,953 WARNING NOT FOUND: 2888 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:14:23,611 WARNING NOT FOUND: 2872 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:14:25,439 WARNING NOT FOUND: 2864 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:27,020 WARNING NOT FOUND: 2846 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:28,896 WARNING NOT FOUND: 642 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:30,588 WARNING NOT FOUND: 630 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:32,333 WARNING NOT FOUND: 650 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:34,231 WARNING NOT FOUND: 385 Place des Ardennes, Mascouche, Quebec, Canada
+2025-09-24 09:14:36,082 WARNING NOT FOUND: 2876 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:37,686 WARNING NOT FOUND: 634 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:39,425 WARNING NOT FOUND: 652 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:41,069 WARNING NOT FOUND: 620 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:42,947 WARNING NOT FOUND: 755 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:44,458 WARNING NOT FOUND: 2868 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:14:46,258 WARNING NOT FOUND: 2816 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:47,859 WARNING NOT FOUND: 695 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:49,839 WARNING NOT FOUND: 760 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:51,394 WARNING NOT FOUND: 2840 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:53,175 WARNING NOT FOUND: 2811 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:54,847 WARNING NOT FOUND: 750 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:14:56,613 WARNING NOT FOUND: 2852 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:14:58,267 WARNING NOT FOUND: 780 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:00,116 WARNING NOT FOUND: 730 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:01,795 WARNING NOT FOUND: 725 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:03,638 WARNING NOT FOUND: 2882 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:05,320 WARNING NOT FOUND: 2851 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:07,161 WARNING NOT FOUND: 645 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:08,901 WARNING NOT FOUND: 477 Rue de Champagne, Mascouche, Quebec, Canada
+2025-09-24 09:15:10,891 WARNING NOT FOUND: 790 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:12,994 WARNING Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=1)")': /search?q=500+Rue+de+Champagne%2C+Mascouche%2C+Quebec%2C+Canada&format=json&limit=1
+2025-09-24 09:15:13,699 WARNING NOT FOUND: 500 Rue de Champagne, Mascouche, Quebec, Canada
+2025-09-24 09:15:15,357 WARNING NOT FOUND: 397 Place des Ardennes, Mascouche, Quebec, Canada
+2025-09-24 09:15:17,157 WARNING NOT FOUND: 2870 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:18,777 WARNING NOT FOUND: 675 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:20,565 WARNING NOT FOUND: 610 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:22,276 WARNING NOT FOUND: 720 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:23,934 WARNING NOT FOUND: 2884 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:15:25,226 INFO OK: 3268 Rue Charbonneau, Mascouche, Quebec, Canada -> 45.804391, -73.579113
+2025-09-24 09:15:26,919 WARNING NOT FOUND: 2886 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:28,543 WARNING NOT FOUND: 513 Rue de Champagne, Mascouche, Quebec, Canada
+2025-09-24 09:15:30,286 WARNING NOT FOUND: 2828 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:32,208 WARNING NOT FOUND: 720 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:34,083 WARNING NOT FOUND: 670 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:35,742 WARNING NOT FOUND: 2834 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:37,302 INFO OK: 3580 Chemin Saint-Philippe, Mascouche, Quebec, Canada -> 45.777756, -73.553279
+2025-09-24 09:15:38,949 WARNING NOT FOUND: 614 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:40,756 WARNING NOT FOUND: 625 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:42,038 INFO OK: 3100 Rue Tedford, Mascouche, Quebec, Canada -> 45.8039, -73.605318
+2025-09-24 09:15:43,700 WARNING NOT FOUND: 2860 Place Marie-Victorin, Mascouche, Quebec, Canada
+2025-09-24 09:15:45,296 WARNING NOT FOUND: 2875 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:47,204 WARNING NOT FOUND: 664 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:48,544 INFO OK: 3572 Chemin Saint-Philippe, Mascouche, Quebec, Canada -> 45.7783251, -73.5578539
+2025-09-24 09:15:50,094 INFO OK: 3307 Rue Charbonneau, Mascouche, Quebec, Canada -> 45.8043494, -73.5769366
+2025-09-24 09:15:51,552 INFO OK: 2850 Chemin Saint-Henri, Mascouche, Quebec, Canada -> 45.79418, -73.572376
+2025-09-24 09:15:53,054 INFO OK: 2787 Chemin de la Cabane-Ronde, Mascouche, Quebec, Canada -> 45.7896048, -73.5425718
+2025-09-24 09:15:54,870 WARNING NOT FOUND: 2804 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:15:56,638 WARNING NOT FOUND: 715 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:15:58,025 INFO OK: 2564 Rue La Vérendrye, Mascouche, Quebec, Canada -> 45.783974, -73.553864
+2025-09-24 09:15:59,485 INFO OK: 2427 Rue La Vérendrye, Mascouche, Quebec, Canada -> 45.77801, -73.552771
+2025-09-24 09:16:01,323 WARNING NOT FOUND: 674 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:16:03,071 WARNING NOT FOUND: 2805 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:16:04,491 INFO OK: 3565 Chemin Saint-Philippe, Mascouche, Quebec, Canada -> 45.7790908, -73.5631674
+2025-09-24 09:16:06,074 INFO OK: 3025 Rue Tedford, Mascouche, Quebec, Canada -> 45.802369, -73.607619
+2025-09-24 09:16:07,687 WARNING NOT FOUND: 745 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:16:09,535 WARNING NOT FOUND: 635 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:16:11,271 WARNING NOT FOUND: 795 Rue de Montmartre, Mascouche, Quebec, Canada
+2025-09-24 09:16:13,111 WARNING NOT FOUND: 2863 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:16:14,871 WARNING NOT FOUND: 375 Place des Ardennes, Mascouche, Quebec, Canada
+2025-09-24 09:16:17,138 WARNING NOT FOUND: 2857 Rue de Châteauroux, Mascouche, Quebec, Canada
+2025-09-24 09:16:18,832 WARNING NOT FOUND: 810 Rue de Montmartre, Mascouche, Quebec, Canada
