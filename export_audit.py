@@ -33,33 +33,12 @@ FILES_TO_INCLUDE = [
     "guignomap/validators.py",
     "tests/smoke_db_missing_api.py",
     "tests/smoke_db_status_api.py",
-    "geocode_offline.py",
-    "geocode_online.py",
-    "geocode_sample.py",
-    "import_data.py",
-    "lancer_guignomap.ps1",
+    "import_postal_codes_v2.py",
     "README.md",
-    "requirements-freeze.txt",
     "requirements.txt",
+    "DEPLOYMENT.md",
     ".gitignore"
-    ,"app_carte.py"
-    ,"add_secteur_column.py"
-    ,"add_team_column.py"
-    ,"analyse_matching.py"
-    ,"backup_complet.py"
-    ,"check_original_files.py"
-    ,"debug_matching.py"
-    ,"diagnostic.py"
-    ,"fix_database_structure.py"
-    ,"geocode_remaining.py"
-    ,"geocode_with_postal.py"
-    ,"import_cp_complement_to_db.py"
-    ,"inspect_db_structure.py"
-    ,"reimport_complete.py"
-    ,"verify_final.py"
-    ,"verify_postal_codes.py"
-    ,"verify_reimport.py"
-]
+    ]
 
 def get_python_version():
     return sys.version
@@ -92,14 +71,17 @@ def get_tree():
         return f"Erreur génération tree: {e}"
 
 def read_file_content(filepath):
-    encodings = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
-    for encoding in encodings:
-        try:
-            with open(filepath, 'r', encoding=encoding) as f:
-                return f.read()
-        except UnicodeDecodeError:
-            continue
-    return f"Erreur lecture {filepath}: Impossible de décoder avec les encodages testés"
+    try:
+        encodings = ['utf-8', 'utf-8-sig', 'utf-16', 'latin-1']
+        for encoding in encodings:
+            try:
+                with open(filepath, 'r', encoding=encoding) as f:
+                    return f.read()
+            except UnicodeDecodeError:
+                continue
+        return f"Erreur lecture {filepath}: Impossible de décoder avec les encodages testés"
+    except FileNotFoundError:
+        return f"Fichier manquant: {filepath}"
 
 def main():
     now = datetime.now()

@@ -11,12 +11,15 @@ Thumbs.db
 guignomap/guigno_map.db
 import/nocivique_cp_complement*.xlsx
 
+
 # Backups / exports
+backup/
 backups/
 exports/
 Documents/GuignoMap_Backups/
 **/GuignoMap_Backups/
 GuignoMap_Backup_*.zip
+guignomap_backup_*.zip
 *.zip
 *.db
 export_for_audit.txt

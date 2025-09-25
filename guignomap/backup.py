@@ -14,7 +14,7 @@ else:
 
 # --- Chemins par défaut --------------------------------------------------------------
 DEFAULT_DB  = Path("guignomap/guigno_map.db")
-DEFAULT_DIR = Path("backups")
+DEFAULT_DIR = Path("backup")
 
 class BackupManager:
     def __init__(self, db_path: Path = DEFAULT_DB, backup_dir: Path = DEFAULT_DIR, prefix: str = "db"):

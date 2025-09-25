@@ -8,66 +8,77 @@ DB_PATH = Path("guignomap/guigno_map.db")
 IMPORT_DIR = Path("import")
 REPORT_PATH = Path(f"etat_actuel_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
 
-def diagnostic_complet():
-    report = []
-    report.append("="*60)
-    report.append(f"DIAGNOSTIC GUIGNOMAP - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    report.append("="*60)
+import streamlit as st
+import sys
+import sqlite3
+from pathlib import Path
+
+st.set_page_config(page_title="Diagnostic GuignoMap", page_icon="🔧", layout="wide")
+
+st.title("🔧 Diagnostic GuignoMap")
+
+# Test 1: Python et Streamlit
+st.header("1. Environnement")
+st.info(f"Python: {sys.version}")
+st.info(f"Streamlit: {st.__version__}")
+
+# Test 2: Structure des fichiers
+st.header("2. Fichiers critiques")
+files_to_check = [
+    "guignomap/app.py",
+    "guignomap/db.py",
+    "guignomap/assets/styles.css",
+    "guignomap/guigno_map.db"
+]
+
+for file in files_to_check:
+    path = Path(file)
+    if path.exists():
+        size = path.stat().st_size
+        st.success(f"✅ {file} ({size} octets)")
+    else:
+        st.error(f"❌ {file} MANQUANT!")
+
+# Test 3: Base de données
+st.header("3. Base de données")
+try:
+    conn = sqlite3.connect("guignomap/guigno_map.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    tables = [t[0] for t in cursor.fetchall()]
     
-    # Vérifier existence DB
-    if not DB_PATH.exists():
-        report.append(f"❌ ERREUR: Base de données introuvable: {DB_PATH}")
-        return report
+    if tables:
+        st.success(f"✅ {len(tables)} tables trouvées: {', '.join(tables)}")
+        
+        # Compter les enregistrements
+        for table in ['streets', 'teams', 'addresses']:
+            if table in tables:
+                cursor.execute(f"SELECT COUNT(*) FROM {table}")
+                count = cursor.fetchone()[0]
+                st.info(f"   • {table}: {count} enregistrements")
+    else:
+        st.warning("⚠️ Base de données vide!")
+        
+except Exception as e:
+    st.error(f"❌ Erreur DB: {e}")
+
+# Test 4: Import des modules
+st.header("4. Modules GuignoMap")
+try:
+    from guignomap import db
+    st.success("✅ Module db importé")
     
-    try:
-        conn = sqlite3.connect(str(DB_PATH))
-        cursor = conn.cursor()
+    # Vérifier les fonctions critiques
+    if hasattr(db, 'init_db'):
+        st.success("✅ Fonction init_db trouvée")
+    else:
+        st.error("❌ Fonction init_db MANQUANTE!")
         
-        # 1. TABLES EXISTANTES
-        report.append("\n📊 TABLES DANS LA BASE:")
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-        tables = cursor.fetchall()
-        for table in tables:
-            report.append(f"  ✓ {table[0]}")
-        
-        # 2. STATISTIQUES STREETS
-        report.append("\n🛤️ RUES (table streets):")
-        cursor.execute("SELECT COUNT(*) FROM streets")
-        total_streets = cursor.fetchone()[0]
-        report.append(f"  Total: {total_streets}")
-        
-        cursor.execute("SELECT status, COUNT(*) FROM streets GROUP BY status")
-        for status, count in cursor.fetchall():
-            report.append(f"  - {status}: {count}")
-        
-        cursor.execute("SELECT COUNT(DISTINCT team) FROM streets WHERE team IS NOT NULL AND team != ''")
-        teams_assigned = cursor.fetchone()[0]
-        report.append(f"  Équipes assignées: {teams_assigned}")
-        
-        # 3. STATISTIQUES ADDRESSES
-        report.append("\n📍 ADRESSES (table addresses):")
-        cursor.execute("SELECT COUNT(*) FROM addresses")
-        total_addr = cursor.fetchone()[0]
-        report.append(f"  Total: {total_addr}")
-        
-        # Avec code postal
-        cursor.execute("SELECT COUNT(*) FROM addresses WHERE postal_code IS NOT NULL AND postal_code != ''")
-        with_cp = cursor.fetchone()[0]
-        report.append(f"  Avec code postal: {with_cp} ({with_cp*100/total_addr:.1f}%)")
-        
-        # Avec GPS
-        cursor.execute("SELECT COUNT(*) FROM addresses WHERE latitude IS NOT NULL AND longitude IS NOT NULL")
-        with_gps = cursor.fetchone()[0]
-        report.append(f"  Avec GPS: {with_gps} ({with_gps*100/total_addr:.1f}%)")
-        
-        # Sans GPS mais avec CP (candidats au géocodage)
-        cursor.execute("""
-            SELECT COUNT(*) FROM addresses 
-            WHERE postal_code IS NOT NULL AND postal_code != ''
-            AND (latitude IS NULL OR longitude IS NULL)
-        """)
-        ready_for_geocoding = cursor.fetchone()[0]
+except ImportError as e:
+    st.error(f"❌ Impossible d'importer db: {e}")
+
         report.append(f"  Prêtes pour géocodage (CP sans GPS): {ready_for_geocoding}")
+st.success("🎯 Diagnostic terminé. Corrige les erreurs ❌ avant de lancer l'app principale.")
         
         # 4. STATISTIQUES TEAMS
         report.append("\n👥 ÉQUIPES (table teams):")
