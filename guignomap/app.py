@@ -384,17 +384,8 @@ def map_team(conn: sqlite3.Connection, team_id: str) -> folium.Map:
 
 def page_accueil() -> None:
     conn = get_connection()
-    st.markdown(
-        """
-        <div class="brand-header">
-          <div class="brand-title">🎄 GuignoMap – Guignolée de Mascouche</div>
-          <p class="brand-sub">Tableau de bord public (aperçu global)</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
-    # Compte à rebours
+    render_header()
     st.info(f"⏰ Prochain rendez-vous : {get_compte_a_rebours()}")
 
     stats = db_stats_globales(conn)
@@ -409,6 +400,8 @@ def page_accueil() -> None:
     with st.spinner("Génération de la carte…"):
         m = map_global(conn)
         st_folium(m, height=680, use_container_width=True)
+
+    render_footer()
 
 
 # -----------------------------
@@ -452,6 +445,7 @@ def page_benevole() -> None:
     team_id = st.session_state[auth_key]
     team_name = db_team_name(conn, team_id)
 
+    render_header()
     top = st.container()
     with top:
         st.header(f"👥 Équipe {team_name}")
@@ -486,6 +480,8 @@ def page_benevole() -> None:
         if badges:
             st.markdown("**🎯 Objectifs atteints**")
             st.write(" ".join(badges))
+
+    render_footer()
 
     tab_list, tab_map = st.tabs(["📋 Mes rues", "🗺️ Ma carte"])
 
@@ -567,12 +563,13 @@ def page_gestionnaire() -> None:
         return
 
     # Gestionnaire connecté
+    render_header()
     st.header("🎛️ Tableau de bord Gestionnaire")
     if st.button("🚪 Se déconnecter", key="logout_admin"):
         st.session_state[auth_key] = False
         st.rerun()
 
-    tabs = st.tabs(["📊 Vue d'ensemble", "👥 Gestion & Assignation", "📈 Rapports & Exports", "💳 Dons (Futur)"])
+    tabs = st.tabs(["📊 Vue d'ensemble", "👥 Gestion & Assignation", "📈 Rapports & Exports", "💳 Dons & Financement"])
 
     # --- Vue d'ensemble ---
     with tabs[0]:
@@ -802,9 +799,38 @@ def page_gestionnaire() -> None:
         st.markdown("---")
         st.info("Carré réservé à l'avenir pour PDF/rapports visuels avancés (ReportLab).")
 
-    # --- Dons (Futur) ---
+    # --- Dons & Financement ---
     with tabs[3]:
         st.info("Intégration Square/Stripe prévue ultérieurement.")
+        st.button("Paiement Square (désactivé)", disabled=True)
+
+    render_footer()
+# -----------------------------------------------------------------------------
+# HEADER/FOOTER RENDERS
+# -----------------------------------------------------------------------------
+def render_header():
+        st.markdown(
+                """
+                <div class="brand-header">
+                    <div class="brand-title">🎄 GuignoMap – Guignolée de Mascouche</div>
+                    <p class="brand-sub">Plateforme collaborative – Tableau de bord, bénévoles, gestion</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+        )
+
+def render_footer():
+        st.markdown(
+                """
+                <div class="footer">
+                    <span>© 2025 Le Relais de Mascouche – GuignoMap. Tous droits réservés.</span>
+                    <br>
+                    <a href="https://github.com/NeolunaInc/GuignoMap" target="_blank">GitHub</a> |
+                    <a href="mailto:info@relaisdemascouche.org">Contact</a>
+                </div>
+                """,
+                unsafe_allow_html=True,
+        )
 
 
 # -----------------------------------------------------------------------------
