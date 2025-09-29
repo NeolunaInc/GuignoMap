@@ -61,58 +61,169 @@ Si l’API Google est bloquée, le script `geocode_fallback.py` permet de géoco
    ```
    - Active venv, vérifie pip, affiche version Plotly, lance Streamlit.
 
-Options du script :
-- `-InitDb` : Initialise la DB SQLite.
-- `-Backup` : Effectue un backup DB+Excel.
-- `-SkipTests` : Saute les tests rapides.
-- `-Port <int>` : Port Streamlit (défaut 8501).
 
+# GuignoMap
 
-## Configuration API Google (géocodage)
+Application Streamlit pour la gestion collaborative des rues et adresses de Mascouche, avec cartographie interactive, exports Excel/PDF, interface bénévole/superviseur, et workflow moderne.
 
-Si tu utilises l'API Google Maps pour le géocodage, configure la clé API pour autoriser l'adresse IP publique suivante :
+---
 
-**IP publique à autoriser : 173.206.55.65**
+## Table des matières
+1. [Présentation](#présentation)
+# GuignoMap
 
-Cela permet d'utiliser l'API Google depuis cette machine sans restriction.
+Application Streamlit pour la gestion collaborative des rues et adresses de Mascouche, avec cartographie interactive, exports Excel/PDF, interface bénévole/superviseur, et workflow moderne.
+
+---
+
+## Table des matières
+1. [Présentation](#présentation)
+2. [Fonctionnalités](#fonctionnalités)
+3. [Prérequis & Dépendances](#prérequis--dépendances)
+4. [Installation & Lancement](#installation--lancement)
+5. [Structure du projet](#structure-du-projet)
+6. [Workflow Git](#workflow-git)
+7. [Commandes pratiques VSCode](#commandes-pratiques-vscode)
+8. [Annexes](#annexes)
+9. [Index des fichiers](#index-des-fichiers)
+10. [Checklist de validation](#checklist-de-validation)
+11. [Liens utiles](#liens-utiles)
+
+---
+
+## Présentation
+
+GuignoMap est une application Streamlit dédiée à la gestion des rues et adresses de Mascouche. Elle propose une cartographie interactive, des exports professionnels, une interface adaptée aux bénévoles et superviseurs, et un workflow de développement moderne et sécurisé.
+
+---
+
+## Fonctionnalités
+- **Cartographie interactive** (Folium, Plotly)
+- **Exports Excel/PDF** (openpyxl, reportlab)
+- **UI bénévole** : suivi des statuts des rues
+- **UI superviseur** : dashboard, gestion des équipes, backups, OSM
+- **Navigation** : sidebar, radio, onglets
+- **Imports** : codes postaux, adresses, OSM
+- **Backups** : ZIP, DB, Excel
+- **Tests** : smoke, unitaires
+- **Diagnostic** : script complet pour l’environnement
+
+---
+
+## Prérequis & Dépendances
+
+- **Système** : Windows 10/11 (VSCode, PowerShell)
+- **Python** : 3.11+ (recommandé)
+- **Streamlit** : 1.49.1
+- **Plotly** : 6.3.0
+- **Folium** : 0.20.0
+- **openpyxl** : 3.1.5
+- **reportlab** : 4.1.0
+- **pandas** : 2.3.2
+- **numpy** : 2.3.3
+- **requests** : 2.32.5
+- **geopy** : 2.4.1
+- **geographiclib** : 2.1
+
+> **Dépendances complètes** : voir `requirements-freeze.txt` pour l’environnement exact.
+
+---
+
+## Installation & Lancement
+
+### 1. Cloner le repo
+```powershell
+git clone https://github.com/NeolunaInc/GuignoMap.git
+cd GuignoMap
+```
+
+### 2. Initialiser l’environnement
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 3. Lancer l’application
+```powershell
+streamlit run guignomap/app.py --server.port 8501
+```
+
+### 4. Backup et diagnostic
+```powershell
+python guignomap/backup.py
+python diagnostic.py
+```
+
+---
 
 ## Structure du projet
 
+```plaintext
+# ===================== TREE (clean) =====================
+2. [Fonctionnalités](#fonctionnalités)
+3. [Prérequis & Dépendances](#prérequis--dépendances)
+4. [Installation & Lancement](#installation--lancement)
+5. [Structure du projet](#structure-du-projet)
+6. [Workflow Git](#workflow-git)
+7. [Commandes pratiques VSCode](#commandes-pratiques-vscode)
+8. [Annexes](#annexes)
+9. [Index des fichiers](#index-des-fichiers)
+10. [Checklist de validation](#checklist-de-validation)
+11. [Liens utiles](#liens-utiles)
+
+---
+
+## Présentation
+
+GuignoMap est une application Streamlit dédiée à la gestion des rues et adresses de Mascouche. Elle propose une cartographie interactive, des exports professionnels, une interface adaptée aux bénévoles et superviseurs, et un workflow de développement moderne et sécurisé.
+
+---
+
+## Fonctionnalités
+- **Cartographie interactive** (Folium, Plotly)
+- **Exports Excel/PDF** (openpyxl, reportlab)
+- **UI bénévole** : suivi des statuts des rues
+- **UI superviseur** : dashboard, gestion des équipes, backups, OSM
+- **Navigation** : sidebar, radio, onglets
+- **Imports** : codes postaux, adresses, OSM
+- **Backups** : ZIP, DB, Excel
+- **Tests** : smoke, unitaires
+- **Diagnostic** : script complet pour l’environnement
+
+---
+
+## Prérequis & Dépendances
+
+- **Système** : Windows 10/11 (VSCode, PowerShell)
+- **Python** : 3.11+ (recommandé)
+- **Streamlit** : 1.49.1
+- **Plotly** : 6.3.0
+- **Folium** : 0.20.0
+- **openpyxl** : 3.1.5
+- **reportlab** : 4.1.0
+- **pandas** : 2.3.2
+- **numpy** : 2.3.3
+- **requests** : 2.32.5
+- **geopy** : 2.4.1
+- **geographiclib** : 2.1
+
+> **Dépendances complètes** : voir `requirements-freeze.txt` pour l’environnement exact.
+
+---
+
+## Installation & Lancement
+
+### 1. Cloner le repo
+```powershell
+git clone https://github.com/NeolunaInc/GuignoMap.git
+cd GuignoMap
 ```
-GuignoMap/
-├── guignomap/          # Code principal
-│   ├── app.py         # App principale avec navigation
-│   ├── db.py          # Gestion DB SQLite
-│   ├── osm.py         # Intégration OSM
-│   ├── helpers_gm.py  # Helpers extraits
-│   └── ...
-├── .streamlit/        # Config Streamlit
-├── .vscode/           # Config VSCode
-├── exports/           # Exports générés
-├── import/            # Données d'import
-├── tests/             # Tests smoke
-└── scripts/           # Scripts utilitaires
-```
 
-## Développement
-
-## Import des codes postaux (nouveauté)
-
-- Le fichier d’import des codes postaux a été converti de XLSX vers CSV UTF-8 pour garantir la compatibilité et l’intégrité des caractères.
-- L’import des adresses et codes postaux se fait désormais directement depuis le fichier `import/nocivique_cp_complement.csv`.
-- Le script `import_cp_complement_to_db.py` permet d’intégrer ou mettre à jour les adresses et codes postaux dans la base SQLite (`guignomap/guigno_map.db`).
-- Cette méthode centralise la donnée et simplifie le workflow géocodage et cartographie.
-
-- **IDE** : VSCode (settings/tasks dans `.vscode/`).
-- **Linting** : Pylance, ruff.
-- **Tests** : `python -m tests.smoke_db_status_api` et `smoke_db_missing_api`.
-- **GIT** :
-  - Branche principale : `main`
-  - Commits : `feat:`, `fix:`, `chore:`, `refactor:`
-  - Push : `git push origin main`
-  - Pull : `git pull origin main`
-  - Branches features : `git switch -c feature/nom`
-
+### 2. Initialiser l’environnement
+```powershell
+.\
 ## Exports
 
 - **Excel** : `.xlsx` via openpyxl.
@@ -143,6 +254,190 @@ Excel : .xlsx prêt pour Excel/Sheets.
 
 PDF : table formatée A4 paysage (ReportLab).
 
+
+---
+
+## Workflow Git
+
+- **Branche principale** : `main` (protégée)
+- **Branches éphémères** : `feature/...`, `fix/...`
+- **Workflow** :
+   1. Créer une branche courte pour chaque fonctionnalité ou correction
+   2. PR rapide, squash merge
+   3. Suppression de la branche après merge
+- **Archivage** :
+   - Les anciennes branches sont archivées via des tags `archive/<nom>`
+   - Historique complet conservé
+- **Tags de version** :
+   - Chaque version stable est taguée : `v5.0.0`, `v5.0.1`, etc.
+
+### Commandes Git principales
+```powershell
+git switch main
+git pull
+git status
+git tag -a v5.0.0 -m "GuignoMap v5 – app.py unifié"
+git push origin v5.0.0
+git branch --merged main
+git branch --no-merged main
+git tag -a archive/<branch> -m "Archive <branch> avant suppression"
+git branch -D <branch>
+git push origin :<branch>
+git push origin archive/<branch>
+git remote prune origin
+```
+
+---
+
+## Commandes pratiques VSCode
+
+- **Activer le venv** :
+   ```powershell
+   .\.venv\Scripts\Activate.ps1
+   ```
+- **Installer les dépendances** :
+   ```powershell
+   pip install -r requirements.txt
+   ```
+- **Lancer l’app Streamlit** :
+   ```powershell
+   streamlit run guignomap/app.py --server.port 8501
+   ```
+- **Backup DB/Excel** :
+   ```powershell
+   python guignomap/backup.py
+   ```
+- **Diagnostic complet** :
+   ```powershell
+   python diagnostic.py
+   ```
+- **Lancer les tests** :
+   ```powershell
+   python -m tests.smoke_db_status_api
+   python -m tests.smoke_db_missing_api
+   ```
+- **Afficher le tree du projet** :
+   ```powershell
+   python tree_clean.py
+   ```
+
+---
+
+## Annexe
+
+- **Système utilisé** : Windows 10/11, PowerShell, VSCode
+- **Déploiement** : L’application est conçue pour être déployée sur Streamlit Cloud (non local une fois prête)
+- **Backups** : ZIP, DB, Excel, scripts dédiés
+- **Diagnostic** : script `diagnostic.py` pour vérifier l’environnement, les fichiers, la DB, les modules
+- **Historique** : toutes les branches anciennes sont archivées, le projet est nettoyé et prêt pour le workflow moderne
+
+---
+
+## Index des fichiers
+
+- `guignomap/app.py` : App principale Streamlit
+- `guignomap/db.py` : Gestion DB SQLite
+- `guignomap/osm.py` : Intégration OSM
+- `guignomap/backup.py` : Sauvegardes
+- `guignomap/reports.py` : Exports PDF/Excel
+- `guignomap/validators.py` : Validation
+- `guignomap/assets/` : Images, CSS
+- `guignomap/logs/` : Logs d’activité
+- `import/` : Données d’import (CSV/XLSX)
+- `scripts/` : Utilitaires, maintenance
+- `tests/` : Tests unitaires/smoke
+- `tools/` : Scripts d’analyse
+- `.streamlit/` : Config et secrets
+- `.vscode/` : Config VSCode
+- `requirements.txt` : Dépendances minimales
+- `requirements-freeze.txt` : Snapshot complet
+- `DEPLOYMENT.md` : Documentation déploiement
+- `diagnostic.py` : Diagnostic complet
+- `tree_clean.py` : Génération du tree
+
+---
+
+## Checklist de validation
+
+1. Cloner le repo et installer les dépendances
+2. Activer le venv
+3. Lancer l’app Streamlit
+4. Vérifier l’accès à la cartographie et aux exports
+5. Tester les boutons Excel/PDF
+6. Vérifier la DB et les backups
+7. Lancer le diagnostic
+8. Exécuter les tests
+9. Vérifier la conformité du workflow Git
+10. Documenter toute modification
+
+---
+
+## Liens utiles
+
+- [Streamlit Documentation](https://docs.streamlit.io/)
+- [VSCode Documentation](https://code.visualstudio.com/docs)
+- [Git Documentation](https://git-scm.com/doc)
+- [Plotly Documentation](https://plotly.com/python/)
+- [Folium Documentation](https://python-visualization.github.io/folium/)
+- [openpyxl Documentation](https://openpyxl.readthedocs.io/en/stable/)
+- [reportlab Documentation](https://www.reportlab.com/docs/reportlab-userguide.pdf)
+
+---
+
+## Notes et bonnes pratiques
+
+- Toujours travailler sur une branche courte, PR rapide, squash merge
+- Taguer chaque version stable
+- Utiliser le script de diagnostic avant tout déploiement
+- Documenter toute modification dans le README ou DEPLOYMENT.md
+- Ne jamais exposer de secrets ou de clés API dans le code ou sur GitHub
+- Utiliser les backups et vérifier leur intégrité régulièrement
+- Préférer Streamlit Cloud pour le déploiement final
+
+---
+
+## Fonctionnement Streamlit Cloud
+
+L’application est conçue pour être déployée sur [Streamlit Cloud](https://streamlit.io/cloud). Une fois prête, elle ne doit plus être lancée localement mais via le cloud pour garantir accessibilité, sécurité et maintenance simplifiée.
+
+---
+
+## Historique et snapshots
+
+Toutes les branches anciennes ont été archivées via des tags `archive/<nom>`. L’historique complet est conservé pour audit et restauration éventuelle.
+
+---
+
+## Index
+
+Voir la section [Index des fichiers](#index-des-fichiers) pour la cartographie complète du projet.
+
+---
+
+## Annexe : Dépendances installées (extrait)
+
+**requirements.txt**
+```text
+streamlit==1.49.1
+folium==0.20.0
+streamlit-folium==0.25.1
+pandas==2.3.2
+numpy==2.3.3
+requests==2.32.5
+openpyxl==3.1.5
+geopy==2.4.1
+geographiclib==2.1
+reportlab==4.1.0
+plotly==6.3.0
+```
+
+**requirements-freeze.txt** : voir le fichier pour la liste complète (plus de 200 paquets, versions exactes)
+
+---
+
+## Contact
+
+Pour toute question, suggestion ou bug, ouvrir une issue sur GitHub ou contacter l’équipe NeolunaInc.
 Remarque : pour des caractères Unicode exotiques, si l’affichage PDF n’est pas parfait, on pourra ultérieurement intégrer une police TTF dédiée (ex. DejaVuSans) et l’enregistrer dans ReportLab.
 
 ### 5) Lancement local (rappel)

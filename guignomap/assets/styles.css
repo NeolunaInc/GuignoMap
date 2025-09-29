@@ -1,3 +1,129 @@
+/* ---------- Base & lisibilité ---------- */
+:root {
+    --brand-bg: #0b1220;         /* fond sombre chic */
+    --brand-fg: #ffffff;
+    --brand-accent: #e11d48;     /* rouge framboise */
+    --brand-gold: #f5b700;       /* doré */
+    --card-bg: #111827;
+    --card-border: #1f2937;
+    --muted: #9ca3af;
+    --ok: #22c55e;               /* vert */
+    --warn: #f59e0b;             /* orange */
+    --err: #ef4444;              /* rouge */
+}
+
+html, body, .stApp {
+    font-size: 18px;             /* lisibilité bénévoles */
+    color: var(--brand-fg);
+    background: var(--brand-bg);
+}
+
+/* Focus accessible */
+*:focus-visible {
+    outline: 3px solid var(--brand-gold);
+    outline-offset: 2px;
+    border-radius: 8px;
+}
+
+/* ---------- Header & Footer ---------- */
+.brand-header {
+    background: linear-gradient(90deg, rgba(241,80,37,0.15), rgba(245,183,0,0.15));
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin: 8px 0 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.brand-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+.brand-sub {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.app-footer {
+    margin-top: 24px;
+    padding: 16px;
+    border-top: 1px solid var(--card-border);
+    color: var(--muted);
+    text-align: center;
+}
+
+/* ---------- Cartes / conteneurs ---------- */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    margin-bottom: 16px;
+}
+.card h3, .card h4 { margin: 0 0 8px; }
+
+/* ---------- Boutons & inputs ---------- */
+.stButton>button {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+}
+.stButton>button:hover {
+    transform: translateY(-1px);
+}
+button[kind="primary"] {
+    background: var(--brand-accent);
+}
+button:disabled {
+    opacity: 0.65 !important;
+}
+
+/* ---------- Métriques stylées ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+@media (max-width: 1200px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+.stat-card .label { color: var(--muted); font-size: 14px; }
+.stat-card .value { font-size: 28px; font-weight: 800; }
+
+/* ---------- Tabs ---------- */
+.stTabs [data-baseweb="tab"] {
+    font-size: 18px;
+}
+
+/* ---------- Folium container ---------- */
+iframe, .folium-map {
+    border-radius: 14px !important;
+    border: 1px solid var(--card-border) !important;
+}
+
+/* ---------- Badges ---------- */
+.badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: rgba(255,255,255,0.06);
+    margin-right: 8px;
+}
+
+/* ---------- Square (placeholder) ---------- */
+.square-cta {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 12px;
+    background: #223; border: 1px solid var(--card-border);
+    color: var(--muted); cursor: not-allowed;
+}
+.square-cta img { height: 22px; }
 /* ========================================
    GUIGNO-MAP - STYLES PERSONNALISÉS
    Le Relais de Mascouche

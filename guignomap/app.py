@@ -25,6 +25,7 @@ import streamlit as st
 import plotly.express as px
 import folium
 from streamlit_folium import st_folium
+import base64
 import math
 
 try:
@@ -52,12 +53,27 @@ DB_PATH = APP_DIR / "guigno_map.db"
 ASSETS_DIR = APP_DIR / "assets"
 CSS_PATH = ASSETS_DIR / "styles.css"
 
-# Charger CSS (silencieux si absent)
-try:
-    if CSS_PATH.exists():
-        st.markdown(f"<style>{CSS_PATH.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
-except Exception:
-    pass
+def _inject_css_with_fallback():
+    """Charge assets/styles.css si présent; sinon injecte un style minimal de secours."""
+    try:
+        if CSS_PATH.exists():
+            css = CSS_PATH.read_text(encoding="utf-8")
+            st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+        else:
+            # Fallback minimal pour prouver l’application du thème si le fichier manque
+            fallback = """
+            :root{--card-bg:#111827;--card-b:#1f2937;--fg:#fff;--bg:#0b1220}
+            body,.stApp{background:var(--bg);color:var(--fg)}
+            .brand-header{border:1px solid var(--card-b);border-radius:16px;padding:16px 20px;margin:8px 0 16px;background:#151c2c}
+            .brand-title{font-size:28px;font-weight:800}
+            .brand-sub{color:#9ca3af}
+            .card{background:var(--card-bg);border:1px solid var(--card-b);border-radius:16px;padding:16px;margin-bottom:16px}
+            """
+            st.markdown(f"<style>{fallback}</style>", unsafe_allow_html=True)
+    except Exception:
+        pass
+
+_inject_css_with_fallback()
 
 # -----------------------------------------------------------------------------
 # UTILITAIRES TEMPS
@@ -379,28 +395,75 @@ def map_team(conn: sqlite3.Connection, team_id: str) -> folium.Map:
     return m
 
 # -----------------------------------------------------------------------------
+# HEADER / FOOTER (branding)
+# -----------------------------------------------------------------------------
+
+def _img_b64(p: Path | str) -> str | None:
+    try:
+        p = Path(p)
+        if not p.exists():
+            return None
+        return base64.b64encode(p.read_bytes()).decode("utf-8")
+    except Exception:
+        return None
+
+
+def render_header(subtitle: str | None = None) -> None:
+    """Bandeau supérieur cohérent (logo + titre + sous-titre)."""
+    logo = _img_b64(ASSETS_DIR / "logo.png") or _img_b64(APP_DIR / "logo.png")
+    title = "GuignoMap 2025"
+    sub = subtitle or "Ensemble, Redonnons espoir"
+    if logo:
+        img_html = f'<img src="data:image/png;base64,{logo}" style="height:48px;margin-right:12px;" />'
+    else:
+        # Fallback: Unicode emoji or blank
+        img_html = '<span style="font-size:40px;margin-right:12px;">🎄</span>'
+    st.markdown(
+        f"""
+        <div class="brand-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            {img_html}
+            <div class="brand-title">{title}</div>
+          </div>
+          <p class="brand-sub">{sub}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_footer() -> None:
+    y = datetime.now().year
+    st.markdown(
+        f"<div class='footer'>© {y} Le Relais de Mascouche — Ensemble, Redonnons espoir.</div>",
+        unsafe_allow_html=True,
+    )
+
+# -----------------------------------------------------------------------------
 # PAGES
 # -----------------------------------------------------------------------------
 
 def page_accueil() -> None:
     conn = get_connection()
+    render_header("Tableau de bord public (aperçu global)")
 
-    render_header()
+    # Compte à rebours
     st.info(f"⏰ Prochain rendez-vous : {get_compte_a_rebours()}")
 
     stats = db_stats_globales(conn)
+    st.markdown('<div class="card metrics-card">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Total rues", stats["total"])
     c2.metric("Terminées", stats["terminee"])
     c3.metric("En cours", stats["en_cours"])
     c4.metric("Non assignées", stats["non_assignees"])
     c5.metric("Progression", f"{stats['pourcentage']:.1f}%")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.subheader("🗺️ Carte d'ensemble des rues (code couleur par statut / pointillé = non assignée)")
     with st.spinner("Génération de la carte…"):
         m = map_global(conn)
         st_folium(m, height=680, use_container_width=True)
-
     render_footer()
 
 
@@ -410,6 +473,7 @@ def page_accueil() -> None:
 
 def page_benevole() -> None:
     conn = get_connection()
+    render_header("Espace bénévole — simple et clair")
 
     # État d'authentification
     auth_key = "auth_benevole"
@@ -445,13 +509,12 @@ def page_benevole() -> None:
     team_id = st.session_state[auth_key]
     team_name = db_team_name(conn, team_id)
 
-    render_header()
-    top = st.container()
-    with top:
-        st.header(f"👥 Équipe {team_name}")
-        if st.button("🚪 Se déconnecter", key="logout_benev"):
-            st.session_state[auth_key] = None
-            st.rerun()
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.header(f"👥 Équipe {team_name}")
+    if st.button("🚪 Se déconnecter", key="logout_benev"):
+        st.session_state[auth_key] = None
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     total, done = db_team_progress(conn, team_id)
     pct = (done * 100.0 / total) if total else 0.0
@@ -469,6 +532,7 @@ def page_benevole() -> None:
     if total and done == total:
         badges.append("🎉 100%")
 
+    st.markdown('<div class="card metrics-card">', unsafe_allow_html=True)
     c1, c2 = st.columns([3, 2])
     with c1:
         st.info(f"Progression: **{done}/{total}** rues terminées ({pct:.0f}%)")
@@ -480,8 +544,7 @@ def page_benevole() -> None:
         if badges:
             st.markdown("**🎯 Objectifs atteints**")
             st.write(" ".join(badges))
-
-    render_footer()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     tab_list, tab_map = st.tabs(["📋 Mes rues", "🗺️ Ma carte"])
 
@@ -496,20 +559,20 @@ def page_benevole() -> None:
                 nb = int(row["nb_adresses"]) if pd.notna(row["nb_adresses"]) else 0
 
                 icon = "✅" if status == "terminee" else ("🛠️" if status == "en_cours" else "📍")
-                with st.container():
-                    c1, c2, c3 = st.columns([3, 1, 1], vertical_alignment="center")
-                    with c1:
-                        st.markdown(f"### {icon} {rue}")
-                        st.caption(f"📫 {nb} adresses")
-                    with c2:
-                        if st.button("🔄 En cours", key=f"encours_{rue}", disabled=(status == "en_cours"), use_container_width=True):
-                            if set_street_status(conn, rue, "en_cours", team_id):
-                                st.rerun()
-                    with c3:
-                        if st.button("✅ Terminée", key=f"terminee_{rue}", disabled=(status == "terminee"), use_container_width=True):
-                            if set_street_status(conn, rue, "terminee", team_id):
-                                st.balloons()
-                                st.rerun()
+                st.markdown('<div class="card street-card">', unsafe_allow_html=True)
+                c1, c2, c3 = st.columns([3, 1, 1], vertical_alignment="center")
+                with c1:
+                    st.markdown(f"### {icon} {rue}")
+                    st.caption(f"📫 {nb} adresses")
+                with c2:
+                    if st.button("🔄 En cours", key=f"encours_{rue}", disabled=(status == "en_cours"), use_container_width=True):
+                        if set_street_status(conn, rue, "en_cours", team_id):
+                            st.rerun()
+                with c3:
+                    if st.button("✅ Terminée", key=f"terminee_{rue}", disabled=(status == "terminee"), use_container_width=True):
+                        if set_street_status(conn, rue, "terminee", team_id):
+                            st.balloons()
+                            st.rerun()
 
                 with st.expander("📝 Ajouter une note"):
                     with st.form(f"note_{rue}"):
@@ -524,12 +587,14 @@ def page_benevole() -> None:
                                     st.success("Note enregistrée")
                             else:
                                 st.warning("Veuillez saisir le numéro civique et la note.")
+                st.markdown('</div>', unsafe_allow_html=True)
                 st.divider()
 
     with tab_map:
         with st.spinner("Carte de votre équipe…"):
             m = map_team(conn, team_id)
             st_folium(m, height=640, use_container_width=True)
+    render_footer()
 
 
 # -----------------------------
@@ -538,6 +603,7 @@ def page_benevole() -> None:
 
 def page_gestionnaire() -> None:
     conn = get_connection()
+    render_header("Outils du gestionnaire — équipes, secteurs, rapports")
 
     # Auth gestionnaire
     auth_key = "auth_admin"
@@ -563,7 +629,6 @@ def page_gestionnaire() -> None:
         return
 
     # Gestionnaire connecté
-    render_header()
     st.header("🎛️ Tableau de bord Gestionnaire")
     if st.button("🚪 Se déconnecter", key="logout_admin"):
         st.session_state[auth_key] = False
@@ -574,12 +639,14 @@ def page_gestionnaire() -> None:
     # --- Vue d'ensemble ---
     with tabs[0]:
         stats = db_stats_globales(conn)
+        st.markdown('<div class="card metrics-card">', unsafe_allow_html=True)
         c1, c2, c3, c4, c5 = st.columns(5)
         c1.metric("Total Rues", stats["total"])
         c2.metric("Terminées", stats["terminee"])
         c3.metric("En cours", stats["en_cours"])
         c4.metric("Non assignées", stats["non_assignees"])
         c5.metric("Progression", f"{stats['pourcentage']:.1f}%")
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.subheader("📈 Performance par équipe")
         df_equipes = db_stats_by_team(conn)
@@ -600,54 +667,58 @@ def page_gestionnaire() -> None:
         with st.spinner("Génération de la carte…"):
             m = map_global(conn)
             st_folium(m, height=720, use_container_width=True)
-
     # --- Gestion & Assignation ---
     with tabs[1]:
+        pass
         st.subheader("👥 Équipes & Secteurs")
         c1, c2 = st.columns(2)
 
         with c1:
-            st.markdown("### ➕ Créer une équipe")
-            with st.form("create_team"):
-                team_id = st.text_input("Code équipe", placeholder="EQ001")
-                team_name = st.text_input("Nom de l'équipe")
-                team_pwd = st.text_input("Mot de passe", type="password")
-                create = st.form_submit_button("Créer l'équipe")
-            if create:
-                if not all([team_id, team_name, team_pwd]):
-                    st.warning("Complétez tous les champs")
-                else:
-                    try:
-                        if bcrypt is None:
-                            st.error("Module bcrypt non disponible.")
-                        else:
-                            hashed = bcrypt.hashpw(team_pwd.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-                            conn.execute("INSERT INTO teams (id, name, password_hash, active) VALUES (?, ?, ?, 1)",
-                                         (team_id.strip(), team_name.strip(), hashed))
-                            conn.commit()
-                            st.success(f"Équipe {team_name} créée")
-                    except sqlite3.IntegrityError:
-                        st.error("Ce code d'équipe existe déjà")
-                    except Exception as e:
-                        st.error(f"Création impossible: {e}")
+                st.markdown('<div class="card">', unsafe_allow_html=True)
+                st.markdown("### ➕ Créer une équipe")
+                with st.form("create_team"):
+                    team_id = st.text_input("Code équipe", placeholder="EQ001")
+                    team_name = st.text_input("Nom de l'équipe")
+                    team_pwd = st.text_input("Mot de passe", type="password")
+                    create = st.form_submit_button("Créer l'équipe")
+                if create:
+                    if not all([team_id, team_name, team_pwd]):
+                        st.warning("Complétez tous les champs")
+                    else:
+                        try:
+                            if bcrypt is None:
+                                st.error("Module bcrypt non disponible.")
+                            else:
+                                hashed = bcrypt.hashpw(team_pwd.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+                                conn.execute("INSERT INTO teams (id, name, password_hash, active) VALUES (?, ?, ?, 1)",
+                                             (team_id.strip(), team_name.strip(), hashed))
+                                conn.commit()
+                                st.success(f"Équipe {team_name} créée")
+                        except sqlite3.IntegrityError:
+                            st.error("Ce code d'équipe existe déjà")
+                        except Exception as e:
+                            st.error(f"Création impossible: {e}")
+                st.markdown('</div>', unsafe_allow_html=True)
 
         with c2:
-            st.markdown("### 🗂️ Créer un secteur")
-            with st.form("create_sector"):
-                sector_name = st.text_input("Nom du secteur")
-                add = st.form_submit_button("Créer le secteur")
-            if add:
-                if not sector_name.strip():
-                    st.warning("Nom de secteur requis")
-                else:
-                    try:
-                        conn.execute("INSERT INTO sectors (name) VALUES (?)", (sector_name.strip(),))
-                        conn.commit()
-                        st.success(f"Secteur {sector_name} créé")
-                    except sqlite3.IntegrityError:
-                        st.error("Ce secteur existe déjà")
-                    except Exception as e:
-                        st.error(f"Création secteur impossible: {e}")
+                st.markdown('<div class="card">', unsafe_allow_html=True)
+                st.markdown("### 🗂️ Créer un secteur")
+                with st.form("create_sector"):
+                    sector_name = st.text_input("Nom du secteur")
+                    add = st.form_submit_button("Créer le secteur")
+                if add:
+                    if not sector_name.strip():
+                        st.warning("Nom de secteur requis")
+                    else:
+                        try:
+                            conn.execute("INSERT INTO sectors (name) VALUES (?)", (sector_name.strip(),))
+                            conn.commit()
+                            st.success(f"Secteur {sector_name} créé")
+                        except sqlite3.IntegrityError:
+                            st.error("Ce secteur existe déjà")
+                        except Exception as e:
+                            st.error(f"Création secteur impossible: {e}")
+                st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown("---")
         st.markdown("### 🎯 Assigner des rues à une équipe")
@@ -661,45 +732,48 @@ def page_gestionnaire() -> None:
         elif not rues_non_assignees:
             st.success("🎉 Toutes les rues sont déjà assignées !")
         else:
-            with st.form("assign_streets_form"):
-                c1, c2 = st.columns(2)
-                with c1:
-                    team_sel = st.selectbox("Équipe", options=teams, format_func=lambda t: f"{t[0]} – {t[1]}")
-                with c2:
-                    sector_sel = st.selectbox(
-                        "Filtrer par secteur (optionnel)",
-                        options=[(None, "Tous")] + sectors,
-                        format_func=lambda x: x[1] if x and x[0] is not None else "Tous",
-                    )
+                st.markdown('<div class="card">', unsafe_allow_html=True)
+                with st.form("assign_streets_form"):
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        team_sel = st.selectbox("Équipe", options=teams, format_func=lambda t: f"{t[0]} – {t[1]}")
+                    with c2:
+                        sector_sel = st.selectbox(
+                            "Filtrer par secteur (optionnel)",
+                            options=[(None, "Tous")] + sectors,
+                            format_func=lambda x: x[1] if x and x[0] is not None else "Tous",
+                        )
 
-                options = rues_non_assignees
-                # Filtre par secteur si une colonne sector_id existe dans streets
-                try:
-                    if sector_sel and sector_sel[0] is not None:
-                        sid = int(sector_sel[0])
-                        options = [r[0] for r in conn.execute(
-                            "SELECT name FROM streets WHERE (team IS NULL OR team='') AND sector_id = ? ORDER BY name",
-                            (sid,),
-                        ).fetchall()]
-                except Exception:
-                    pass
+                    options = rues_non_assignees
+                    # Filtre par secteur si une colonne sector_id existe dans streets
+                    try:
+                        if sector_sel and sector_sel[0] is not None:
+                            sid = int(sector_sel[0])
+                            options = [r[0] for r in conn.execute(
+                                "SELECT name FROM streets WHERE (team IS NULL OR team='') AND sector_id = ? ORDER BY name",
+                                (sid,),
+                            ).fetchall()]
+                    except Exception:
+                        pass
 
-                selected = st.multiselect("Rues à assigner", options=options)
-                go = st.form_submit_button("Assigner")
+                    selected = st.multiselect("Rues à assigner", options=options)
+                    go = st.form_submit_button("Assigner")
 
-            if go:
-                try:
-                    for rue in selected:
-                        conn.execute("UPDATE streets SET team = ?, status = CASE WHEN status='a_faire' THEN 'a_faire' ELSE status END WHERE name = ?", (team_sel[0], rue))
-                    conn.commit()
-                    st.success(f"{len(selected)} rues assignées à {team_sel[1]}")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Assignation impossible: {e}")
-
+                if go:
+                    try:
+                        for rue in selected:
+                            conn.execute("UPDATE streets SET team = ?, status = CASE WHEN status='a_faire' THEN 'a_faire' ELSE status END WHERE name = ?", (team_sel[0], rue))
+                        conn.commit()
+                        st.success(f"{len(selected)} rues assignées à {team_sel[1]}")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Assignation impossible: {e}")
+                st.markdown('</div>', unsafe_allow_html=True)
     # --- Rapports & Exports ---
     with tabs[2]:
+        pass
         st.subheader("📦 Exports")
+        st.markdown('<div class="card export-card">', unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
 
         # Essayer d'utiliser un module reports dédié si présent
@@ -798,39 +872,18 @@ def page_gestionnaire() -> None:
 
         st.markdown("---")
         st.info("Carré réservé à l'avenir pour PDF/rapports visuels avancés (ReportLab).")
-
+        st.markdown('</div>', unsafe_allow_html=True)
     # --- Dons & Financement ---
     with tabs[3]:
-        st.info("Intégration Square/Stripe prévue ultérieurement.")
-        st.button("Paiement Square (désactivé)", disabled=True)
-
+        st.info("Intégration Square prévue ultérieurement.")
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="square-cta"><img src="https://developer.squareup.com/images/logos/square-logo.svg"/> '
+            'Configurer les dons en ligne avec Square (bientôt)</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
     render_footer()
-# -----------------------------------------------------------------------------
-# HEADER/FOOTER RENDERS
-# -----------------------------------------------------------------------------
-def render_header():
-        st.markdown(
-                """
-                <div class="brand-header">
-                    <div class="brand-title">🎄 GuignoMap – Guignolée de Mascouche</div>
-                    <p class="brand-sub">Plateforme collaborative – Tableau de bord, bénévoles, gestion</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-        )
-
-def render_footer():
-        st.markdown(
-                """
-                <div class="footer">
-                    <span>© 2025 Le Relais de Mascouche – GuignoMap. Tous droits réservés.</span>
-                    <br>
-                    <a href="https://github.com/NeolunaInc/GuignoMap" target="_blank">GitHub</a> |
-                    <a href="mailto:info@relaisdemascouche.org">Contact</a>
-                </div>
-                """,
-                unsafe_allow_html=True,
-        )
 
 
 # -----------------------------------------------------------------------------

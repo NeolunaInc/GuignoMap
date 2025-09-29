@@ -37,7 +37,9 @@ FILES_TO_INCLUDE = [
     "README.md",
     "requirements.txt",
     "DEPLOYMENT.md",
-    ".gitignore"
+    ".gitignore",
+    "import_data.py",
+    "lancer_guignomap.ps1"
     ]
 
 def get_python_version():
